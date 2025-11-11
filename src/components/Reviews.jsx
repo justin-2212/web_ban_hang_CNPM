@@ -13,7 +13,7 @@ const Reviews = () => {
       <h3 
         data-aos="fade-up" 
         data-aos-offset="80" 
-        className="text-2xl font-semibold text-center mb-8"
+        className="text-2xl md:text-3xl font-extrabold text-center mb-10 text-red"
       >
         Đánh giá từ khách hàng
       </h3>
