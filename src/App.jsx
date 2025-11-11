@@ -11,8 +11,8 @@ import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 
 // === LAYOUT ===
-import Header from "./sections/Header";
-import Footer from "./sections/Footer";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 const App = () => {
   // Khởi tạo AOS khi app load

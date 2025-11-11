@@ -16,7 +16,7 @@ const Header = () => {
       </Link>
 
       {/* Navigation */}
-      <nav className="hidden md:flex space-x-8 text-gray-600">
+      <nav className="hidden md:flex space-x-10 text-gray-700 text-xl font-medium">
         <Link to="/" className="hover:text-black transition">Trang chủ</Link>
         <Link to="/products" className="hover:text-black transition">Sản phẩm</Link>
         <Link to="/about" className="hover:text-black transition">Thông tin thêm</Link>
