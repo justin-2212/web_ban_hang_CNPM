@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { ClerkProvider } from "@clerk/clerk-react";
 
 // === PAGES ===
 import Home from "./pages/Home";
@@ -14,18 +15,19 @@ import NotFound from "./pages/NotFound";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 
-const App = () => {
+const App = ({ clerkPublishableKey }) => {
   // Khởi tạo AOS khi app load
   useEffect(() => {
     AOS.init({
-      duration: 600,   // Thời gian hiệu ứng (ms)
-      once: true,      // Chỉ chạy một lần khi cuộn tới
-      offset: 100,     // Khoảng cách trước khi hiệu ứng kích hoạt
-      easing: 'ease-in-out'
+      duration: 600, // Thời gian hiệu ứng (ms)
+      once: true, // Chỉ chạy một lần khi cuộn tới
+      offset: 100, // Khoảng cách trước khi hiệu ứng kích hoạt
+      easing: "ease-in-out",
     });
   }, []);
 
   return (
+    <ClerkProvider publishableKey={clerkPublishableKey}>
     <div className="flex flex-col min-h-screen">
       {/* Header luôn hiển thị */}
       <Header />
@@ -43,6 +45,7 @@ const App = () => {
       {/* Footer luôn hiển thị */}
       <Footer />
     </div>
+    </ClerkProvider>  
   );
 };
 
