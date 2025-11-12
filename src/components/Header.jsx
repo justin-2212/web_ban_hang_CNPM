@@ -64,7 +64,7 @@ const Header = () => {
 
         <SignedOut>
           <SignInButton>
-            <button className="px-4 py-2 bg-blue-600 text-Black rounded hover:bg-blue-700">
+            <button className="px-4 py-2 bg-white text-red-600 border border-red-600 rounded hover:bg-red-50">
               Đăng nhập
             </button>
           </SignInButton>
