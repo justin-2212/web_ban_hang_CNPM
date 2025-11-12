@@ -28,7 +28,8 @@ const Header = () => {
       </Link>
 
       {/* Navigation */}
-      <nav className="hidden md:flex space-x-8 text-gray-600">
+
+      <nav className="hidden md:flex space-x-10 text-gray-700 text-xl font-medium">
         <Link to="/" className="hover:text-black transition">
           Trang chủ
         </Link>

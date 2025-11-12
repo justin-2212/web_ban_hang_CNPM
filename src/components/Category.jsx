@@ -25,7 +25,7 @@ const Category = () => {
         <h3 
           data-aos="fade-up" 
           data-aos-offset="100" 
-          className="text-2xl md:text-3xl font-semibold text-center mb-10 text-gray-900"
+          className="text-2xl md:text-3xl font-extrabold text-center mb-10 text-red"
         >
           Danh mục sản phẩm
         </h3>
@@ -48,7 +48,7 @@ const Category = () => {
                   className="w-full h-full object-cover p-6"
                 />
               </div>
-              <p className="mt-3 font-medium text-gray-700 group-hover:text-apple-blue transition">
+              <p className="mt-3 font-medium text-red group-hover:text-apple-blue transition">
                 {cat.name}
               </p>
             </div>

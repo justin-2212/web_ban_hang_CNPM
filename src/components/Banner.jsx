@@ -4,14 +4,14 @@ import { ArrowRight } from "lucide-react";
 
 const Banner = () => {
   return (
-    <section className="w-full py-16 md:py-20 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] overflow-hidden">
+    <section className="pt-20 pb-20 bg-blue-50">
       <div className="max-w-7xl mx-auto px-6 md:px-8 text-center">
         {/* Tiêu đề chính – nổi bật */}
         <h3 
           data-aos="fade-up" 
           data-aos-delay="0" 
           data-aos-offset="100" 
-          className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white mb-4 leading-tight"
+          className="text-3xl md:text-4xl lg:text-5xl font-semibold text-black mb-4 leading-tight"
         >
           Giảm <span className="text-apple-blue">15%</span> cho tất cả phụ kiện Apple
         </h3>
@@ -21,7 +21,7 @@ const Banner = () => {
           data-aos="fade-up" 
           data-aos-delay="120" 
           data-aos-offset="100" 
-          className="text-gray-300 text-lg md:text-xl mb-8 max-w-2xl mx-auto"
+          className="text-black text-lg md:text-xl mb-8 max-w-2xl mx-auto"
         >
           Chỉ áp dụng đến hết tuần này. Nhanh tay sở hữu ngay!
         </p>
