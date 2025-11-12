@@ -3,24 +3,44 @@ import { Link } from "react-router-dom";
 import { ShoppingBag, Search } from "lucide-react";
 import AppleLogo from "../assets/logo.png";
 
+// --- Clerk imports ---
+import {
+  SignedIn,
+  SignedOut,
+  UserButton,
+  SignInButton,
+} from "@clerk/clerk-react";
+
 const Header = () => {
   return (
     <header className="flex items-center justify-between px-8 py-4 bg-white shadow-sm sticky top-0 z-50">
       {/* Logo + Tên */}
       {/* Dùng Link để click vào logo thì chuyển hướng đến trang chủ */}
       <Link to="/" className="bg-apple-blue text-white px-6 py-3 rounded-full">
-      <div className="flex items-center space-x-2">
-        <img src={AppleLogo} alt="Apple Logo" className="w-12 h-12 object-contain" />
-        <h2 className="text-2xl font-semibold text-gray-800">Apple Store</h2>
-      </div>
+        <div className="flex items-center space-x-2">
+          <img
+            src={AppleLogo}
+            alt="Apple Logo"
+            className="w-12 h-12 object-contain"
+          />
+          <h2 className="text-2xl font-semibold text-gray-800">Apple Store</h2>
+        </div>
       </Link>
 
       {/* Navigation */}
       <nav className="hidden md:flex space-x-8 text-gray-600">
-        <Link to="/" className="hover:text-black transition">Trang chủ</Link>
-        <Link to="/products" className="hover:text-black transition">Sản phẩm</Link>
-        <Link to="/about" className="hover:text-black transition">Thông tin thêm</Link>
-        <Link to="/contact" className="hover:text-black transition">Liên hệ</Link>
+        <Link to="/" className="hover:text-black transition">
+          Trang chủ
+        </Link>
+        <Link to="/products" className="hover:text-black transition">
+          Sản phẩm
+        </Link>
+        <Link to="/about" className="hover:text-black transition">
+          Thông tin thêm
+        </Link>
+        <Link to="/contact" className="hover:text-black transition">
+          Liên hệ
+        </Link>
       </nav>
 
       {/* Icon Section */}
@@ -35,6 +55,19 @@ const Header = () => {
             0
           </span>
         </Link>
+
+        {/* --- Clerk authentication --- */}
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
+
+        <SignedOut>
+          <SignInButton>
+            <button className="px-4 py-2 bg-blue-600 text-Black rounded hover:bg-blue-700">
+              Đăng nhập
+            </button>
+          </SignInButton>
+        </SignedOut>
       </div>
     </header>
   );
