@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
+// import SearchPage from "./pages/Search";
 
 // === LAYOUT ===
 import Header from "./components/Header";
@@ -39,6 +40,7 @@ const App = ({ clerkPublishableKey }) => {
           <Route path="/products" element={<Products />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="*" element={<NotFound />} />
+          {/* <Route path="/search" element={<SearchPage />} /> */}
         </Routes>
       </main>
 
