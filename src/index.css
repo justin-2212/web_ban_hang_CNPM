@@ -1,3 +1,5 @@
+/*source/index.css*/
+
 @import "tailwindcss";
 
 :root {
@@ -41,7 +43,11 @@ h1 {
 /* Cập nhật button mặc định xanh gradient */
 button {
   margin-top: 1rem; /* mt-4 */
-  background: linear-gradient(to right, #3b82f6, #6366f1); /* from-blue-500 to-indigo-600 */
+  background: linear-gradient(
+    to right,
+    #3b82f6,
+    #6366f1
+  ); /* from-blue-500 to-indigo-600 */
   color: white;
   padding: 0.5rem 1.25rem; /* px-5 py-2 */
   border-radius: 9999px; /* rounded-full */
@@ -80,7 +86,9 @@ button:focus-visible {
 }
 
 /* Fix thanh đen khi resize */
-html, body, #root {
+html,
+body,
+#root {
   width: 100%;
   overflow-x: hidden;
 }

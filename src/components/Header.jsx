@@ -1,7 +1,10 @@
+// src/components/Headers.jsx
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { ShoppingBag, Search } from "lucide-react";
 import AppleLogo from "../assets/logo.png";
+import { VscAccount } from "react-icons/vsc";
 
 // --- Clerk imports ---
 import {
@@ -58,15 +61,16 @@ const Header = () => {
         </Link>
 
         {/* --- Clerk authentication --- */}
+
         <SignedIn>
           <UserButton />
         </SignedIn>
-
         <SignedOut>
           <SignInButton>
-            <button className="px-4 py-2 bg-white text-red-600 border border-red-600 rounded hover:bg-red-50">
+            <div className="bg-white hover:text-indigo-500 text-red-500 px-5 py-2 rounded-full cursor-pointer transition font-bold text-xl flex items-center gap-2">
               Đăng nhập
-            </button>
+              <VscAccount className="w-5 h-5" />
+            </div>
           </SignInButton>
         </SignedOut>
       </div>

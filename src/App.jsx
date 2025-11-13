@@ -1,21 +1,22 @@
 // src/App.jsx
 import React, { useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Router } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { ClerkProvider } from "@clerk/clerk-react";
 
 // === PAGES ===
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
+import SignInPage from "./pages/auth/SignInPage";
 
 // === LAYOUT ===
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import { LogIn } from "lucide-react";
 
-const App = ({ clerkPublishableKey }) => {
+const App = () => {
   // Khởi tạo AOS khi app load
   useEffect(() => {
     AOS.init({
@@ -27,7 +28,6 @@ const App = ({ clerkPublishableKey }) => {
   }, []);
 
   return (
-    <ClerkProvider publishableKey={clerkPublishableKey}>
     <div className="flex flex-col min-h-screen">
       {/* Header luôn hiển thị */}
       <Header />
@@ -45,7 +45,6 @@ const App = ({ clerkPublishableKey }) => {
       {/* Footer luôn hiển thị */}
       <Footer />
     </div>
-    </ClerkProvider>  
   );
 };
 
