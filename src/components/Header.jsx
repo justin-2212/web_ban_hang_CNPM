@@ -9,6 +9,7 @@ import {
   UserButton,
   SignInButton,
 } from "@clerk/clerk-react";
+import { VscAccount } from "react-icons/vsc";
 
 const Header = () => {
   const [query, setQuery] = useState("");
@@ -171,9 +172,10 @@ const Header = () => {
 
         <SignedOut>
           <SignInButton>
-            <button className="px-4 py-2 bg-white text-red-600 border border-red-600 rounded hover:bg-red-50 transition">
+            <dev className="px-4 py-2 bg-gray-50 font-bold text-red-600 text-xl hover:text-indigo-400 cursor-pointer transition flex items-center gap-1 ">
               Đăng nhập
-            </button>
+              <VscAccount /> {/*thêm icon*/}
+            </dev>
           </SignInButton>
         </SignedOut>
       </div>
