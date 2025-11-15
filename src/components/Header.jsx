@@ -9,7 +9,8 @@ import {
   UserButton,
   SignInButton,
 } from "@clerk/clerk-react";
-import { VscAccount } from "react-icons/vsc";
+
+import { CircleUser } from "lucide-react";
 
 const Header = () => {
   const [query, setQuery] = useState("");
@@ -171,13 +172,14 @@ const Header = () => {
         </SignedIn>
 
         <SignedOut>
-          <SignInButton>
-            <dev className="px-4 py-2 bg-gray-50 font-bold text-red-600 text-xl hover:text-indigo-400 cursor-pointer transition flex items-center gap-1 ">
-              Đăng nhập
-              <VscAccount /> {/*thêm icon*/}
-            </dev>
-          </SignInButton>
-        </SignedOut>
+        <SignInButton> 
+          <div className="px-5 py-2 bg-red-600 text-white font-bold text-xl hover:bg-red-700 cursor-pointer transition flex items-center gap-2 rounded-full shadow-sm">
+            Đăng nhập
+            <CircleUser /> {/*thêm icon*/}
+          </div>
+        </SignInButton>
+      </SignedOut>
+
       </div>
     </header>
   );
