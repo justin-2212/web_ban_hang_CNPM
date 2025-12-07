@@ -1,23 +1,26 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import { ShoppingBag, Search, X } from "lucide-react";
+import { Link, useNavigate, NavLink } from "react-router-dom";
+import { ShoppingBag, Search, X, Loader2, ArrowRight } from "lucide-react";
 import AppleLogo from "../assets/logo.png";
-import { productsData } from "../data/productsData";
+import { sanPhamAPI } from "../services/api";
 import {
   SignedIn,
   SignedOut,
   UserButton,
   SignInButton,
 } from "@clerk/clerk-react";
-
 import { CircleUser } from "lucide-react";
 
 const Header = () => {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [filtered, setFiltered] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const searchRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
 
   // Đóng search khi click ra ngoài
   useEffect(() => {
@@ -30,156 +33,301 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Auto focus khi mở search
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showSearch]);
+
   // Cập nhật số lượng giỏ hàng
   useEffect(() => {
     const updateCart = () => {
       const cart = JSON.parse(localStorage.getItem("cart")) || [];
-      const total = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      const total = cart.reduce((sum, item) => sum + (item.soLuong || 1), 0);
       setCartCount(total);
     };
+    
     updateCart();
     window.addEventListener("cartUpdated", updateCart);
     return () => window.removeEventListener("cartUpdated", updateCart);
   }, []);
 
-  const handleSearch = (e) => {
-    const value = e.target.value.toLowerCase();
+  // Tìm kiếm logic
+  const handleSearch = (value) => {
     setQuery(value);
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
     if (!value.trim()) {
       setFiltered([]);
+      setSearchLoading(false);
       return;
     }
-    const results = productsData.filter((item) =>
-      item.name.toLowerCase().includes(value)
-    );
-    setFiltered(results);
+
+    setSearchLoading(true);
+
+    searchTimeoutRef.current = setTimeout(() => {
+      sanPhamAPI.search(value)
+        .then((res) => {
+          setFiltered(res.data || []);
+        })
+        .catch((err) => {
+          console.error("Search error:", err);
+          setFiltered([]);
+        })
+        .finally(() => {
+          setSearchLoading(false);
+        });
+    }, 500);
   };
 
   const clearSearch = () => {
     setQuery("");
     setFiltered([]);
     setShowSearch(false);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
   };
 
+  const handleSearchResultClick = (productId) => {
+    clearSearch();
+    navigate(`/products/${productId}`);
+  };
+
+  // --- STYLES ---
+  const navLinkStyle = ({ isActive }) => 
+    `hover:text-blue-600 transition-colors relative group py-2 ${
+      isActive ? "text-blue-600 font-bold" : "text-gray-800 font-semibold"
+    }`;
+
+  const mobileNavLinkStyle = ({ isActive }) =>
+    `font-medium transition-colors ${
+      isActive ? "text-blue-600 font-bold" : "text-gray-700 hover:text-blue-600"
+    }`;
+
   return (
-    <header className="flex items-center justify-between px-8 py-4 bg-white shadow-sm sticky top-0 z-50">
-      {/* Logo + Tên cửa hàng */}
-      <Link to="/" className="flex items-center space-x-2">
-        <img
-          src={AppleLogo}
-          alt="Apple Logo"
-          className="w-12 h-12 object-contain"
-        />
-        <h2 className="text-2xl font-semibold text-gray-800">Apple Store</h2>
-      </Link>
-
-      {/* Navigation */}
-      <nav className="hidden md:flex space-x-10 text-gray-700 text-xl font-medium">
-        <Link to="/" className="hover:text-black transition">
-          Trang chủ
-        </Link>
-        <Link to="/products" className="hover:text-black transition">
-          Sản phẩm
-        </Link>
-        <Link to="/about" className="hover:text-black transition">
-          Thông tin thêm
-        </Link>
-        <Link to="/contact" className="hover:text-black transition">
-          Liên hệ
-        </Link>
-      </nav>
-
-      {/* Icon Section */}
-      <div className="flex items-center space-x-4">
-        {/* Search */}
-        <div className="relative" ref={searchRef}>
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            className="hover:text-black transition"
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between py-4">
+          
+          {/* --- LOGO --- */}
+          <Link 
+            to="/" 
+            className="flex items-center space-x-3 group"
           >
-            <Search className="w-6 h-6" />
-          </button>
+            <img
+              src={AppleLogo}
+              alt="Apple Logo"
+              className="w-14 h-14 object-contain transition-transform group-hover:scale-110"
+            />
+            <div className="hidden md:block">
+              <h2 className="text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                Apple Store
+              </h2>
+              <p className="text-xs text-gray-500">Chính hãng VN/A</p>
+            </div>
+          </Link>
 
-          {/* Dropdown tìm kiếm */}
-          {showSearch && (
-            <div className="absolute right-0 top-12 bg-white shadow-xl border rounded-xl p-3 w-72">
-              <div className="flex items-center mb-2">
-                <input
-                  type="text"
-                  value={query}
-                  onChange={handleSearch}
-                  placeholder="Tìm sản phẩm..."
-                  className="w-full border px-3 py-2 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                  autoFocus
-                />
-                <button
-                  onClick={clearSearch}
-                  className="ml-2 text-gray-500 hover:text-black"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+          {/* --- NAVIGATION --- */}
+          <nav className="hidden lg:flex items-center space-x-12 text-xl font-semibold text-gray-800">
+            {[
+              { to: "/", label: "Trang chủ" },
+              { to: "/products", label: "Sản phẩm" },
+              { to: "/about", label: "Về chúng tôi" },
+              { to: "/contact", label: "Liên hệ" },
+            ].map((link) => (
+              <NavLink 
+                key={link.to} 
+                to={link.to} 
+                className={navLinkStyle}
+                end={link.to === "/"}
+              >
+                {({ isActive }) => (
+                  <>
+                    {link.label}
+                    <span 
+                      className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
+                        isActive ? "w-full" : "w-0 group-hover:w-full"
+                      }`}
+                    ></span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </nav>
 
-              {/* Kết quả tìm kiếm */}
-              {filtered.length > 0 && (
-                <div className="max-h-64 overflow-y-auto">
-                  {filtered.map((item) => (
-                    <Link
-                      key={item.id}
-                      to={`/products/${item.id}`}
-                      className="flex items-center gap-3 px-2 py-2 hover:bg-gray-100 rounded-lg transition"
-                      onClick={clearSearch}
-                    >
-                      <img
-                        src={item.img}
-                        alt={item.name}
-                        className="w-10 h-10 object-cover rounded"
-                      />
-                      <div>
-                        <p className="font-medium text-gray-800">{item.name}</p>
-                        <p className="text-sm text-gray-500">
-                          ${item.price.toLocaleString()}
+          {/* --- RIGHT ACTIONS --- */}
+          <div className="flex items-center space-x-4">
+            
+            {/* --- NÚT TÌM KIẾM (ĐÃ CHỈNH SỬA BORDER) --- */}
+            <div className="relative" ref={searchRef}>
+              <button
+                onClick={() => setShowSearch(!showSearch)}
+                className={`group flex items-center gap-2 transition-all duration-300 rounded-full
+                  /* Ghi đè CSS toàn cục */
+                  !bg-white !bg-none !mt-0
+                  /* THAY ĐỔI Ở ĐÂY: Thêm !border-2 và đổi màu thành !border-red-500 */
+                  !border-2 !border-red-500
+                  ${showSearch ? 'ring-2 !ring-red-200' : ''}
+                  h-10 px-3 md:w-56 md:px-4 cursor-text
+                `}
+              >
+                {/* Icon màu đỏ */}
+                <Search className="w-5 h-5 !text-red-600" />
+                
+                {/* Text gợi ý màu đỏ */}
+                <span className="hidden md:block text-sm !text-red-600 font-medium">
+                  Tìm kiếm...
+                </span>
+              </button>
+
+              {/* DROPDOWN KẾT QUẢ */}
+              {showSearch && (
+                <div className="absolute right-0 top-14 bg-white/90 backdrop-blur-2xl border border-gray-200 rounded-2xl w-[90vw] md:w-[450px] max-h-[500px] overflow-hidden z-50 shadow-2xl origin-top-right animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-4 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 !text-red-500" />
+                        <input
+                          ref={searchInputRef}
+                          type="text"
+                          value={query}
+                          onChange={(e) => handleSearch(e.target.value)}
+                          placeholder="Nhập tên sản phẩm..."
+                          className="w-full pl-10 pr-3 py-2.5 !bg-white border border-gray-200 focus:!border-red-300 rounded-xl text-sm !text-red-600 placeholder-red-300 focus:ring-4 focus:ring-red-100 transition-all outline-none"
+                        />
+                        {searchLoading && (
+                          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 !text-red-500 animate-spin" />
+                        )}
+                      </div>
+                      <button
+                        onClick={clearSearch}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors !bg-transparent !mt-0"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="max-h-96 overflow-y-auto">
+                    {filtered.length > 0 ? (
+                      <div className="p-2 space-y-1">
+                         <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                            Sản phẩm gợi ý
+                          </div>
+                        {filtered.map((item) => (
+                          <button
+                            key={item.MaSP}
+                            onClick={() => handleSearchResultClick(item.MaSP)}
+                            className="w-full flex items-center gap-3 px-3 py-3 hover:bg-gray-50 rounded-xl transition-colors text-left group !bg-transparent hover:!bg-gray-50 !mt-0"
+                          >
+                            <div className="w-12 h-12 bg-white border border-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                              <span className="text-xl">📱</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">
+                                {item.Ten}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {item.TenLoai}
+                              </p>
+                            </div>
+                            <div className="flex items-center text-xs text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                              Xem <ArrowRight className="w-3 h-3 ml-1" />
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : query ? (
+                      <div className="text-center py-10 px-4">
+                        <div className="text-4xl mb-3">🔍</div>
+                        <p className="text-gray-500 text-sm">
+                          Không tìm thấy sản phẩm "{query}"
                         </p>
                       </div>
-                    </Link>
-                  ))}
+                    ) : (
+                      <div className="p-6">
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                          Từ khóa phổ biến
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {['iPhone 15', 'MacBook', 'iPad', 'AirPods'].map(tag => (
+                            <button 
+                              key={tag}
+                              onClick={() => handleSearch(tag)} 
+                              className="px-3 py-1 !bg-white hover:!bg-gray-100 !text-gray-600 text-sm rounded-lg border border-gray-100 transition-colors !mt-0"
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
-
-              {/* Không tìm thấy */}
-              {query && filtered.length === 0 && (
-                <p className="text-gray-500 text-center text-sm py-2">
-                  Không tìm thấy sản phẩm
-                </p>
-              )}
             </div>
-          )}
-        </div>
 
-        {/* Giỏ hàng */}
-        <Link to="/cart" className="relative hover:text-black transition">
-          <ShoppingBag className="w-6 h-6" />
-          {cartCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-              {cartCount > 99 ? "99+" : cartCount}
-            </span>
-          )}
-        </Link>
+            {/* --- CART --- */}
+            <Link 
+              to="/cart" 
+              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors group"
+              aria-label="Giỏ hàng"
+            >
+              <ShoppingBag className="w-6 h-6 text-gray-700 group-hover:text-blue-600 transition-colors" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center font-bold px-1.5 shadow-lg animate-bounce">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
+            </Link>
 
-        {/* Authentication */}
-        <SignedIn>
-          <UserButton />
-        </SignedIn>
+            {/* --- AUTH --- */}
+            <SignedIn>
+              <div className="flex items-center gap-2">
+                <UserButton 
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-9 h-9 ring-2 ring-blue-500 ring-offset-2"
+                    }
+                  }}
+                />
+              </div>
+            </SignedIn>
 
-        <SignedOut>
-        <SignInButton> 
-          <div className="px-5 py-2 bg-red-600 text-white font-bold text-xl hover:bg-red-700 cursor-pointer transition flex items-center gap-2 rounded-full shadow-sm">
-            Đăng nhập
-            <CircleUser /> {/*thêm icon*/}
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-full hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 !mt-0">
+                  <CircleUser className="w-5 h-5" />
+                  <span className="hidden sm:inline">Đăng nhập</span>
+                </button>
+              </SignInButton>
+            </SignedOut>
           </div>
-        </SignInButton>
-      </SignedOut>
+        </div>
+      </div>
 
+      {/* --- MOBILE NAV --- */}
+      <div className="lg:hidden border-t border-gray-100 bg-white">
+        <nav className="container mx-auto px-6 py-3 flex items-center justify-around text-sm">
+          <NavLink to="/" className={mobileNavLinkStyle} end>
+            Trang chủ
+          </NavLink>
+          <NavLink to="/products" className={mobileNavLinkStyle}>
+            Sản phẩm
+          </NavLink>
+          <NavLink to="/about" className={mobileNavLinkStyle}>
+            Về chúng tôi
+          </NavLink>
+          <NavLink to="/contact" className={mobileNavLinkStyle}>
+            Liên hệ
+          </NavLink>
+        </nav>
       </div>
     </header>
   );

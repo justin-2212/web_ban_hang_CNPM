@@ -25,17 +25,17 @@ const Newsletter = () => {
       <form 
         data-aos="fade-up"
         data-aos-delay="300"
-        className="flex flex-col sm:flex-row justify-center items-center gap-0 max-w-md mx-auto"
+        className="flex justify-center items-center gap-0 max-w-2xl mx-auto"
       >
         <input
           type="email"
           placeholder="Nhập email của bạn"
-          className="px-5 py-3.5 w-full sm:w-72 rounded-l-full sm:rounded-l-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-transparent text-gray-800 placeholder:text-gray-400 transition-all"
+          className="px-5 py-3.5 w-full sm:w-72 rounded-l-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-transparent text-gray-800 placeholder:text-gray-400 transition-all"
           required
         />
         <button 
           type="submit"
-          className="w-full sm:w-auto mt-3 sm:mt-0 px-8 py-3.5 bg-[#0071e3] text-white rounded-r-full sm:rounded-r-lg font-medium hover:bg-[#0061c3] hover:shadow-lg transition-all duration-200"
+          className="px-8 py-3.5 bg-[#0071e3] text-white rounded-r-full font-medium hover:bg-[#0061c3] hover:shadow-lg transition-all duration-200 whitespace-nowrap"
         >
           Đăng ký
         </button>

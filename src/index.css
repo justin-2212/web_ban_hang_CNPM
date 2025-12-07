@@ -45,8 +45,8 @@ button {
   margin-top: 1rem; /* mt-4 */
   background: linear-gradient(
     to right,
-    #3b82f6,
-    #6366f1
+    #ec2424,
+    #ec1ac9
   ); /* from-blue-500 to-indigo-600 */
   color: white;
   padding: 0.5rem 1.25rem; /* px-5 py-2 */

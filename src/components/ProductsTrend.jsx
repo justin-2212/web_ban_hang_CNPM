@@ -1,14 +1,10 @@
 import React from "react";
-import p1 from "../assets/products/iphone/17prm.jpg";
-import p2 from "../assets/products/macbook/mac_airm3.jpeg";
-import p3 from "../assets/products/ipad/ipad_prom4.jpeg";
-import p4 from "../assets/products/airpods/ap_pro2.jpeg";
 
 const products = [
-  { name: "iPhone 17 Pro Max", price: "$1399", img: p1 },
-  { name: "MacBook Air M3", price: "$1499", img: p2 },
-  { name: "iPad Pro M4", price: "$999", img: p3 },
-  { name: "AirPods Pro 2", price: "$249", img: p4 },
+  { name: "iPhone 17 Pro Max", price: "$1399", img: "/assets/products/iphone/17prm.jpg" },
+  { name: "MacBook Air M3", price: "$1499", img: "/assets/products/macbook/mac_airm3.jpeg" },
+  { name: "iPad Pro M4", price: "$999", img: "/assets/products/ipad/ipad_prom4.jpeg" },
+  { name: "AirPods Pro 2", price: "$249", img: "/assets/products/airpods/ap_pro2.jpeg" },
 ];
 
 const ProductsGrid = () => (

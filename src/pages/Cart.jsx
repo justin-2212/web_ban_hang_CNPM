@@ -1,4 +1,3 @@
-// src/pages/Cart.jsx
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from "lucide-react";
@@ -20,41 +19,54 @@ const Cart = () => {
   };
 
   // Tăng số lượng
-  const increaseQuantity = (id) => {
+  const increaseQuantity = (maBienThe) => {
     const newCart = cart.map((item) =>
-      item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+      item.maBienThe === maBienThe 
+        ? { ...item, soLuong: item.soLuong + 1 } 
+        : item
     );
     saveCart(newCart);
   };
 
   // Giảm số lượng
-  const decreaseQuantity = (id) => {
+  const decreaseQuantity = (maBienThe) => {
     const newCart = cart.map((item) =>
-      item.id === id && item.quantity > 1
-        ? { ...item, quantity: item.quantity - 1 }
+      item.maBienThe === maBienThe && item.soLuong > 1
+        ? { ...item, soLuong: item.soLuong - 1 }
         : item
     );
     saveCart(newCart);
   };
 
   // Xóa sản phẩm
-  const removeItem = (id) => {
-    const newCart = cart.filter((item) => item.id !== id);
+  const removeItem = (maBienThe) => {
+    const newCart = cart.filter((item) => item.maBienThe !== maBienThe);
     saveCart(newCart);
   };
 
   // Xóa tất cả
   const clearCart = () => {
-    saveCart([]);
+    if (window.confirm("Bạn có chắc muốn xóa tất cả sản phẩm?")) {
+      saveCart([]);
+    }
+  };
+
+  // Format giá tiền
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      maximumFractionDigits: 0
+    }).format(price);
   };
 
   // Tính tổng tiền
   const totalPrice = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + item.giaTien * item.soLuong,
     0
   );
 
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = cart.reduce((sum, item) => sum + item.soLuong, 0);
 
   return (
     <div className="bg-gray-50 min-h-screen pt-24 pb-20">
@@ -103,51 +115,63 @@ const Cart = () => {
             <div className="lg:col-span-2 space-y-4">
               {cart.map((item) => (
                 <div
-                  key={item.id}
+                  key={item.maBienThe}
                   className="bg-white rounded-xl shadow-sm p-6 flex items-center gap-6 hover:shadow-md transition"
                 >
                   {/* Hình ảnh */}
                   <img
-                    src={item.img}
-                    alt={item.name}
-                    className="w-24 h-24 object-cover rounded-lg"
+                    src={item.hinhAnh || '/assets/placeholder.png'}
+                    alt={item.tenSanPham}
+                    className="w-24 h-24 object-contain rounded-lg bg-gray-50"
+                    onError={(e) => {
+                      e.target.src = '/assets/placeholder.png';
+                    }}
                   />
 
                   {/* Thông tin sản phẩm */}
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                      {item.name}
+                      {item.tenSanPham}
                     </h3>
                     <p className="text-gray-500 text-sm mb-3">
-                      {item.category}
+                      {item.tenBienThe}
                     </p>
                     <p className="text-blue-600 font-bold text-xl">
-                      ${item.price.toLocaleString()}
+                      {formatPrice(item.giaTien)}
                     </p>
                   </div>
 
                   {/* Điều chỉnh số lượng */}
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => decreaseQuantity(item.id)}
+                      onClick={() => decreaseQuantity(item.maBienThe)}
                       className="w-9 h-9 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition"
+                      disabled={item.soLuong <= 1}
                     >
                       <Minus className="w-4 h-4 text-gray-700" />
                     </button>
                     <span className="text-lg font-semibold text-gray-900 w-8 text-center">
-                      {item.quantity}
+                      {item.soLuong}
                     </span>
                     <button
-                      onClick={() => increaseQuantity(item.id)}
+                      onClick={() => increaseQuantity(item.maBienThe)}
                       className="w-9 h-9 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition"
                     >
                       <Plus className="w-4 h-4 text-gray-700" />
                     </button>
                   </div>
 
+                  {/* Tổng tiền item */}
+                  <div className="text-right min-w-[120px]">
+                    <p className="text-sm text-gray-500 mb-1">Tổng:</p>
+                    <p className="text-lg font-bold text-gray-900">
+                      {formatPrice(item.giaTien * item.soLuong)}
+                    </p>
+                  </div>
+
                   {/* Nút xóa */}
                   <button
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeItem(item.maBienThe)}
                     className="p-2 rounded-lg hover:bg-red-50 text-red-500 hover:text-red-600 transition"
                     title="Xóa sản phẩm"
                   >
@@ -178,7 +202,7 @@ const Cart = () => {
                   <div className="flex justify-between text-gray-600">
                     <span>Tạm tính:</span>
                     <span className="font-semibold">
-                      ${totalPrice.toLocaleString()}
+                      {formatPrice(totalPrice)}
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-600">
@@ -188,12 +212,23 @@ const Cart = () => {
                   <div className="border-t pt-3 flex justify-between text-lg font-bold text-gray-900">
                     <span>Tổng cộng:</span>
                     <span className="text-blue-600">
-                      ${totalPrice.toLocaleString()}
+                      {formatPrice(totalPrice)}
                     </span>
                   </div>
                 </div>
 
-                <button className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-lg mb-3">
+                {/* Thông tin đơn hàng */}
+                <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                  <div className="flex items-start gap-2">
+                    <ShoppingBag className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-800">
+                      <p className="font-semibold mb-1">Ưu đãi đặc biệt</p>
+                      <p>Miễn phí vận chuyển cho đơn hàng trên 5.000.000₫</p>
+                    </div>
+                  </div>
+                </div>
+
+                <button className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-lg mb-3 shadow-md hover:shadow-lg">
                   Thanh toán
                 </button>
 

@@ -10,6 +10,9 @@ import Products from "./pages/Products";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 import SignInPage from "./pages/auth/SignInPage";
+import ProductDetail from './pages/ProductsDetail';
+import About from './pages/About';
+import Contact from './pages/Contact';
 
 // === LAYOUT ===
 import Header from "./components/Header";
@@ -39,6 +42,9 @@ const App = () => {
           <Route path="/products" element={<Products />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
         </Routes>
       </main>
 
