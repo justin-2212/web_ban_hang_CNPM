@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { sanPhamAPI } from "../services/api";
 import {
   ShoppingCart,
@@ -15,6 +15,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isSignedIn } = useUser();
+  const location = useLocation();
 
   // --- STATE ---
   const [product, setProduct] = useState(null);
@@ -64,8 +65,8 @@ export default function ProductDetail() {
         const seen = new Set(productImgs.map((i) => i.src));
         const uniqueVariantImgs = variantImgs.filter((v) => {
           if (seen.has(v.src)) {
-            seen.add(v.src); 
-            return true;
+            // seen.add(v.src); xóa do bị lỗi trùng ảnh ở iphone 13 và 13 mini
+            return false; // true->false
           }
           seen.add(v.src);
           return true;
@@ -269,7 +270,16 @@ export default function ProductDetail() {
       {/* --- MAIN CONTENT --- */}
       <div className="container mx-auto px-6">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            const params = new URLSearchParams(location.search);
+            const categoryId = params.get('category');
+            
+            if (categoryId) {
+              navigate(`/products?category=${categoryId}`);
+            } else {
+              navigate('/products');
+            }
+          }}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
         >
           <ArrowLeft className="w-5 h-5" />

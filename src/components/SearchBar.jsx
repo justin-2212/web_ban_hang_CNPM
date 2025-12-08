@@ -16,9 +16,11 @@ export default function SearchBar({ onSearch, placeholder = "Tìm kiếm..." }) 
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="relative flex items-center">
         
+        {/* Icon Search bên trái */}
+        <Search className="absolute left-4 w-5 h-5 text-gray-400 pointer-events-none" />
+
         <input
           type="text"
           value={query}
@@ -30,18 +32,17 @@ export default function SearchBar({ onSearch, placeholder = "Tìm kiếm..." }) 
                      transition-all duration-200 outline-none shadow-sm"
         />
 
+        {/* Dấu X bên phải – luôn căn giữa chuẩn */}
         {query && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-4 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         )}
       </div>
-
-      {/* Optional: Search suggestions can be added here */}
     </form>
   );
 }

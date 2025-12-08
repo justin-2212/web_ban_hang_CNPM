@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import { sanPhamAPI, loaiSanPhamAPI } from "../services/api";
 import CategoryTabs from "../components/CategoryTabs";
-import PriceRange from "../components/PriceRange";
 import SortSelect from "../components/SortSelect";
 import ProductsList from "../components/ProductsList";
 import SearchBar from "../components/SearchBar";
 import { Loader2 } from "lucide-react";
+
 
 export default function Products() {
   const [searchParams] = useSearchParams();
@@ -20,11 +21,48 @@ export default function Products() {
   const [error, setError] = useState(null);
 
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Price range state
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 100000000 });
-
   const [sortBy, setSortBy] = useState("default");
+
+  const navigate = useNavigate(); 
+  // ============================================================
+  // HELPER FUNCTION: Fetch products with variants
+  // ============================================================
+  const fetchProductsWithVariants = (productsData) => {
+    if (productsData.length === 0) {
+      setProducts([]);
+      return Promise.resolve([]);
+    }
+
+    // Fetch variants cho từng product
+    const fetchVariants = productsData.map((p) =>
+      sanPhamAPI
+        .getDetail(p.MaSP)
+        .then((detail) => {
+          const variants = detail.data.variants || [];
+          const prices = variants.map(v => v.GiaTienBienThe).filter(Boolean);
+          
+          return {
+            ...p,
+            variants,
+            minPrice: prices.length > 0 ? Math.min(...prices) : 0,
+            maxPrice: prices.length > 0 ? Math.max(...prices) : 0
+          };
+        })
+        .catch(() => ({
+          ...p,
+          variants: [],
+          minPrice: 0,
+          maxPrice: 0
+        }))
+    );
+
+    // Đợi tất cả fetch xong
+    return Promise.all(fetchVariants)
+      .then((productsWithPrices) => {
+        setProducts(productsWithPrices);
+        return productsWithPrices;
+      });
+  };
 
   // ------------------------------------------------------------
   // 1. FETCH CATEGORIES
@@ -53,44 +91,25 @@ export default function Products() {
   // ------------------------------------------------------------
   useEffect(() => {
     if (!selectedCategory || searchQuery) return;
-
+    
+    // Clear products cũ NGAY để tránh hiển thị data cũ
+    setProducts([]);
     setLoading(true);
     setError(null);
-
+    
     sanPhamAPI
       .getByCategory(selectedCategory)
       .then((res) => {
-        setProducts(res.data);
-
-        // Fetch variant prices to set correct min/max
-        if (res.data.length > 0) {
-          const fetchVariants = res.data.map((p) =>
-            sanPhamAPI
-              .getDetail(p.MaSP)
-              .then((detail) => detail.data.variants || [])
-              .catch(() => [])
-          );
-
-          Promise.all(fetchVariants).then((allVariants) => {
-            const allPrices = allVariants
-              .flat()
-              .map((v) => v.GiaTienBienThe)
-              .filter(Boolean);
-
-            if (allPrices.length > 0) {
-              setPriceRange({
-                min: Math.min(...allPrices),
-                max: Math.max(...allPrices),
-              });
-            }
-          });
-        }
+        return fetchProductsWithVariants(res.data);
       })
       .catch((err) => {
         console.error("Error loading products:", err);
         setError("Không thể tải sản phẩm");
+        setProducts([]);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+      });
   }, [selectedCategory, searchQuery]);
 
   // ------------------------------------------------------------
@@ -100,40 +119,61 @@ export default function Products() {
     setSearchQuery(query);
 
     if (!query.trim()) {
-      // Reset về theo category
-      if (selectedCategory) {
-        sanPhamAPI
-          .getByCategory(selectedCategory)
-          .then((res) => setProducts(res.data))
-          .catch((err) => console.error(err));
-      }
       return;
     }
 
+    // Clear products cũ trước khi search
+    setProducts([]);
     setLoading(true);
+    setError(null);
+    
     sanPhamAPI
       .search(query)
       .then((res) => {
-        setProducts(res.data);
-        setSelectedCategory(null); // Bỏ tab khi đang search
+        setSelectedCategory(null);
+        return fetchProductsWithVariants(res.data);
       })
       .catch((err) => {
         console.error("Search error:", err);
         setError("Lỗi tìm kiếm");
+        setProducts([]);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
-  // ------------------------------------------------------------
-  // 4. FILTER & SORT PRODUCTS
-  // ------------------------------------------------------------
+  // ------------------------------------------------------------ 
+  // 4. FILTER & SORT PRODUCTS 
+  // ------------------------------------------------------------ 
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    // Sort
-    if (sortBy === "name-asc") {
+    // Sắp xếp theo giá tăng dần (Thấp -> Cao)
+    if (sortBy === "price-asc") {
+      result.sort((a, b) => {
+        const priceA = a.minPrice || 0;
+        const priceB = b.minPrice || 0;
+        return priceA - priceB;
+      });
+    } 
+    
+    // Sắp xếp theo giá giảm dần (Cao -> Thấp)
+    else if (sortBy === "price-desc") {
+      result.sort((a, b) => {
+        const priceA = a.minPrice || 0;
+        const priceB = b.minPrice || 0;
+        return priceB - priceA;
+      });
+    }
+    
+    // Sắp xếp theo tên A-Z
+    else if (sortBy === "name-asc") {
       result.sort((a, b) => a.Ten.localeCompare(b.Ten));
-    } else if (sortBy === "name-desc") {
+    } 
+    
+    // Sắp xếp theo tên Z-A
+    else if (sortBy === "name-desc") {
       result.sort((a, b) => b.Ten.localeCompare(a.Ten));
     }
 
@@ -170,14 +210,17 @@ export default function Products() {
           />
         </div>
 
-        {/* Category Tabs */}
+        {/* Category Tabs fixxxxxxxxxxxxx*/}
         {!searchQuery && (
           <div data-aos="fade-up" className="mb-8">
             <CategoryTabs
               categories={categories}
               selected={selectedCategory}
-              onSelect={setSelectedCategory}
-            />
+              onSelect={(categoryId) => {
+                setSelectedCategory(categoryId);
+                navigate(`/products?category=${categoryId}`, { replace: true });
+              }}
+            /> 
           </div>
         )}
 
@@ -221,7 +264,7 @@ export default function Products() {
         {/* Products List */}
         {!loading && !error && (
           <div className="mt-6">
-            <ProductsList products={filteredProducts} priceRange={priceRange} />
+            <ProductsList products={filteredProducts} />
           </div>
         )}
 

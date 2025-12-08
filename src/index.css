@@ -72,7 +72,7 @@ button:focus-visible {
 }
 
 /* Light mode */
-@media (prefers-color-scheme: light) {
+/* @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
     background-color: #ffffff;
@@ -83,7 +83,7 @@ button:focus-visible {
   button {
     background: linear-gradient(to right, #3b82f6, #6366f1);
   }
-}
+} */
 
 /* Fix thanh đen khi resize */
 html,

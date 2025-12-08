@@ -18,6 +18,9 @@ export default function ProductsList({ products, priceRange }) {
     }
 
     setLoading(true);
+
+    // === BẮT ĐẦU SỬA: GIỮ NGUYÊN THỨ TỰ PROPS ===
+    
     // Fetch variants for each product
     const fetchVariants = products.map(product =>
       sanPhamAPI.getDetail(product.MaSP)
@@ -25,7 +28,7 @@ export default function ProductsList({ products, priceRange }) {
           ...product,
           variants: res.data.variants || [],
           images: res.data.images || [],
-          minPrice: res.data.variants?.length > 0 
+          minPrice: res.data.variants?.length > 0
             ? Math.min(...res.data.variants.map(v => v.GiaTienBienThe))
             : 0,
           maxPrice: res.data.variants?.length > 0
@@ -34,22 +37,34 @@ export default function ProductsList({ products, priceRange }) {
         }))
         .catch(err => {
           console.error(`Error fetching variants for product ${product.MaSP}:`, err);
-          return { ...product, variants: [], images: [], minPrice: 0, maxPrice: 0 };
+          return {
+            ...product,
+            variants: [],
+            images: [],
+            minPrice: 0,
+            maxPrice: 0
+          };
         })
     );
 
+    // ✅ SỬA: Dùng Promise.all GIỮ NGUYÊN THỨ TỰ
     Promise.all(fetchVariants)
       .then(results => {
+        // ✅ results giữ nguyên thứ tự của products[] prop
         // Filter by price range if provided
-        const filtered = priceRange 
-          ? results.filter(p => 
+        const filtered = priceRange
+          ? results.filter(p =>
               p.minPrice <= priceRange.max && p.maxPrice >= priceRange.min
             )
           : results;
+
         setProductsWithVariants(filtered);
       })
       .finally(() => setLoading(false));
+      
+    // === KẾT THÚC SỬA ===
   }, [products, priceRange]);
+
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -166,7 +181,7 @@ export default function ProductsList({ products, priceRange }) {
         return (
           <Link
             key={product.MaSP}
-            to={`/products/${product.MaSP}`}
+            to={`/products/${product.MaSP}?category=${product.MaLoai}`}
             data-aos="zoom-in"
             data-aos-delay={index * 50}
             className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden"
