@@ -1,3 +1,5 @@
+//server/routes/loaiSanPham.routes.js
+
 import express from 'express';
 const router = express.Router();
 import LoaiSanPham from '../models/loaiSanPham.model.js';

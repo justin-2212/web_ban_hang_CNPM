@@ -6,6 +6,8 @@ import "./index.css";
 import App from "./App.jsx";
 
 import { ClerkProvider } from "@clerk/clerk-react";
+// 1. Thêm dòng này để nhập gói tiếng Việt
+import { viVN } from "@clerk/localizations";
 
 // Import your Publishable Key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -23,21 +25,7 @@ createRoot(document.getElementById("root")).render(
       <ClerkProvider
         publishableKey={PUBLISHABLE_KEY}
         afterSignOutURL="/"
-        localization={{
-          language: "vi",
-          translations: {
-            signIn: {
-              headerTitle: "Đăng nhập",
-              emailAddressLabel: "Email",
-              passwordLabel: "Mật khẩu",
-              primaryAction: "Đăng nhập",
-            },
-            signUp: {
-              headerTitle: "Đăng ký",
-              primaryAction: "Tạo tài khoản",
-            },
-          },
-        }}
+        localization={viVN}
       >
         <App />
       </ClerkProvider>

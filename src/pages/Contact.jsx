@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { MapPin, Phone, Mail, Clock, Send, Facebook, Instagram, Youtube } from "lucide-react";
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Send,
+  Facebook,
+  Instagram,
+  Youtube,
+} from "lucide-react";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -7,7 +16,7 @@ export default function Contact() {
     email: "",
     phone: "",
     subject: "",
-    message: ""
+    message: "",
   });
 
   const [submitted, setSubmitted] = useState(false);
@@ -15,7 +24,7 @@ export default function Contact() {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -24,7 +33,7 @@ export default function Contact() {
     // TODO: Implement actual form submission to backend
     console.log("Form submitted:", formData);
     setSubmitted(true);
-    
+
     // Reset form sau 3 giây
     setTimeout(() => {
       setSubmitted(false);
@@ -33,7 +42,7 @@ export default function Contact() {
         email: "",
         phone: "",
         subject: "",
-        message: ""
+        message: "",
       });
     }, 3000);
   };
@@ -43,32 +52,47 @@ export default function Contact() {
       icon: <MapPin className="w-6 h-6" />,
       title: "Địa chỉ",
       content: "280 An Dương Vương, phường Chợ Quán, TPHCM",
-      link: "https://maps.google.com"
+      link: "https://maps.google.com",
     },
     {
       icon: <Phone className="w-6 h-6" />,
       title: "Điện thoại",
       content: "1900 1010",
-      link: "tel:1900xxxx"
+      link: "tel:1900xxxx",
     },
     {
       icon: <Mail className="w-6 h-6" />,
       title: "Email",
       content: "support@applestore.vn",
-      link: "mailto:support@applestore.vn"
+      link: "mailto:support@applestore.vn",
     },
     {
       icon: <Clock className="w-6 h-6" />,
       title: "Giờ làm việc",
       content: "8:00 - 22:00 (Tất cả các ngày)",
-      link: null
-    }
+      link: null,
+    },
   ];
 
   const socialLinks = [
-    { icon: <Facebook className="w-6 h-6" />, name: "Facebook", link: "https://www.facebook.com/apple", color: "hover:bg-blue-600" },
-    { icon: <Instagram className="w-6 h-6" />, name: "Instagram", link: "https://www.instagram.com/apple/", color: "hover:bg-pink-600" },
-    { icon: <Youtube className="w-6 h-6" />, name: "YouTube", link: "https://www.youtube.com/@Apple", color: "hover:bg-red-600" }
+    {
+      icon: <Facebook className="w-6 h-6" />,
+      name: "Facebook",
+      link: "https://www.facebook.com/apple",
+      color: "hover:bg-blue-600",
+    },
+    {
+      icon: <Instagram className="w-6 h-6" />,
+      name: "Instagram",
+      link: "https://www.instagram.com/apple/",
+      color: "hover:bg-pink-600",
+    },
+    {
+      icon: <Youtube className="w-6 h-6" />,
+      name: "YouTube",
+      link: "https://www.youtube.com/@Apple",
+      color: "hover:bg-red-600",
+    },
   ];
 
   return (
@@ -85,10 +109,11 @@ export default function Contact() {
             </p>
           </div>
         </div>
-        
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gray-50" 
-             style={{ clipPath: 'polygon(0 50%, 100% 0, 100% 100%, 0 100%)' }}>
-        </div>
+
+        <div
+          className="absolute bottom-0 left-0 right-0 h-16 bg-gray-50"
+          style={{ clipPath: "polygon(0 50%, 100% 0, 100% 100%, 0 100%)" }}
+        ></div>
       </section>
 
       {/* Contact Info Cards */}
@@ -102,16 +127,14 @@ export default function Contact() {
                 data-aos-delay={index * 100}
                 className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-shadow duration-300"
               >
-                <div className="text-blue-600 mb-4">
-                  {info.icon}
-                </div>
+                <div className="text-blue-600 mb-4">{info.icon}</div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">
                   {info.title}
                 </h3>
                 {info.link ? (
                   <a
                     href={info.link}
-                    target={info.link.startsWith('http') ? '_blank' : '_self'}
+                    target={info.link.startsWith("http") ? "_blank" : "_self"}
                     rel="noopener noreferrer"
                     className="text-gray-600 hover:text-blue-600 transition-colors"
                   >
@@ -136,13 +159,15 @@ export default function Contact() {
                 Gửi tin nhắn cho chúng tôi
               </h2>
               <p className="text-gray-600 mb-8">
-                Điền thông tin vào form bên dưới và chúng tôi sẽ phản hồi trong thời gian sớm nhất
+                Điền thông tin vào form bên dưới và chúng tôi sẽ phản hồi trong
+                thời gian sớm nhất
               </p>
 
               {submitted && (
                 <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
                   <p className="text-green-700 font-medium">
-                    ✓ Cảm ơn bạn! Chúng tôi đã nhận được tin nhắn và sẽ phản hồi sớm nhất.
+                    ✓ Cảm ơn bạn! Chúng tôi đã nhận được tin nhắn và sẽ phản hồi
+                    sớm nhất.
                   </p>
                 </div>
               )}
@@ -257,7 +282,8 @@ export default function Contact() {
                   Kết nối với chúng tôi
                 </h3>
                 <p className="text-gray-300 mb-6">
-                  Theo dõi chúng tôi trên mạng xã hội để cập nhật thông tin mới nhất
+                  Theo dõi chúng tôi trên mạng xã hội để cập nhật thông tin mới
+                  nhất
                 </p>
                 <div className="flex gap-4">
                   {socialLinks.map((social, index) => (
@@ -282,22 +308,34 @@ export default function Contact() {
                 </h3>
                 <ul className="space-y-3">
                   <li>
-                    <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                    <a
+                      href="#"
+                      className="text-blue-600 hover:text-blue-700 font-medium"
+                    >
                       → Chính sách bảo hành
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                    <a
+                      href="#"
+                      className="text-blue-600 hover:text-blue-700 font-medium"
+                    >
                       → Chính sách đổi trả
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                    <a
+                      href="#"
+                      className="text-blue-600 hover:text-blue-700 font-medium"
+                    >
                       → Hướng dẫn thanh toán
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                    <a
+                      href="#"
+                      className="text-blue-600 hover:text-blue-700 font-medium"
+                    >
                       → Hướng dẫn mua hàng
                     </a>
                   </li>

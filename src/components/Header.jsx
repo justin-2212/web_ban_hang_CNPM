@@ -1,3 +1,5 @@
+//src/components/Header.jsx
+
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, NavLink } from "react-router-dom";
 import { ShoppingBag, Search, X, Loader2, ArrowRight } from "lucide-react";
@@ -47,7 +49,7 @@ const Header = () => {
       const total = cart.reduce((sum, item) => sum + (item.soLuong || 1), 0);
       setCartCount(total);
     };
-    
+
     updateCart();
     window.addEventListener("cartUpdated", updateCart);
     return () => window.removeEventListener("cartUpdated", updateCart);
@@ -56,7 +58,7 @@ const Header = () => {
   // Tìm kiếm logic
   const handleSearch = (value) => {
     setQuery(value);
-    
+
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
@@ -70,7 +72,8 @@ const Header = () => {
     setSearchLoading(true);
 
     searchTimeoutRef.current = setTimeout(() => {
-      sanPhamAPI.search(value)
+      sanPhamAPI
+        .search(value)
         .then((res) => {
           setFiltered(res.data || []);
         })
@@ -99,7 +102,7 @@ const Header = () => {
   };
 
   // --- STYLES ---
-  const navLinkStyle = ({ isActive }) => 
+  const navLinkStyle = ({ isActive }) =>
     `hover:text-blue-600 transition-colors relative group py-2 ${
       isActive ? "text-blue-600 font-bold" : "text-gray-800 font-semibold"
     }`;
@@ -113,12 +116,8 @@ const Header = () => {
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-4">
-          
           {/* --- LOGO --- */}
-          <Link 
-            to="/" 
-            className="flex items-center space-x-3 group"
-          >
+          <Link to="/" className="flex items-center space-x-3 group">
             <img
               src={AppleLogo}
               alt="Apple Logo"
@@ -140,16 +139,16 @@ const Header = () => {
               { to: "/about", label: "Về chúng tôi" },
               { to: "/contact", label: "Liên hệ" },
             ].map((link) => (
-              <NavLink 
-                key={link.to} 
-                to={link.to} 
+              <NavLink
+                key={link.to}
+                to={link.to}
                 className={navLinkStyle}
                 end={link.to === "/"}
               >
                 {({ isActive }) => (
                   <>
                     {link.label}
-                    <span 
+                    <span
                       className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
                         isActive ? "w-full" : "w-0 group-hover:w-full"
                       }`}
@@ -162,7 +161,6 @@ const Header = () => {
 
           {/* --- RIGHT ACTIONS --- */}
           <div className="flex items-center space-x-4">
-            
             {/* --- NÚT TÌM KIẾM (ĐÃ CHỈNH SỬA BORDER) --- */}
             <div className="relative" ref={searchRef}>
               <button
@@ -172,13 +170,13 @@ const Header = () => {
                   !bg-white !bg-none !mt-0
                   /* THAY ĐỔI Ở ĐÂY: Thêm !border-2 và đổi màu thành !border-red-500 */
                   !border-2 !border-red-500
-                  ${showSearch ? 'ring-2 !ring-red-200' : ''}
+                  ${showSearch ? "ring-2 !ring-red-200" : ""}
                   h-10 px-3 md:w-56 md:px-4 cursor-text
                 `}
               >
                 {/* Icon màu đỏ */}
                 <Search className="w-5 h-5 !text-red-600" />
-                
+
                 {/* Text gợi ý màu đỏ */}
                 <span className="hidden md:block text-sm !text-red-600 font-medium">
                   Tìm kiếm...
@@ -216,9 +214,9 @@ const Header = () => {
                   <div className="max-h-96 overflow-y-auto">
                     {filtered.length > 0 ? (
                       <div className="p-2 space-y-1">
-                         <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                            Sản phẩm gợi ý
-                          </div>
+                        <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                          Sản phẩm gợi ý
+                        </div>
                         {filtered.map((item) => (
                           <button
                             key={item.MaSP}
@@ -255,15 +253,17 @@ const Header = () => {
                           Từ khóa phổ biến
                         </p>
                         <div className="flex flex-wrap gap-2">
-                          {['iPhone 15', 'MacBook', 'iPad', 'AirPods'].map(tag => (
-                            <button 
-                              key={tag}
-                              onClick={() => handleSearch(tag)} 
-                              className="px-3 py-1 !bg-white hover:!bg-gray-100 !text-gray-600 text-sm rounded-lg border border-gray-100 transition-colors !mt-0"
-                            >
-                              {tag}
-                            </button>
-                          ))}
+                          {["iPhone 15", "MacBook", "iPad", "AirPods"].map(
+                            (tag) => (
+                              <button
+                                key={tag}
+                                onClick={() => handleSearch(tag)}
+                                className="px-3 py-1 !bg-white hover:!bg-gray-100 !text-gray-600 text-sm rounded-lg border border-gray-100 transition-colors !mt-0"
+                              >
+                                {tag}
+                              </button>
+                            )
+                          )}
                         </div>
                       </div>
                     )}
@@ -273,8 +273,8 @@ const Header = () => {
             </div>
 
             {/* --- CART --- */}
-            <Link 
-              to="/cart" 
+            <Link
+              to="/cart"
               className="relative p-2 hover:bg-gray-100 rounded-full transition-colors group"
               aria-label="Giỏ hàng"
             >
@@ -289,12 +289,12 @@ const Header = () => {
             {/* --- AUTH --- */}
             <SignedIn>
               <div className="flex items-center gap-2">
-                <UserButton 
+                <UserButton
                   afterSignOutUrl="/"
                   appearance={{
                     elements: {
-                      avatarBox: "w-9 h-9 ring-2 ring-blue-500 ring-offset-2"
-                    }
+                      avatarBox: "w-9 h-9 ring-2 ring-blue-500 ring-offset-2",
+                    },
                   }}
                 />
               </div>

@@ -1,3 +1,5 @@
+//server/routes/sanPham.routes.js
+
 import express from 'express';
 const router = express.Router();
 import SanPham from '../models/sanPham.model.js';

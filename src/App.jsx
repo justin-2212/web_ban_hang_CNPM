@@ -10,9 +10,10 @@ import Products from "./pages/Products";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 import SignInPage from "./pages/auth/SignInPage";
-import ProductDetail from './pages/ProductsDetail';
-import About from './pages/About';
-import Contact from './pages/Contact';
+import ProductDetail from "./pages/ProductsDetail";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import AuthSync from './components/AuthSync';
 
 // === LAYOUT ===
 import Header from "./components/Header";
@@ -32,9 +33,9 @@ const App = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <AuthSync /> {/*nhúng component AuthSync để đồng bộ user*/}
       {/* Header luôn hiển thị */}
       <Header />
-
       {/* Nội dung chính – thay đổi theo route */}
       <main className="flex-1">
         <Routes>
@@ -47,7 +48,6 @@ const App = () => {
           <Route path="/contact" element={<Contact />} />
         </Routes>
       </main>
-
       {/* Footer luôn hiển thị */}
       <Footer />
     </div>

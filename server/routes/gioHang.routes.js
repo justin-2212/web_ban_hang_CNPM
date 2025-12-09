@@ -1,3 +1,5 @@
+// server/routes/gioHang.routes.js
+
 import express from 'express';
 const router = express.Router();
 import GioHang from '../models/gioHang.model.js';
