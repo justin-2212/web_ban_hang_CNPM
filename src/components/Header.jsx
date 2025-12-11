@@ -289,6 +289,30 @@ const Header = () => {
             {/* --- AUTH --- */}
             <SignedIn>
               <div className="flex items-center gap-2">
+                <NavLink
+                  to="/profile"
+                  className={({ isActive }) =>
+                    `md:flex items-center gap-2 px-3 py-1.5 transition-colors relative group ${
+                      isActive
+                        ? "text-blue-600 font-bold"
+                        : "text-gray-700 hover:text-blue-600"
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <CircleUser className="w-4 h-4" />
+                      <span>Địa chỉ của tôi</span>
+
+                      {/* --- THANH GẠCH DƯỚI MÀU XANH --- */}
+                      <span
+                        className={`absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
+                          isActive ? "w-full" : "w-0 group-hover:w-full"
+                        }`}
+                      ></span>
+                    </>
+                  )}
+                </NavLink>
                 <UserButton
                   afterSignOutUrl="/"
                   appearance={{

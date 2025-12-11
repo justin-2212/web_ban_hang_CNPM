@@ -1,3 +1,5 @@
+//src/pages/Products.jsx
+
 import React, { useState, useEffect, useMemo } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";

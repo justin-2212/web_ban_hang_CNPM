@@ -52,4 +52,19 @@ router.put("/update-info", async (req, res) => {
   }
 });
 
+//---  API Lấy thông tin user bằng Email ---
+router.get("/get-by-email/:email", async (req, res) => {
+  const { email } = req.params;
+  try {
+    const user = await TaiKhoan.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy user" });
+    }
+    // Trả về toàn bộ thông tin (bao gồm SĐT, Địa chỉ mới nhất từ DB)
+    res.json({ success: true, data: user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 export default router;

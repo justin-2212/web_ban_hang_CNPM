@@ -1,3 +1,4 @@
+//src/pages/ProductsDetail.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { sanPhamAPI } from "../services/api";
@@ -26,7 +27,7 @@ export default function ProductDetail() {
   // State cho Thumbnail Slider
   const [thumbStart, setThumbStart] = useState(0);
   const THUMB_PER_ROW = 4;
-  
+
   const [isAnimating, setIsAnimating] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -86,7 +87,9 @@ export default function ProductDetail() {
           if (found >= 0) initialIndex = found;
         }
         setActiveImageIndex(initialIndex);
-        setThumbStart(Math.max(0, initialIndex - Math.floor(THUMB_PER_ROW / 2)));
+        setThumbStart(
+          Math.max(0, initialIndex - Math.floor(THUMB_PER_ROW / 2))
+        );
       })
       .catch(() => setError("Không thể tải thông tin sản phẩm"))
       .finally(() => setLoading(false));
@@ -96,7 +99,8 @@ export default function ProductDetail() {
   // 2. CHANGE ACTIVE IMAGE (Logic trượt thumbnail tự động)
   // ---------------------------
   const changeActiveImage = (newIndex) => {
-    if (!allImages.length || newIndex < 0 || newIndex >= allImages.length) return;
+    if (!allImages.length || newIndex < 0 || newIndex >= allImages.length)
+      return;
 
     setIsAnimating(false);
     setTimeout(() => {
@@ -128,7 +132,9 @@ export default function ProductDetail() {
 
     // Tìm ảnh variant theo MaBienThe (ưu tiên)
     const exactMatch = allImages.findIndex(
-      (i) => i.type === "variant" && String(i.maBienThe) === String(variant.MaBienThe)
+      (i) =>
+        i.type === "variant" &&
+        String(i.maBienThe) === String(variant.MaBienThe)
     );
 
     if (exactMatch >= 0) {
@@ -196,11 +202,15 @@ export default function ProductDetail() {
       activeImageIndex === allImages.length - 1 ? 0 : activeImageIndex + 1
     );
 
-  const thumbPrev = () => setThumbStart((prev) => Math.max(prev - THUMB_PER_ROW, 0));
+  const thumbPrev = () =>
+    setThumbStart((prev) => Math.max(prev - THUMB_PER_ROW, 0));
 
   const thumbNext = () =>
     setThumbStart((prev) =>
-      Math.min(prev + THUMB_PER_ROW, Math.max(0, allImages.length - THUMB_PER_ROW))
+      Math.min(
+        prev + THUMB_PER_ROW,
+        Math.max(0, allImages.length - THUMB_PER_ROW)
+      )
     );
 
   // Variables for Render
@@ -272,12 +282,12 @@ export default function ProductDetail() {
         <button
           onClick={() => {
             const params = new URLSearchParams(location.search);
-            const categoryId = params.get('category');
-            
+            const categoryId = params.get("category");
+
             if (categoryId) {
               navigate(`/products?category=${categoryId}`);
             } else {
-              navigate('/products');
+              navigate("/products");
             }
           }}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
@@ -289,7 +299,6 @@ export default function ProductDetail() {
         {/* Card */}
         <div className="bg-white rounded-3xl shadow-lg p-8">
           <div className="grid md:grid-cols-2 gap-8">
-            
             {/* --- GALLERY SECTION (LEFT) --- */}
             <div>
               {/* Main Image */}
@@ -332,15 +341,15 @@ export default function ProductDetail() {
                       onClick={thumbPrev}
                       disabled={thumbStart === 0}
                       className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
-                        thumbStart === 0 
-                          ? 'bg-gray-100 text-gray-300 cursor-not-allowed' 
-                          : 'bg-gray-100 hover:bg-gray-200'
+                        thumbStart === 0
+                          ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                          : "bg-gray-100 hover:bg-gray-200"
                       }`}
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
                   )}
-                  
+
                   {/* Thumb Grid */}
                   <div className="grid grid-cols-4 gap-2 flex-1">
                     {thumbVisible.map((img, idx) => {
@@ -359,13 +368,15 @@ export default function ProductDetail() {
                             src={img.src}
                             alt={`Thumbnail ${real + 1}`}
                             className="w-full h-full object-contain rounded"
-                            onError={(e) => (e.target.src = "/assets/placeholder.png")}
+                            onError={(e) =>
+                              (e.target.src = "/assets/placeholder.png")
+                            }
                           />
                         </div>
                       );
                     })}
                   </div>
-                  
+
                   {/* Next Thumb Button */}
                   {allImages.length > THUMB_PER_ROW && (
                     <button
@@ -373,8 +384,8 @@ export default function ProductDetail() {
                       disabled={thumbStart + THUMB_PER_ROW >= allImages.length}
                       className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
                         thumbStart + THUMB_PER_ROW >= allImages.length
-                          ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                          : 'bg-gray-100 hover:bg-gray-200'
+                          ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                          : "bg-gray-100 hover:bg-gray-200"
                       }`}
                     >
                       <ChevronRight className="w-5 h-5" />
@@ -480,7 +491,9 @@ export default function ProductDetail() {
                         key={i}
                         className="flex justify-between py-2 border-b border-gray-100"
                       >
-                        <span className="text-gray-600">{spec.TenThongSo}:</span>
+                        <span className="text-gray-600">
+                          {spec.TenThongSo}:
+                        </span>
                         <span className="font-medium text-gray-900">
                           {spec.GiaTriHienThi} {spec.DonVi}
                         </span>

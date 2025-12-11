@@ -24,7 +24,7 @@ import taiKhoanRoutes from "./routes/taiKhoan.routes.js";
 app.use("/api/san-pham", sanPhamRoutes);
 app.use("/api/loai-san-pham", loaiSanPhamRoutes);
 app.use("/api/gio-hang", gioHangRoutes);
-app.use("/api/users", taiKhoanRoutes);
+app.use("/api/tai-khoan", taiKhoanRoutes);
 // app.use('/api/don-hang', donHangRoutes);
 
 // Test route

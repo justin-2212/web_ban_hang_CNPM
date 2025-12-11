@@ -8,6 +8,7 @@ import App from "./App.jsx";
 import { ClerkProvider } from "@clerk/clerk-react";
 // 1. Thêm dòng này để nhập gói tiếng Việt
 import { viVN } from "@clerk/localizations";
+import { AuthProvider } from "./context/AuthContext";
 
 // Import your Publishable Key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -27,7 +28,9 @@ createRoot(document.getElementById("root")).render(
         afterSignOutURL="/"
         localization={viVN}
       >
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </ClerkProvider>
     </BrowserRouter>
   </StrictMode>
