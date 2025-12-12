@@ -5,7 +5,6 @@ const router = express.Router();
 import TaiKhoan from "../models/taiKhoan.model.js";
 
 router.post("/sync-user", async (req, res) => {
-  // --- SỬA Ở ĐÂY: Thêm clerkId vào để hứng dữ liệu từ Frontend ---
   const { email, fullName, clerkId } = req.body;
 
   if (!email)
@@ -15,12 +14,20 @@ router.post("/sync-user", async (req, res) => {
     const existingUser = await TaiKhoan.findByEmail(email);
 
     if (existingUser) {
+      // Logic cập nhật ClerkID nếu chưa có
+      if (!existingUser.ClerkID && clerkId) {
+        // --- SỬA Ở ĐÂY: Gọi hàm từ Model thay vì viết SQL trực tiếp ---
+        await TaiKhoan.updateClerkID(email, clerkId);
+
+        // Cập nhật lại biến existingUser trong bộ nhớ để trả về data đúng nhất
+        existingUser.ClerkID = clerkId;
+      }
       return res
         .status(200)
         .json({ success: true, message: "User cũ", data: existingUser });
     }
 
-    // Bây giờ biến clerkId đã có giá trị, truyền vào đây mới được
+    // Tạo mới
     const newUserId = await TaiKhoan.create(email, fullName, clerkId);
 
     const newUser = {
@@ -34,7 +41,7 @@ router.post("/sync-user", async (req, res) => {
 
     res.status(201).json({ success: true, message: "User mới", data: newUser });
   } catch (err) {
-    console.error("Lỗi sync user:", err); // In lỗi ra terminal để dễ debug
+    console.error("Lỗi sync user:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
@@ -58,9 +65,27 @@ router.get("/get-by-email/:email", async (req, res) => {
   try {
     const user = await TaiKhoan.findByEmail(email);
     if (!user) {
-      return res.status(404).json({ success: false, message: "Không tìm thấy user" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy user" });
     }
     // Trả về toàn bộ thông tin (bao gồm SĐT, Địa chỉ mới nhất từ DB)
+    res.json({ success: true, data: user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// --- BỔ SUNG: API Lấy thông tin user bằng ID (Dùng cho Admin hoặc logic nội bộ) ---
+router.get("/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await TaiKhoan.findById(id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy user" });
+    }
     res.json({ success: true, data: user });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

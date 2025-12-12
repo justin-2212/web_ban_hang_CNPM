@@ -11,7 +11,16 @@ const TaiKhoan = {
     return rows[0];
   },
 
-  // 2. Tạo user mới
+  // 2. Tìm user bằng ID (MaTaiKhoan) ---
+  findById: async (id) => {
+    const [rows] = await pool.query(
+      "SELECT * FROM TaiKhoan WHERE MaTaiKhoan = ?",
+      [id]
+    );
+    return rows[0];
+  },
+  // ----------------------------------------------
+  // 3. Tạo user mới
   create: async (email, fullName, clerkId) => {
     // <--- Nhận thêm clerkId
     const [result] = await pool.query(
@@ -22,7 +31,15 @@ const TaiKhoan = {
     return result.insertId;
   },
 
-  // 3. Cập nhật thông tin
+  updateClerkID: async (email, clerkId) => {
+    const [result] = await pool.query(
+      "UPDATE TaiKhoan SET ClerkID = ? WHERE Gmail = ?",
+      [clerkId, email]
+    );
+    return result.affectedRows;
+  },
+
+  // 4. Cập nhật thông tin
   updateInfo: async (id, soDienThoai, diaChi) => {
     const [result] = await pool.query(
       "UPDATE TaiKhoan SET SoDienThoai = ?, DiaChi = ? WHERE MaTaiKhoan = ?",
