@@ -1,7 +1,7 @@
 //src/pages/ProductsDetail.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
-import { sanPhamAPI } from "../services/api";
+import { sanPhamAPI, gioHangAPI } from "../services/api";
 import {
   ShoppingCart,
   ArrowLeft,
@@ -11,6 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useUser, SignInButton } from "@clerk/clerk-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -23,6 +24,7 @@ export default function ProductDetail() {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [allImages, setAllImages] = useState([]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const { dbUser, loadingUser } = useAuth(); // lấy user DB
 
   // State cho Thumbnail Slider
   const [thumbStart, setThumbStart] = useState(0);
@@ -162,32 +164,44 @@ export default function ProductDetail() {
       currency: "VND",
     }).format(price || 0);
 
-  const addToCart = () => {
-    if (!isSignedIn) return setShowLoginModal(true);
-    if (!selectedVariant) return alert("Vui lòng chọn phiên bản sản phẩm");
+    const addToCart = async () => {
+    if (!isSignedIn) {
+      return setShowLoginModal(true);
+    }
 
-    const cartItem = {
-      maBienThe: selectedVariant.MaBienThe,
-      tenSanPham: product.Ten,
-      tenBienThe: selectedVariant.TenBienThe,
-      giaTien: selectedVariant.GiaTienBienThe,
-      soLuong: 1,
-      hinhAnh:
-        selectedVariant.DuongDanAnhBienThe ||
-        product.images?.[0]?.DuongDanLuuAnh ||
-        allImages?.[0]?.src ||
-        null,
-    };
+    if (loadingUser) {
+      return alert("Đang tải thông tin tài khoản, vui lòng thử lại sau.");
+    }
 
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-    const i = cart.findIndex((c) => c.maBienThe === cartItem.maBienThe);
-    if (i >= 0) cart[i].soLuong++;
-    else cart.push(cartItem);
+    if (!dbUser?.MaTaiKhoan) {
+      return alert("Không tìm thấy tài khoản trong hệ thống. Vui lòng đăng nhập lại.");
+    }
 
-    localStorage.setItem("cart", JSON.stringify(cart));
-    window.dispatchEvent(new Event("cartUpdated"));
-    alert("Đã thêm vào giỏ hàng!");
+    if (!selectedVariant) {
+      return alert("Vui lòng chọn phiên bản sản phẩm");
+    }
+
+    try {
+      const response = await gioHangAPI.addItem(
+        dbUser.MaTaiKhoan,
+        selectedVariant.MaBienThe,
+        1
+      );
+
+      // Nếu backend trả success: true mới dispatch event
+      if (response.success) {
+        window.dispatchEvent(new CustomEvent("cartServerUpdated"));
+        alert("Đã thêm vào giỏ hàng! Nhấp OK để xem giỏ hàng.");
+        // navigate("/cart"); sau khi thêm vào giỏ hàng sẽ link tới giỏ hàng
+      } else {
+        alert(response.message || "Không thể thêm vào giỏ hàng");
+      }
+    } catch (err) {
+      console.error("Error adding to cart:", err);
+      alert(err.message || "Lỗi khi thêm vào giỏ hàng. Vui lòng thử lại.");
+    }
   };
+
 
   // ---------------------------
   // 5. NAVIGATION HANDLERS

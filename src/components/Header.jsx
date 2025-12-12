@@ -1,25 +1,35 @@
-//src/components/Header.jsx
+// src/components/Header.jsx
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, NavLink } from "react-router-dom";
-import { ShoppingBag, Search, X, Loader2, ArrowRight } from "lucide-react";
+import {
+  ShoppingBag,
+  Search,
+  X,
+  Loader2,
+  ArrowRight,
+  CircleUser,
+} from "lucide-react";
 import AppleLogo from "../assets/logo.png";
-import { sanPhamAPI } from "../services/api";
+import { sanPhamAPI, gioHangAPI } from "../services/api";
 import {
   SignedIn,
   SignedOut,
   UserButton,
   SignInButton,
 } from "@clerk/clerk-react";
-import { CircleUser } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const Header = () => {
   const navigate = useNavigate();
+  const { dbUser, loadingUser } = useAuth();
+
   const [query, setQuery] = useState("");
   const [filtered, setFiltered] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+
   const searchRef = useRef(null);
   const searchInputRef = useRef(null);
   const searchTimeoutRef = useRef(null);
@@ -32,7 +42,8 @@ const Header = () => {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Auto focus khi mở search
@@ -42,18 +53,35 @@ const Header = () => {
     }
   }, [showSearch]);
 
-  // Cập nhật số lượng giỏ hàng
+  // Lấy số lượng giỏ hàng từ DB
   useEffect(() => {
-    const updateCart = () => {
-      const cart = JSON.parse(localStorage.getItem("cart")) || [];
-      const total = cart.reduce((sum, item) => sum + (item.soLuong || 1), 0);
-      setCartCount(total);
+    const fetchCartCount = async () => {
+      if (!dbUser?.MaTaiKhoan) {
+        setCartCount(0);
+        return;
+      }
+      try {
+        const res = await gioHangAPI.get(dbUser.MaTaiKhoan);
+        const total =
+          res.data?.totalItems ??
+          (res.data?.items || []).reduce(
+            (sum, item) => sum + (item.SoLuong || 0),
+            0
+          );
+        setCartCount(total || 0);
+      } catch {
+        setCartCount(0);
+      }
     };
 
-    updateCart();
-    window.addEventListener("cartUpdated", updateCart);
-    return () => window.removeEventListener("cartUpdated", updateCart);
-  }, []);
+    if (!loadingUser && dbUser?.MaTaiKhoan) {
+      fetchCartCount();
+    }
+
+    const handler = () => fetchCartCount();
+    window.addEventListener("cartServerUpdated", handler);
+    return () => window.removeEventListener("cartServerUpdated", handler);
+  }, [loadingUser, dbUser]);
 
   // Tìm kiếm logic
   const handleSearch = (value) => {
@@ -77,8 +105,7 @@ const Header = () => {
         .then((res) => {
           setFiltered(res.data || []);
         })
-        .catch((err) => {
-          console.error("Search error:", err);
+        .catch(() => {
           setFiltered([]);
         })
         .finally(() => {
@@ -161,29 +188,24 @@ const Header = () => {
 
           {/* --- RIGHT ACTIONS --- */}
           <div className="flex items-center space-x-4">
-            {/* --- NÚT TÌM KIẾM (ĐÃ CHỈNH SỬA BORDER) --- */}
+            {/* --- SEARCH BUTTON --- */}
             <div className="relative" ref={searchRef}>
               <button
                 onClick={() => setShowSearch(!showSearch)}
                 className={`group flex items-center gap-2 transition-all duration-300 rounded-full
-                  /* Ghi đè CSS toàn cục */
                   !bg-white !bg-none !mt-0
-                  /* THAY ĐỔI Ở ĐÂY: Thêm !border-2 và đổi màu thành !border-red-500 */
                   !border-2 !border-red-500
                   ${showSearch ? "ring-2 !ring-red-200" : ""}
                   h-10 px-3 md:w-56 md:px-4 cursor-text
                 `}
               >
-                {/* Icon màu đỏ */}
                 <Search className="w-5 h-5 !text-red-600" />
-
-                {/* Text gợi ý màu đỏ */}
                 <span className="hidden md:block text-sm !text-red-600 font-medium">
                   Tìm kiếm...
                 </span>
               </button>
 
-              {/* DROPDOWN KẾT QUẢ */}
+              {/* SEARCH DROPDOWN */}
               {showSearch && (
                 <div className="absolute right-0 top-14 bg-white/90 backdrop-blur-2xl border border-gray-200 rounded-2xl w-[90vw] md:w-[450px] max-h-[500px] overflow-hidden z-50 shadow-2xl origin-top-right animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-4 border-b border-gray-100">
@@ -303,8 +325,6 @@ const Header = () => {
                     <>
                       <CircleUser className="w-4 h-4" />
                       <span>Địa chỉ của tôi</span>
-
-                      {/* --- THANH GẠCH DƯỚI MÀU XANH --- */}
                       <span
                         className={`absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
                           isActive ? "w-full" : "w-0 group-hover:w-full"

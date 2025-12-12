@@ -1,7 +1,10 @@
 import db from '../config/db.js';
 
 const GioHang = {
-    // Lấy giỏ hàng của user
+
+    // ===============================
+    // Lấy giỏ hàng theo user
+    // ===============================
     getByUser: async (maTaiKhoan) => {
         const [rows] = await db.query(`
             SELECT 
@@ -17,43 +20,103 @@ const GioHang = {
         return rows;
     },
 
-    // Thêm sản phẩm vào giỏ
+    // ===============================
+    // Thêm item vào giỏ
+    // ===============================
     addItem: async (maTaiKhoan, maBienThe, soLuong) => {
-        // Kiểm tra đã có trong giỏ chưa
+
+        // 1. Kiểm tra biến thể có tồn tại
+        const [variant] = await db.query(`
+            SELECT MaBienThe, SoLuongTonKho 
+            FROM BienThe 
+            WHERE MaBienThe = ?
+        `, [maBienThe]);
+
+        if (variant.length === 0) {
+            throw new Error("Biến thể sản phẩm không tồn tại");
+        }
+
+        const tonKho = variant[0].SoLuongTonKho;
+
+        // 2. Kiểm tra đã có trong giỏ chưa
         const [existing] = await db.query(`
-            SELECT * FROM GioHangChiTiet 
+            SELECT SoLuong 
+            FROM GioHangChiTiet 
             WHERE MaTaiKhoan = ? AND MaBienThe = ?
         `, [maTaiKhoan, maBienThe]);
 
         if (existing.length > 0) {
-            // Cập nhật số lượng
+            const newQuantity = existing[0].SoLuong + soLuong;
+
+            if (newQuantity > tonKho) {
+                throw new Error(`Chỉ còn ${tonKho} sản phẩm trong kho`);
+            }
+
             const [result] = await db.query(`
                 UPDATE GioHangChiTiet 
-                SET SoLuong = SoLuong + ?, ThoiGianThem = NOW()
+                SET SoLuong = ?, ThoiGianThem = NOW()
                 WHERE MaTaiKhoan = ? AND MaBienThe = ?
-            `, [soLuong, maTaiKhoan, maBienThe]);
+            `, [newQuantity, maTaiKhoan, maBienThe]);
+
+            if (result.affectedRows === 0) {
+                throw new Error("Không thể cập nhật giỏ hàng");
+            }
+
             return { action: 'updated', affected: result.affectedRows };
-        } else {
-            // Thêm mới
-            const [result] = await db.query(`
-                INSERT INTO GioHangChiTiet (MaTaiKhoan, MaBienThe, SoLuong, ThoiGianThem)
-                VALUES (?, ?, ?, NOW())
-            `, [maTaiKhoan, maBienThe, soLuong]);
-            return { action: 'inserted', affected: result.affectedRows };
         }
+
+        // 3. Nếu chưa có → thêm mới
+        if (soLuong > tonKho) {
+            throw new Error(`Chỉ còn ${tonKho} sản phẩm trong kho`);
+        }
+
+        const [result] = await db.query(`
+            INSERT INTO GioHangChiTiet (MaTaiKhoan, MaBienThe, SoLuong, ThoiGianThem)
+            VALUES (?, ?, ?, NOW())
+        `, [maTaiKhoan, maBienThe, soLuong]);
+
+        if (result.affectedRows === 0) {
+            throw new Error("Không thể thêm sản phẩm vào giỏ hàng");
+        }
+
+        return { action: 'inserted', affected: result.affectedRows };
     },
 
-    // Cập nhật số lượng
+    // ===============================
+    // Cập nhật số lượng trong giỏ
+    // ===============================
     updateQuantity: async (maTaiKhoan, maBienThe, soLuong) => {
+
+        // Không cho số lượng <=0
+        if (soLuong <= 0) return 0;
+
+        // Kiểm tra tồn kho
+        const [variant] = await db.query(`
+            SELECT SoLuongTonKho 
+            FROM BienThe 
+            WHERE MaBienThe = ?
+        `, [maBienThe]);
+
+        if (variant.length === 0) {
+            throw new Error("Biến thể không tồn tại");
+        }
+
+        if (soLuong > variant[0].SoLuongTonKho) {
+            throw new Error(`Chỉ còn ${variant[0].SoLuongTonKho} sản phẩm trong kho`);
+        }
+
         const [result] = await db.query(`
             UPDATE GioHangChiTiet 
             SET SoLuong = ?
             WHERE MaTaiKhoan = ? AND MaBienThe = ?
         `, [soLuong, maTaiKhoan, maBienThe]);
+
         return result.affectedRows;
     },
 
-    // Xóa item khỏi giỏ
+    // ===============================
+    // Xóa 1 sản phẩm khỏi giỏ
+    // ===============================
     removeItem: async (maTaiKhoan, maBienThe) => {
         const [result] = await db.query(`
             DELETE FROM GioHangChiTiet 
@@ -62,7 +125,9 @@ const GioHang = {
         return result.affectedRows;
     },
 
-    // Xóa toàn bộ giỏ hàng
+    // ===============================
+    // Xóa toàn bộ giỏ
+    // ===============================
     clearCart: async (maTaiKhoan) => {
         const [result] = await db.query(`
             DELETE FROM GioHangChiTiet WHERE MaTaiKhoan = ?
@@ -70,12 +135,16 @@ const GioHang = {
         return result.affectedRows;
     },
 
-    // Đếm số item trong giỏ
+    // ===============================
+    // Tổng số lượng item
+    // ===============================
     countItems: async (maTaiKhoan) => {
         const [rows] = await db.query(`
-            SELECT SUM(SoLuong) as total FROM GioHangChiTiet 
+            SELECT SUM(SoLuong) AS total 
+            FROM GioHangChiTiet 
             WHERE MaTaiKhoan = ?
         `, [maTaiKhoan]);
+
         return rows[0].total || 0;
     }
 };
