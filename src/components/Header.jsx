@@ -62,26 +62,28 @@ const Header = () => {
       }
       try {
         const res = await gioHangAPI.get(dbUser.MaTaiKhoan);
-        const total =
-          res.data?.totalItems ??
-          (res.data?.items || []).reduce(
-            (sum, item) => sum + (item.SoLuong || 0),
-            0
-          );
-        setCartCount(total || 0);
-      } catch {
+        // ✅ Lấy từ totalItems (backend return totalItems)
+        const total = res.data?.totalItems ?? 0;
+        setCartCount(total);
+      } catch (err) {
+        console.error("Error fetching cart count:", err);
         setCartCount(0);
       }
     };
 
+    // Fetch lần đầu khi user login
     if (!loadingUser && dbUser?.MaTaiKhoan) {
       fetchCartCount();
     }
 
-    const handler = () => fetchCartCount();
-    window.addEventListener("cartServerUpdated", handler);
-    return () => window.removeEventListener("cartServerUpdated", handler);
-  }, [loadingUser, dbUser]);
+    // ✅ LISTENER để update khi có event từ cart/checkout
+    const handleCartUpdate = () => {
+      fetchCartCount();
+    };
+
+    window.addEventListener("cartServerUpdated", handleCartUpdate);
+    return () => window.removeEventListener("cartServerUpdated", handleCartUpdate);
+  }, [loadingUser, dbUser?.MaTaiKhoan]);
 
   // Tìm kiếm logic
   const handleSearch = (value) => {

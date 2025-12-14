@@ -1,12 +1,12 @@
 import db from '../config/db.js';
 
 const GioHang = {
-
     // ===============================
     // Lấy giỏ hàng theo user
     // ===============================
-    getByUser: async (maTaiKhoan) => {
-        const [rows] = await db.query(`
+    getByUser: async (maTaiKhoan, conn) => {
+        const connection = conn || db;
+        const [rows] = await connection.query(`
             SELECT 
                 ghct.*,
                 bt.TenBienThe, bt.GiaTienBienThe, bt.DuongDanAnhBienThe, bt.SoLuongTonKho,
@@ -21,12 +21,31 @@ const GioHang = {
     },
 
     // ===============================
+    // Lấy giỏ hàng với tổng số items
+    // ===============================
+    getWithTotals: async (maTaiKhoan, conn) => {
+        const items = await GioHang.getByUser(maTaiKhoan, conn);
+        const totalItems = items.reduce((sum, item) => sum + item.SoLuong, 0);
+        const totalPrice = items.reduce(
+            (sum, item) => sum + item.GiaTienBienThe * item.SoLuong,
+            0
+        );
+
+        return {
+            items,
+            totalItems,
+            totalPrice,
+        };
+    },
+
+    // ===============================
     // Thêm item vào giỏ
     // ===============================
-    addItem: async (maTaiKhoan, maBienThe, soLuong) => {
+    addItem: async (maTaiKhoan, maBienThe, soLuong, conn) => {
+        const connection = conn || db;
 
         // 1. Kiểm tra biến thể có tồn tại
-        const [variant] = await db.query(`
+        const [variant] = await connection.query(`
             SELECT MaBienThe, SoLuongTonKho 
             FROM BienThe 
             WHERE MaBienThe = ?
@@ -39,7 +58,7 @@ const GioHang = {
         const tonKho = variant[0].SoLuongTonKho;
 
         // 2. Kiểm tra đã có trong giỏ chưa
-        const [existing] = await db.query(`
+        const [existing] = await connection.query(`
             SELECT SoLuong 
             FROM GioHangChiTiet 
             WHERE MaTaiKhoan = ? AND MaBienThe = ?
@@ -52,7 +71,7 @@ const GioHang = {
                 throw new Error(`Chỉ còn ${tonKho} sản phẩm trong kho`);
             }
 
-            const [result] = await db.query(`
+            const [result] = await connection.query(`
                 UPDATE GioHangChiTiet 
                 SET SoLuong = ?, ThoiGianThem = NOW()
                 WHERE MaTaiKhoan = ? AND MaBienThe = ?
@@ -70,7 +89,7 @@ const GioHang = {
             throw new Error(`Chỉ còn ${tonKho} sản phẩm trong kho`);
         }
 
-        const [result] = await db.query(`
+        const [result] = await connection.query(`
             INSERT INTO GioHangChiTiet (MaTaiKhoan, MaBienThe, SoLuong, ThoiGianThem)
             VALUES (?, ?, ?, NOW())
         `, [maTaiKhoan, maBienThe, soLuong]);
@@ -85,13 +104,14 @@ const GioHang = {
     // ===============================
     // Cập nhật số lượng trong giỏ
     // ===============================
-    updateQuantity: async (maTaiKhoan, maBienThe, soLuong) => {
+    updateQuantity: async (maTaiKhoan, maBienThe, soLuong, conn) => {
+        const connection = conn || db;
 
         // Không cho số lượng <=0
         if (soLuong <= 0) return 0;
 
         // Kiểm tra tồn kho
-        const [variant] = await db.query(`
+        const [variant] = await connection.query(`
             SELECT SoLuongTonKho 
             FROM BienThe 
             WHERE MaBienThe = ?
@@ -105,7 +125,7 @@ const GioHang = {
             throw new Error(`Chỉ còn ${variant[0].SoLuongTonKho} sản phẩm trong kho`);
         }
 
-        const [result] = await db.query(`
+        const [result] = await connection.query(`
             UPDATE GioHangChiTiet 
             SET SoLuong = ?
             WHERE MaTaiKhoan = ? AND MaBienThe = ?
@@ -117,8 +137,9 @@ const GioHang = {
     // ===============================
     // Xóa 1 sản phẩm khỏi giỏ
     // ===============================
-    removeItem: async (maTaiKhoan, maBienThe) => {
-        const [result] = await db.query(`
+    removeItem: async (maTaiKhoan, maBienThe, conn) => {
+        const connection = conn || db;
+        const [result] = await connection.query(`
             DELETE FROM GioHangChiTiet 
             WHERE MaTaiKhoan = ? AND MaBienThe = ?
         `, [maTaiKhoan, maBienThe]);
@@ -128,8 +149,9 @@ const GioHang = {
     // ===============================
     // Xóa toàn bộ giỏ
     // ===============================
-    clearCart: async (maTaiKhoan) => {
-        const [result] = await db.query(`
+    clearCart: async (maTaiKhoan, conn) => {
+        const connection = conn || db;
+        const [result] = await connection.query(`
             DELETE FROM GioHangChiTiet WHERE MaTaiKhoan = ?
         `, [maTaiKhoan]);
         return result.affectedRows;
@@ -138,8 +160,9 @@ const GioHang = {
     // ===============================
     // Tổng số lượng item
     // ===============================
-    countItems: async (maTaiKhoan) => {
-        const [rows] = await db.query(`
+    countItems: async (maTaiKhoan, conn) => {
+        const connection = conn || db;
+        const [rows] = await connection.query(`
             SELECT SUM(SoLuong) AS total 
             FROM GioHangChiTiet 
             WHERE MaTaiKhoan = ?

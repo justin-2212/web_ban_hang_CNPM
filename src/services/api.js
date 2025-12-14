@@ -156,4 +156,43 @@ export const donHangAPI = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     }).then(handleResponse),
+
+    // Lấy trạng thái thanh toán online
+    getPaymentStatus: (maDonHang) =>
+      fetch(`${API_BASE}/don-hang/${maDonHang}/payment-status`).then(
+        handleResponse
+      ),
+};
+
+// ============ CHECKOUT & THANH TOÁN ============
+
+// Checkout (tạo đơn hàng từ giỏ hàng)
+export const checkoutAPI = {
+  checkout: ({ maTaiKhoan, phuongThucThanhToan }) =>
+    fetch(`${API_BASE}/checkout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        maTaiKhoan,
+        phuongThucThanhToan, // "COD" | "ONLINE"
+      }),
+    }).then(handleResponse),
+};
+
+// Thanh toán online
+export const thanhToanAPI = {
+  // Tạo link thanh toán (VNPay / Momo / ...)
+  createOnlinePayment: ({ maDonHang, soTien }) =>
+    fetch(`${API_BASE}/thanh-toan/online`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        maDonHang,
+        soTien,
+      }),
+    }).then(handleResponse),
+
+  // (Optional) Lấy trạng thái thanh toán đơn hàng
+  getPaymentStatus: (maDonHang) =>
+    fetch(`${API_BASE}/thanh-toan/status/${maDonHang}`).then(handleResponse),
 };

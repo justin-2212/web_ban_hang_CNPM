@@ -12,7 +12,12 @@ import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductsDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import OrderHistory from "./pages/OrderHistory";
+// === CHECKOUT & ORDER ===
+import Checkout from "./pages/Checkout";
+import OrderSuccess from "./pages/OrderSuccess";
 import Profile from "./pages/Profile";
+import OrderDetail from "./pages/OrderDetail";
 
 // === ADMIN PAGES ===
 import AdminDashboard from "./pages/admin/AdminDashboard"; // Import trang Admin
@@ -47,6 +52,16 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<Products />} />
           <Route path="/cart" element={<Cart />} />
+          
+          <Route path="/orders" element={<OrderHistory />} />
+          <Route path="/order-detail/:id" element={<OrderDetail />} />
+
+                {/* CHECKOUT */}
+          <Route path="/checkout" element={<Checkout />} />
+
+          {/* KẾT QUẢ ĐƠN HÀNG */}
+          <Route path="/order-success" element={<OrderSuccess />} />
+
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
