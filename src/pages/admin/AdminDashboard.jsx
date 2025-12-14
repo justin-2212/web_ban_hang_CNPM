@@ -2,6 +2,7 @@
 import React from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { SignedIn, UserButton } from "@clerk/clerk-react";
 
 const AdminDashboard = () => {
   const { dbUser } = useAuth();
@@ -13,27 +14,39 @@ const AdminDashboard = () => {
         <h1 className="text-3xl font-bold text-blue-800 mb-4">
           Trang quản lý nhân viên
         </h1>
+        <SignedIn>
+          <div className="flex items-center gap-2">
+            <UserButton
+              afterSignOutUrl="/"
+              appearance={{
+                elements: {
+                  avatarBox: "w-9 h-9 ring-2 ring-blue-500 ring-offset-2",
+                },
+              }}
+            />
+          </div>
+        </SignedIn>
         <p className="text-gray-600 mb-6">
-          Xin chào, <span className="font-bold">{dbUser?.TenDayDu}</span>! 
-          Đây là khu vực dành riêng cho quản trị viên/nhân viên (Quyền = 0).
+          Xin chào, <span className="font-bold">{dbUser?.TenDayDu}</span>! Đây
+          là khu vực dành riêng cho quản trị viên/nhân viên (Quyền = 0).
         </p>
-        
+
         <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                <h3 className="font-bold text-blue-700">Quản lý đơn hàng</h3>
-                <p>Xem và cập nhật trạng thái đơn</p>
-            </div>
-            <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
-                <h3 className="font-bold text-purple-700">Quản lý sản phẩm</h3>
-                <p>Thêm, sửa, xóa sản phẩm</p>
-            </div>
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <h3 className="font-bold text-blue-700">Quản lý đơn hàng</h3>
+            <p>Xem và cập nhật trạng thái đơn</p>
+          </div>
+          <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
+            <h3 className="font-bold text-purple-700">Quản lý sản phẩm</h3>
+            <p>Thêm, sửa, xóa sản phẩm</p>
+          </div>
         </div>
 
-        <button 
-            onClick={() => navigate('/')}
-            className="mt-8 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-700"
+        <button
+          onClick={() => navigate("/")}
+          className="mt-8 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-700"
         >
-            Về trang chủ bán hàng
+          Về trang chủ bán hàng
         </button>
       </div>
     </div>

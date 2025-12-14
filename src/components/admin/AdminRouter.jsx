@@ -1,10 +1,10 @@
-// src/components/AdminRoute.jsx
+// src/components/admin/AdminRoute.jsx
 
 // bảo vệ các route dành riêng cho Admin/Nhân viên (không cho tài khoản có quyền khác truy cập bằng link admin)
 
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { Loader2 } from "lucide-react";
 
 const AdminRoute = () => {
