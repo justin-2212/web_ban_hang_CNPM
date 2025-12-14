@@ -4,7 +4,7 @@ import { Routes, Route, Router } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
-// === PAGES ===
+// === khách hàngPAGES ===
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Cart from "./pages/Cart";
@@ -26,9 +26,10 @@ import AdminDashboard from "./pages/admin/AdminDashboard"; // Import trang Admin
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { LogIn } from "lucide-react";
-import AdminRoute from "./components/AdminRouter"; // Import bảo vệ
+import AdminRoute from "./components/admin/AdminRouter"; // Import bảo vệ
 import AuthRedirect from "./components/AuthRedirect"; // Import chuyển hướng tự động
 import MainLayout from "./components/MainLayout";
+import AdminLayout from "./components/admin/AdminLayout";
 
 const App = () => {
   // Khởi tạo AOS khi app load
@@ -66,17 +67,24 @@ const App = () => {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
 
         {/* --- CÁC ROUTE ADMIN (Được bảo vệ) --- */}
         {/* AdminRoute sẽ chặn khách thường, chỉ cho Quyen=0 đi qua */}
         <Route element={<AdminRoute />}>
-          {/* Đây là dòng code bạn đang thiếu, khiến bị lỗi 404 */}
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route element={<AdminLayout />}>
+            {/* Trang Dashboard (Mặc định khi vào /admin) */}
+            <Route path="/admin" element={<AdminDashboard />} />
+            {/* Trang Quản lý User */}
+            {/* (Chỗ này để dành cho các trang Sản phẩm, Đơn hàng sau này) 
+                  <Route path="/admin/products" element={<ProductManagement />} />
+                  <Route path="/admin/orders" element={<OrderManagement />} />
+              */}
+          </Route>
         </Route>
 
         {/* Route 404 - Phải để cuối cùng */}
-        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   );

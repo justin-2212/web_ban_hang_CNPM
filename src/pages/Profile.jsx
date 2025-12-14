@@ -25,7 +25,6 @@ const Profile = () => {
     soDienThoai: "",
     diaChi: "",
   });
-  // --- HÀM THOÁT (QUAY VỀ TRANG CHỦ) ---
 
   // 1. Chỉ đơn giản là sync dữ liệu từ Context vào Form khi dbUser có thay đổi
   useEffect(() => {
@@ -48,7 +47,9 @@ const Profile = () => {
   };
   // --- HÀM THOÁT (QUAY VỀ TRANG CHỦ) ---
   const handleExit = () => {
-    navigate("/"); // Chuyển hướng về trang chủ ("/")
+    // Thêm state: { fromAdmin: true } để AuthRedirect biết là bạn chủ động muốn ra trang bán hàng
+    // Nếu không có dòng này, Admin bấm vào sẽ bị đá ngược lại trang AdminDashboard
+    navigate("/", { state: { fromAdmin: true } });
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -174,7 +175,7 @@ const Profile = () => {
               className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 border border-gray-200"
             >
               <ArrowLeft className="w-5 h-5" />
-              Quay lại trang chủ
+              Quay lại trang bán hàng
             </button>
           </form>
         </div>
