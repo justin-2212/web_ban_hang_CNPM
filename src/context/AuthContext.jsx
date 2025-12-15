@@ -18,9 +18,11 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const email = user.primaryEmailAddress.emailAddress;
+      const fullName = user.fullName;
+      const clerkId = user.id;
       // Gọi API get-by-email mà bạn đã định nghĩa trong route
-      const res = await taiKhoanAPI.getByEmail(email);
-
+      // const res = await taiKhoanAPI.getByEmail(email);
+      const res = await taiKhoanAPI.syncUser({ email, fullName, clerkId });
       if (res.success && res.data) {
         setDbUser(res.data);
         // Lưu cache local để dùng khi cần gấp (tùy chọn)

@@ -7,7 +7,7 @@ import { useAuth } from "../context/AuthContext"; // Import hook vừa tạo
 import { taiKhoanAPI } from "../services/api";
 import { User, Phone, MapPin, Save, Loader2, ArrowLeft } from "lucide-react";
 
-// Tách hàm validate ra ngoài component để code gọn hơn
+// Validate thông tin input sdt email  trước khi chuyển vòa
 const validateForm = (phone) => {
   const phoneRegex = /^0\d{9}$/;
   if (!phone) return "Vui lòng nhập số điện thoại!";
@@ -49,7 +49,7 @@ const Profile = () => {
   const handleExit = () => {
     // Thêm state: { fromAdmin: true } để AuthRedirect biết là bạn chủ động muốn ra trang bán hàng
     // Nếu không có dòng này, Admin bấm vào sẽ bị đá ngược lại trang AdminDashboard
-    navigate("/", { state: { fromAdmin: true } });
+    navigate("/");
   };
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -53,11 +53,11 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<Products />} />
           <Route path="/cart" element={<Cart />} />
-          
+
           <Route path="/orders" element={<OrderHistory />} />
           <Route path="/order-detail/:id" element={<OrderDetail />} />
 
-                {/* CHECKOUT */}
+          {/* CHECKOUT */}
           <Route path="/checkout" element={<Checkout />} />
 
           {/* KẾT QUẢ ĐƠN HÀNG */}
@@ -67,7 +67,6 @@ const App = () => {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="*" element={<NotFound />} />
         </Route>
 
         {/* --- CÁC ROUTE ADMIN (Được bảo vệ) --- */}
@@ -82,6 +81,8 @@ const App = () => {
                   <Route path="/admin/orders" element={<OrderManagement />} />
               */}
           </Route>
+
+          <Route path="*" element={<NotFound />} />
         </Route>
 
         {/* Route 404 - Phải để cuối cùng */}

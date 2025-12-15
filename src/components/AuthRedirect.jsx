@@ -10,11 +10,9 @@ const AuthRedirect = () => {
 
   useEffect(() => {
     if (!loadingUser && dbUser) {
-      // Kiểm tra xem người dùng có phải vừa bấm nút "Về trang bán hàng" không
-      const isFromAdmin = location.state?.fromAdmin;
       // Logic: Nếu là Nhân viên (Quyen = 0) VÀ đang ở trang chủ (/)
       // Thì chuyển hướng sang trang Admin
-      if (dbUser.Quyen === 0 && location.pathname === "/" && !isFromAdmin) {
+      if (dbUser.Quyen === 0 && location.pathname === "/") {
         navigate("/admin");
       }
       // Nếu là Khách hàng (Quyen = 1) -> Giữ nguyên (Mặc định ở trang chủ)

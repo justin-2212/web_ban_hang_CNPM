@@ -76,17 +76,6 @@ const Sidebar = () => {
         ))}
 
         <div className="my-4 border-t border-gray-100"></div>
-
-        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-2">
-          Hệ thống
-        </div>
-
-        {/* Link về trang bán hàng */}
-        <Link to="/" className={linkStyle} state={{ fromAdmin: true }}>
-          <Store size={20} />
-          <span>Về trang bán hàng</span>
-          <span className="absolute bottom-0 left-0 h-[3px] bg-blue-600 rounded-t-sm w-0 group-hover:w-full transition-all duration-300 ease-out"></span>
-        </Link>
       </nav>
 
       {/* --- FOOTER SIDEBAR --- */}

@@ -119,6 +119,12 @@ export const taiKhoanAPI = {
 
   // Lấy thông tin user
   getProfile: (id) => fetch(`${API_BASE}/tai-khoan/${id}`).then(handleResponse),
+  syncUser: (data) =>
+    fetch(`${API_BASE}/tai-khoan/sync-user`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }).then(handleResponse),
 
   // --- SỬA LẠI ĐOẠN NÀY ---
   // Backend của bạn là: router.put("/update-info", ...)
@@ -157,11 +163,11 @@ export const donHangAPI = {
       body: JSON.stringify({ status }),
     }).then(handleResponse),
 
-    // Lấy trạng thái thanh toán online
-    getPaymentStatus: (maDonHang) =>
-      fetch(`${API_BASE}/don-hang/${maDonHang}/payment-status`).then(
-        handleResponse
-      ),
+  // Lấy trạng thái thanh toán online
+  getPaymentStatus: (maDonHang) =>
+    fetch(`${API_BASE}/don-hang/${maDonHang}/payment-status`).then(
+      handleResponse
+    ),
 };
 
 // ============ CHECKOUT & THANH TOÁN ============

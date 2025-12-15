@@ -61,7 +61,7 @@ const Header = () => {
       }
       try {
         const res = await gioHangAPI.get(dbUser.MaTaiKhoan);
-        // ✅ Lấy từ totalItems (backend return totalItems)
+        // Lấy từ totalItems (backend return totalItems)
         const total = res.data?.totalItems ?? 0;
         setCartCount(total);
       } catch (err) {
@@ -75,13 +75,14 @@ const Header = () => {
       fetchCartCount();
     }
 
-    // ✅ LISTENER để update khi có event từ cart/checkout
+    // LISTENER để update khi có event từ cart/checkout
     const handleCartUpdate = () => {
       fetchCartCount();
     };
 
     window.addEventListener("cartServerUpdated", handleCartUpdate);
-    return () => window.removeEventListener("cartServerUpdated", handleCartUpdate);
+    return () =>
+      window.removeEventListener("cartServerUpdated", handleCartUpdate);
   }, [loadingUser, dbUser?.MaTaiKhoan]);
 
   // Tìm kiếm logic
@@ -185,23 +186,6 @@ const Header = () => {
                 )}
               </NavLink>
             ))}
-            {/* --- NÚT ADMIN (Chỉ hiện khi là Nhân viên - Quyen = 0) --- */}
-            {!loadingUser && dbUser?.Quyen === 0 && (
-              <NavLink to="/admin" className={navLinkStyle}>
-                {({ isActive }) => (
-                  <>
-                    <span>Trang Admin</span>
-
-                    {/* --- HIỆU ỨNG GẠCH CHÂN --- */}
-                    <span
-                      className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
-                        isActive ? "w-full" : "w-0 group-hover:w-full"
-                      }`}
-                    ></span>
-                  </>
-                )}
-              </NavLink>
-            )}
           </nav>
 
           {/* --- RIGHT ACTIONS --- */}
@@ -389,15 +373,6 @@ const Header = () => {
           <NavLink to="/contact" className={mobileNavLinkStyle}>
             Liên hệ
           </NavLink>
-          {/* Nút Admin Mobile */}
-          {!loadingUser && dbUser?.Quyen === 0 && (
-            <NavLink
-              to="/admin"
-              className="font-bold text-blue-600 flex items-center gap-1 px-3 py-1 rounded-full whitespace-nowrap"
-            >
-              Admin
-            </NavLink>
-          )}
         </nav>
       </div>
     </header>
