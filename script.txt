@@ -92,6 +92,7 @@ CREATE TABLE DonHang (
     MaTaiKhoan INT,
     NgayDat DATETIME,
     TinhTrangDonHang SMALLINT,
+    TinhTrangThanhToan SMALLINT,
     TongTien DECIMAL(13,2),
     PhuongThucThanhToan VARCHAR(50),
     FOREIGN KEY (MaTaiKhoan) REFERENCES TaiKhoan(MaTaiKhoan)
