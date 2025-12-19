@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { Facebook, Instagram, Youtube } from "lucide-react";
 import AppleLogo from "../assets/logo.png";
 
 const Footer = () => {
@@ -23,19 +25,28 @@ const Footer = () => {
           <h4 className="text-black text-xl mb-3">Liên kết</h4>
           <ul className="space-y-2">
             <li>
-              <a href="#" className="text-gray-600 hover:text-black">
+              <Link
+                to="/warranty-policy"
+                className="text-gray-600 hover:text-black transition-colors"
+              >
                 Chính sách bảo hành
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="text-gray-600 hover:text-black">
+              <Link
+                to="/support"
+                className="text-gray-600 hover:text-black transition-colors"
+              >
                 Hỗ trợ khách hàng
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="text-gray-600 hover:text-black">
+              <Link
+                to="/contact"
+                className="text-gray-600 hover:text-black transition-colors"
+              >
                 Liên hệ
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -43,7 +54,35 @@ const Footer = () => {
         {/* Cột 3: Theo dõi */}
         <div>
           <h4 className="text-black text-xl mb-3">Theo dõi chúng tôi</h4>
-          <p>Facebook | Instagram | YouTube</p>
+          <div className="flex gap-4">
+            <a
+              href="https://www.facebook.com/apple"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+              aria-label="Facebook"
+            >
+              <Facebook className="w-6 h-6" />
+            </a>
+            <a
+              href="https://www.instagram.com/apple/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 hover:text-pink-600 transition-colors"
+              aria-label="Instagram"
+            >
+              <Instagram className="w-6 h-6" />
+            </a>
+            <a
+              href="https://www.youtube.com/@Apple"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 hover:text-red-600 transition-colors"
+              aria-label="YouTube"
+            >
+              <Youtube className="w-6 h-6" />
+            </a>
+          </div>
         </div>
       </div>
 

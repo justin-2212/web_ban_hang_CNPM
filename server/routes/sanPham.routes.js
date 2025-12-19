@@ -31,6 +31,16 @@ router.get('/chi-tiet/:id', async (req, res) => {
     }
 });
 
+// GET /api/san-pham/variant-attributes/:maSP - Lấy danh sách thông số biến thể (ĐẶT TRƯỚC /:id)
+router.get('/variant-attributes/:maSP', async (req, res) => {
+    try {
+        const attributes = await SanPham.getVariantAttributes(req.params.maSP);
+        res.json({ success: true, data: attributes });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 // GET /api/san-pham - Lấy tất cả sản phẩm
 router.get('/', async (req, res) => {
     try {

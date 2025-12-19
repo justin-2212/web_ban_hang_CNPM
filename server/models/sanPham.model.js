@@ -119,18 +119,22 @@ const SanPham = {
         // 3. Lấy thông số kỹ thuật chung
         const [specs] = await db.query(`
             SELECT gts.MaThongSoMau, gts.GiaTriHienThi, gts.GiaTriNhap,
-                   tsm.TenThongSo, tsm.ThuTuHienThi
+                   tsm.TenThongSo, tsm.DonVi, tsm.ThuTuHienThi
             FROM GiaTriThongSo gts
             JOIN ThongSoMau tsm ON gts.MaThongSoMau = tsm.MaThongSoMau
             WHERE gts.MaSP = ? AND tsm.TinhTrangThongSoMau = 1
             ORDER BY tsm.ThuTuHienThi
         `, [maSP]);
 
-        // 4. Lấy thông số chi tiết của biến thể 
+        // 4. ✅ FIX: Lấy thông số chi tiết của biến thể với đầy đủ thông tin
         const [variantSpecs] = await db.query(`
             SELECT bt.MaBienThe,
-                   gtvt.MaThongSoBienTheMau, gtvt.GiaTriHienThi, gtvt.GiaTriNhap,
-                   tsbm.TenThongSoBienThe, tsbm.ThuTuHienThi
+                   gtvt.MaThongSoBienTheMau as maThongSo, 
+                   gtvt.GiaTriHienThi as giaTriHienThi, 
+                   gtvt.GiaTriNhap as giaTriNhap,
+                   tsbm.TenThongSoBienThe as tenThongSo, 
+                   tsbm.DonVi as donVi,
+                   tsbm.ThuTuHienThi as thuTuHienThi
             FROM BienThe bt
             LEFT JOIN GiaTriBienThe gtvt ON bt.MaBienThe = gtvt.MaBienThe
             LEFT JOIN ThongSoBienTheMau tsbm ON gtvt.MaThongSoBienTheMau = tsbm.MaThongSoBienTheMau
@@ -144,11 +148,13 @@ const SanPham = {
             if (!variantSpecsGrouped[spec.MaBienThe]) {
                 variantSpecsGrouped[spec.MaBienThe] = [];
             }
-            if (spec.MaThongSoBienTheMau) {
+            if (spec.maThongSo) {
                 variantSpecsGrouped[spec.MaBienThe].push({
-                    tenThongSo: spec.TenThongSoBienThe,
-                    giaTriHienThi: spec.GiaTriHienThi,
-                    giaTriNhap: spec.GiaTriNhap
+                    maThongSo: spec.maThongSo,
+                    tenThongSo: spec.tenThongSo,
+                    giaTriHienThi: spec.giaTriHienThi,
+                    giaTriNhap: spec.giaTriNhap,
+                    donVi: spec.donVi
                 });
             }
         });
@@ -208,6 +214,59 @@ const SanPham = {
         `, [id]);
         return result.affectedRows;
     },
+
+    // Lấy danh sách thông số biến thể (attributes) để hiển thị UI chọn lựa
+    getVariantAttributes: async (maSP) => {
+        try {
+            // Query lấy tất cả thông số biến thể của sản phẩm
+            const [rows] = await db.query(`
+                SELECT DISTINCT
+                    tsbm.MaThongSoBienTheMau as maThongSo,
+                    tsbm.TenThongSoBienThe as tenThongSo,
+                    tsbm.ThuTuHienThi,
+                    gtvt.GiaTriHienThi as giaTriHienThi,
+                    gtvt.GiaTriNhap as giaTriNhap
+                FROM BienThe bt
+                JOIN GiaTriBienThe gtvt ON bt.MaBienThe = gtvt.MaBienThe
+                JOIN ThongSoBienTheMau tsbm ON gtvt.MaThongSoBienTheMau = tsbm.MaThongSoBienTheMau
+                WHERE bt.MaSP = ? AND bt.TinhTrangHoatDong = 1 AND tsbm.TinhTrangThongSoBienThe = 1
+                ORDER BY tsbm.ThuTuHienThi, gtvt.GiaTriHienThi
+            `, [maSP]);
+
+            // Nhóm các giá trị theo thông số
+            const attributesMap = new Map();
+
+            rows.forEach(row => {
+                if (!attributesMap.has(row.maThongSo)) {
+                    attributesMap.set(row.maThongSo, {
+                        maThongSo: row.maThongSo,
+                        tenThongSo: row.tenThongSo,
+                        thuTuHienThi: row.ThuTuHienThi,
+                        options: []
+                    });
+                }
+
+                // Thêm option nếu chưa tồn tại (tránh trùng lặp)
+                const attribute = attributesMap.get(row.maThongSo);
+                const exists = attribute.options.some(
+                    opt => opt.giaTriNhap === row.giaTriNhap
+                );
+
+                if (!exists) {
+                    attribute.options.push({
+                        giaTriHienThi: row.giaTriHienThi,
+                        giaTriNhap: row.giaTriNhap
+                    });
+                }
+            });
+
+            return Array.from(attributesMap.values());
+        } catch (error) {
+            console.error("Lỗi getVariantAttributes:", error);
+            throw error;
+        }
+    },
+
     // mới thêm 
     getProductByCategory: async (maLoai) => {
         const [rows] = await db.query(`
@@ -224,6 +283,69 @@ const SanPham = {
         `, [maLoai]);
 
         return rows[0] || null;
+    },
+
+    // ✅ LẤY THÔNG SỐ BIẾN THỂ THEO SẢN PHẨM (COMPLETELY REWRITTEN)
+    getVariantAttributes: async (maSP) => {
+        try {
+            // Bước 1: Lấy MaLoai của sản phẩm
+            const [productRows] = await db.query(
+                'SELECT MaLoai FROM SanPham WHERE MaSP = ?',
+                [maSP]
+            );
+
+            if (productRows.length === 0) {
+                throw new Error('Không tìm thấy sản phẩm');
+            }
+
+            const maLoai = productRows[0].MaLoai;
+
+            // Bước 2: Lấy khung thông số biến thể theo MaLoai
+            const [attributeRows] = await db.query(
+                `SELECT 
+                  MaThongSoBienTheMau as maThongSo,
+                  TenThongSoBienThe as tenThongSo,
+                  DonVi as donVi,
+                  ThuTuHienThi as thuTuHienThi
+                FROM ThongSoBienTheMau
+                WHERE MaLoai = ? AND TinhTrangThongSoBienThe = 1
+                ORDER BY ThuTuHienThi ASC`,
+                [maLoai]
+            );
+
+            // Bước 3: Với mỗi thông số, lấy CHÍNH XÁC các giá trị có trong biến thể
+            const attributes = [];
+
+            for (const attr of attributeRows) {
+                const [valueRows] = await db.query(
+                    `SELECT DISTINCT
+                        gtb.GiaTriHienThi as giaTriHienThi,
+                        gtb.GiaTriNhap as giaTriNhap,
+                        MIN(gtb.ThuTuHienThi) as thuTuHienThi
+                      FROM BienThe bt
+                      JOIN GiaTriBienThe gtb ON bt.MaBienThe = gtb.MaBienThe
+                      WHERE bt.MaSP = ?
+                        AND gtb.MaThongSoBienTheMau = ?
+                        AND bt.TinhTrangHoatDong = 1
+                      GROUP BY gtb.GiaTriHienThi, gtb.GiaTriNhap
+                      ORDER BY MIN(gtb.ThuTuHienThi)`,
+                    [maSP, attr.maThongSo]
+                );
+
+                // ✅ CHỈ thêm attribute nếu có options
+                if (valueRows.length > 0) {
+                    attributes.push({
+                      ...attr,
+                      options: valueRows
+                    });
+                }
+            }
+
+            return attributes;
+        } catch (error) {
+            console.error('Error in getVariantAttributes:', error);
+            throw error;
+        }
     },
 };
 

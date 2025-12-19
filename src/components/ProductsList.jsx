@@ -1,13 +1,14 @@
 //src/components/ProductsList.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { sanPhamAPI } from "../services/api";
 import { ShoppingCart, Eye } from "lucide-react";
 import { useUser, SignInButton } from "@clerk/clerk-react";
 
 export default function ProductsList({ products, priceRange }) {
   const { isSignedIn } = useUser();
+  const navigate = useNavigate();
   const [productsWithVariants, setProductsWithVariants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -75,50 +76,19 @@ export default function ProductsList({ products, priceRange }) {
     }).format(price);
   };
 
+  // ✅ SỬA: Chỉ navigate đến chi tiết, không fetch cart
   const addToCart = (product, e) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Kiểm tra đăng nhập
     if (!isSignedIn) {
       setShowLoginModal(true);
       return;
     }
     
-    // Get the first available variant
-    const firstVariant = product.variants[0];
-    if (!firstVariant) {
-      alert('Sản phẩm tạm hết hàng');
-      return;
-    }
-
-    const cartItem = {
-      maBienThe: firstVariant.MaBienThe,
-      tenSanPham: product.Ten,
-      tenBienThe: firstVariant.TenBienThe,
-      giaTien: firstVariant.GiaTienBienThe,
-      soLuong: 1,
-      hinhAnh: firstVariant.DuongDanAnhBienThe || product.images[0]?.DuongDanLuuAnh,
-    };
-
-    // Get existing cart
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    
-    // Check if item exists
-    const existingIndex = cart.findIndex(item => item.maBienThe === cartItem.maBienThe);
-    
-    if (existingIndex >= 0) {
-      cart[existingIndex].soLuong += 1;
-    } else {
-      cart.push(cartItem);
-    }
-
-    localStorage.setItem('cart', JSON.stringify(cart));
-    
-    // Dispatch event to update cart count
-    window.dispatchEvent(new Event('cartUpdated'));
-    
-    alert('Đã thêm vào giỏ hàng!');
+    // ✅ CHỈNH: Navigate đến ProductDetail thay vì thêm trực tiếp
+    // ProductDetail sẽ xử lý logic thêm vào giỏ
+    navigate(`/products/${product.MaSP}`);
   };
 
   if (loading) {
@@ -173,9 +143,13 @@ export default function ProductsList({ products, priceRange }) {
       )}
 
       {productsWithVariants.map((product, index) => {
-        const mainImage = product.images[0]?.DuongDanLuuAnh 
-                    || product.variants[0]?.DuongDanAnhBienThe 
-                    || '/assets/placeholder.png';
+        // ✅ Ưu tiên ảnh từ bảng AnhSP, fallback sang ảnh variant đầu tiên
+        const productImages = product.images?.map(img => img.DuongDanLuuAnh) || [];
+        const variantImages = product.variants?.map(v => v.DuongDanAnhBienThe).filter(Boolean) || [];
+        
+        // Loại bỏ trùng lặp bằng Set
+        const uniqueImages = [...new Set([...productImages, ...variantImages])];
+        const mainImage = uniqueImages[0] || '/assets/placeholder.png';
 
         const hasMultipleVariants = product.variants.length > 1;
         const inStock = product.variants.some(v => v.SoLuongTonKho > 0);
@@ -247,18 +221,15 @@ export default function ProductsList({ products, priceRange }) {
               </div>
 
               {/* Action button */}
-              <button
-                onClick={(e) => addToCart(product, e)}
-                disabled={!inStock}
-                className={`w-full py-3 px-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
-                  inStock
-                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-md hover:shadow-lg'
-                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                <ShoppingCart className="w-4 h-4" />
-                {inStock ? 'Thêm vào giỏ' : 'Hết hàng'}
-              </button>
+              <div className="mt-4 flex-1 flex flex-col justify-end">
+                <button
+                  onClick={(e) => addToCart(product, e)}
+                  className="w-full py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Xem chi tiết
+                </button>
+              </div>
             </div>
           </Link>
         );

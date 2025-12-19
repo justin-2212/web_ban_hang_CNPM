@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { gioHangAPI, checkoutAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { ArrowLeft, CreditCard, Truck } from "lucide-react";
@@ -7,8 +7,10 @@ import { ArrowLeft, CreditCard, Truck } from "lucide-react";
 const Checkout = () => {
   const navigate = useNavigate();
   const { dbUser, loadingUser } = useAuth();
+  const [searchParams] = useSearchParams();
 
   const [cartItems, setCartItems] = useState([]);
+  const [selectedMaBienThe, setSelectedMaBienThe] = useState(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [phuongThucThanhToan, setPhuongThucThanhToan] =
@@ -32,12 +34,32 @@ const Checkout = () => {
 
     try {
       const res = await gioHangAPI.get(dbUser.MaTaiKhoan);
-      setCartItems(res.data?.items || []);
+      const items = res.data?.items || [];
+      setCartItems(items);
+
+      // ✅ NEW: Lấy danh sách sản phẩm được chọn từ query param hoặc chọn tất cả
+      const selectedParam = searchParams.get("selected");
+      if (selectedParam) {
+        try {
+          const selected = JSON.parse(decodeURIComponent(selectedParam));
+          setSelectedMaBienThe(new Set(selected));
+        } catch (e) {
+          // Nếu parse lỗi, chọn tất cả
+          setSelectedMaBienThe(
+            new Set(items.map((item) => item.MaBienThe))
+          );
+        }
+      } else {
+        // Nếu không có param, chọn tất cả (fallback)
+        setSelectedMaBienThe(
+          new Set(items.map((item) => item.MaBienThe))
+        );
+      }
     } catch (err) {
       console.error(err);
       setError("Không thể tải giỏ hàng");
     }
-  }, [dbUser]);
+  }, [dbUser, searchParams]);
 
   useEffect(() => {
     if (!loadingUser && dbUser?.MaTaiKhoan) {
@@ -46,9 +68,13 @@ const Checkout = () => {
   }, [loadingUser, dbUser, fetchCart]);
 
   // =========================
-  // Tổng tiền (chỉ hiển thị)
+  // ✅ NEW: Tổng tiền (chỉ sản phẩm được chọn)
   // =========================
-  const tongTien = cartItems.reduce(
+  const selectedItems = cartItems.filter((item) =>
+    selectedMaBienThe.has(item.MaBienThe)
+  );
+
+  const tongTien = selectedItems.reduce(
     (sum, item) => sum + item.GiaTienBienThe * item.SoLuong,
     0
   );
@@ -62,8 +88,8 @@ const Checkout = () => {
       return;
     }
 
-    if (cartItems.length === 0) {
-      alert("Giỏ hàng trống");
+    if (selectedItems.length === 0) {
+      alert("Vui lòng chọn ít nhất 1 sản phẩm");
       return;
     }
 
@@ -71,34 +97,57 @@ const Checkout = () => {
       setLoading(true);
       setError("");
 
-      const res = await checkoutAPI.checkout({
-        maTaiKhoan: dbUser.MaTaiKhoan,
-        phuongThucThanhToan,
-      });
-
       // ===== COD =====
       if (phuongThucThanhToan === "COD") {
-        // ✅ Dispatch event để update header cart count
+        const res = await checkoutAPI.checkout({
+          maTaiKhoan: dbUser.MaTaiKhoan,
+          phuongThucThanhToan: "COD",
+          // ✅ NEW: Chỉ gửi sản phẩm được chọn
+          cartItems: selectedItems.map(item => ({
+            MaBienThe: item.MaBienThe,
+            SoLuong: item.SoLuong,
+            GiaTienBienThe: item.GiaTienBienThe,
+          })),
+        });
+
         window.dispatchEvent(new CustomEvent("cartServerUpdated"));
         navigate(`/order-success?orderId=${res.data.maDonHang}&status=success`);
         return;
       }
 
       // ===== MOMO ONLINE =====
-      if (res.data.paymentUrl) {
-        //⚠️ KHÔNG dispatch cartServerUpdated
-        // Giỏ hàng vẫn giữ cho đến khi callback thành công
-        window.location.href = res.data.paymentUrl;
-      } else {
-        throw new Error("Không tạo được link thanh toán");
+      if (phuongThucThanhToan === "ONLINE") {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api"}/thanh-toan/momo/create-payment`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              maTaiKhoan: dbUser.MaTaiKhoan,
+              // ✅ NEW: Chỉ gửi sản phẩm được chọn
+              cartItems: selectedItems.map(item => ({
+                MaBienThe: item.MaBienThe,
+                SoLuong: item.SoLuong,
+                GiaTienBienThe: item.GiaTienBienThe,
+              })),
+              tongTien,
+            }),
+          }
+        );
+
+        const data = await res.json();
+
+        if (data.success && data.data?.paymentUrl) {
+          window.location.href = data.data.paymentUrl;
+        } else {
+          throw new Error(
+            data.message || "Không tạo được link thanh toán"
+          );
+        }
       }
     } catch (err) {
       console.error(err);
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          "Thanh toán thất bại"
-      );
+      setError(err.message || "Thanh toán thất bại");
     } finally {
       setLoading(false);
     }
@@ -163,11 +212,11 @@ const Checkout = () => {
           {/* ===================== */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
             <h3 className="text-xl font-semibold mb-4">
-              Sản phẩm
+              Sản phẩm ({selectedItems.length})
             </h3>
 
             <div className="space-y-4">
-              {cartItems.map((item) => (
+              {selectedItems.map((item) => (
                 <div
                   key={item.MaBienThe}
                   className="flex items-center justify-between border-b pb-4"
@@ -258,16 +307,16 @@ const Checkout = () => {
 
             <button
               onClick={handleCheckout}
-              disabled={loading}
+              disabled={loading || selectedItems.length === 0}
               className={`w-full py-3 rounded-lg font-semibold text-white transition ${
-                loading
-                  ? "bg-gray-400"
+                loading || selectedItems.length === 0
+                  ? "bg-gray-400 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
               {loading
                 ? "Đang xử lý..."
-                : "Xác nhận thanh toán"}
+                : `Xác nhận thanh toán (${selectedItems.length})`}
             </button>
           </div>
         </div>

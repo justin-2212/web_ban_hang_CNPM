@@ -9,6 +9,8 @@ import {
   Loader2,
   ArrowRight,
   CircleUser,
+  Trash2,
+  Clock,
 } from "lucide-react";
 import AppleLogo from "../assets/logo.png";
 import { sanPhamAPI, gioHangAPI } from "../services/api";
@@ -19,10 +21,12 @@ import {
   SignInButton,
 } from "@clerk/clerk-react";
 import { useAuth } from "../context/AuthContext";
+import { useSearchHistory } from "../hooks/useSearchHistory";
 
 const Header = () => {
   const navigate = useNavigate();
   const { dbUser, loadingUser } = useAuth();
+  const { history, addSearch, clearHistory, removeItem } = useSearchHistory();
 
   const [query, setQuery] = useState("");
   const [filtered, setFiltered] = useState([]);
@@ -52,38 +56,46 @@ const Header = () => {
     }
   }, [showSearch]);
 
-  // Lấy số lượng giỏ hàng từ DB
+  // Fetch cart count
   useEffect(() => {
+    let isMounted = true;
+
     const fetchCartCount = async () => {
       if (!dbUser?.MaTaiKhoan) {
-        setCartCount(0);
+        if (isMounted) setCartCount(0);
         return;
       }
+
       try {
         const res = await gioHangAPI.get(dbUser.MaTaiKhoan);
-        // Lấy từ totalItems (backend return totalItems)
-        const total = res.data?.totalItems ?? 0;
-        setCartCount(total);
+        if (isMounted) {
+          const total = res.data?.totalItems ?? 0;
+          setCartCount(total);
+        }
       } catch (err) {
-        console.error("Error fetching cart count:", err);
-        setCartCount(0);
+        if (isMounted) setCartCount(0);
       }
     };
 
-    // Fetch lần đầu khi user login
     if (!loadingUser && dbUser?.MaTaiKhoan) {
       fetchCartCount();
+    } else if (!dbUser?.MaTaiKhoan) {
+      setCartCount(0);
     }
 
-    // LISTENER để update khi có event từ cart/checkout
     const handleCartUpdate = () => {
-      fetchCartCount();
+      if (isMounted && dbUser?.MaTaiKhoan) {
+        fetchCartCount();
+      }
     };
 
     window.addEventListener("cartServerUpdated", handleCartUpdate);
-    return () =>
+
+    return () => {
+      isMounted = false;
       window.removeEventListener("cartServerUpdated", handleCartUpdate);
-  }, [loadingUser, dbUser?.MaTaiKhoan]);
+    };
+  }, [dbUser?.MaTaiKhoan, loadingUser]);
 
   // Tìm kiếm logic
   const handleSearch = (value) => {
@@ -126,8 +138,23 @@ const Header = () => {
   };
 
   const handleSearchResultClick = (productId) => {
+    addSearch(query);
     clearSearch();
     navigate(`/products/${productId}`);
+  };
+
+  const handleHistoryClick = (historyQuery) => {
+    setQuery(historyQuery);
+    handleSearch(historyQuery);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (query.trim()) {
+      addSearch(query);
+      navigate(`/products?search=${encodeURIComponent(query)}`);
+      clearSearch();
+    }
   };
 
   // --- STYLES ---
@@ -210,7 +237,7 @@ const Header = () => {
               {/* SEARCH DROPDOWN */}
               {showSearch && (
                 <div className="absolute right-0 top-14 bg-white/90 backdrop-blur-2xl border border-gray-200 rounded-2xl w-[90vw] md:w-[450px] max-h-[500px] overflow-hidden z-50 shadow-2xl origin-top-right animate-in fade-in zoom-in-95 duration-200">
-                  <div className="p-4 border-b border-gray-100">
+                  <form onSubmit={handleSearchSubmit} className="p-4 border-b border-gray-100">
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 !text-red-500" />
@@ -227,13 +254,14 @@ const Header = () => {
                         )}
                       </div>
                       <button
+                        type="button"
                         onClick={clearSearch}
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors !bg-transparent !mt-0"
                       >
                         <X className="w-5 h-5" />
                       </button>
                     </div>
-                  </div>
+                  </form>
 
                   <div className="max-h-96 overflow-y-auto">
                     {filtered.length > 0 ? (
@@ -272,22 +300,64 @@ const Header = () => {
                         </p>
                       </div>
                     ) : (
-                      <div className="p-6">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                          Từ khóa phổ biến
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {["iPhone 15", "MacBook", "iPad", "AirPods"].map(
-                            (tag) => (
+                      <div className="p-4">
+                        {history.length > 0 && (
+                          <>
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-gray-400" />
+                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                  Lịch sử tìm kiếm
+                                </p>
+                              </div>
                               <button
-                                key={tag}
-                                onClick={() => handleSearch(tag)}
-                                className="px-3 py-1 !bg-white hover:!bg-gray-100 !text-gray-600 text-sm rounded-lg border border-gray-100 transition-colors !mt-0"
+                                onClick={clearHistory}
+                                className="text-xs text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1 !mt-0"
                               >
-                                {tag}
+                                <Trash2 className="w-3 h-3" />
+                                Xóa tất cả
                               </button>
-                            )
-                          )}
+                            </div>
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {history.map((item) => (
+                                <div
+                                  key={item}
+                                  className="group relative flex items-center"
+                                >
+                                  <button
+                                    onClick={() => handleHistoryClick(item)}
+                                    className="px-3 py-1.5 !bg-gray-100 hover:!bg-blue-100 !text-gray-700 hover:!text-blue-600 text-sm rounded-lg border border-gray-200 transition-all !mt-0"
+                                  >
+                                    {item}
+                                  </button>
+                                  <button
+                                    onClick={() => removeItem(item)}
+                                    className="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 !mt-0"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                        <div>
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                            Từ khóa phổ biến
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {["iPhone 15", "MacBook", "iPad", "AirPods"].map(
+                              (tag) => (
+                                <button
+                                  key={tag}
+                                  onClick={() => handleHistoryClick(tag)}
+                                  className="px-3 py-1 !bg-white hover:!bg-gray-100 !text-gray-600 text-sm rounded-lg border border-gray-100 transition-colors !mt-0"
+                                >
+                                  {tag}
+                                </button>
+                              )
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -361,16 +431,16 @@ const Header = () => {
       {/* --- MOBILE NAV --- */}
       <div className="lg:hidden border-t border-gray-100 bg-white">
         <nav className="container mx-auto px-6 py-3 flex items-center justify-around text-sm">
-          <NavLink to="/" className={mobileNavLinkStyle} end>
+          <NavLink to="/" className={({ isActive }) => `hover:text-blue-600 transition-colors relative group py-2 ${isActive ? "text-blue-600 font-bold" : "text-gray-800 font-semibold"}`} end>
             Trang chủ
           </NavLink>
-          <NavLink to="/products" className={mobileNavLinkStyle}>
+          <NavLink to="/products" className={({ isActive }) => `hover:text-blue-600 transition-colors relative group py-2 ${isActive ? "text-blue-600 font-bold" : "text-gray-800 font-semibold"}`}>
             Sản phẩm
           </NavLink>
-          <NavLink to="/about" className={mobileNavLinkStyle}>
+          <NavLink to="/about" className={({ isActive }) => `hover:text-blue-600 transition-colors relative group py-2 ${isActive ? "text-blue-600 font-bold" : "text-gray-800 font-semibold"}`}>
             Về chúng tôi
           </NavLink>
-          <NavLink to="/contact" className={mobileNavLinkStyle}>
+          <NavLink to="/contact" className={({ isActive }) => `hover:text-blue-600 transition-colors relative group py-2 ${isActive ? "text-blue-600 font-bold" : "text-gray-800 font-semibold"}`}>
             Liên hệ
           </NavLink>
         </nav>

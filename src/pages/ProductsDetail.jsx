@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useUser, SignInButton } from "@clerk/clerk-react";
 import { useAuth } from "../context/AuthContext";
+import OptionSelector from "../components/OptionSelector";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -35,67 +36,184 @@ export default function ProductDetail() {
   const [error, setError] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
+  // State cho thông số biến thể
+  const [variantAttributes, setVariantAttributes] = useState([]);
+  const [selectedAttributes, setSelectedAttributes] = useState({});
+
   // ---------------------------
-  // 1. LOAD PRODUCT DATA
+  // 1. LOAD PRODUCT DATA (FIXED - Handle missing variant attributes)
   // ---------------------------
   useEffect(() => {
-    setLoading(true);
-    sanPhamAPI
-      .getDetail(id)
-      .then((res) => {
-        const data = res.data;
-        setProduct(data);
+    const loadData = async () => {
+      setLoading(true);
 
-        const defaultVariant = data.variants?.[0] || null;
-        setSelectedVariant(defaultVariant);
-
-        // --- Merge images ---
-        const productImgs = (data.images || []).map((img) => ({
-          src: img.DuongDanLuuAnh,
-          type: "product",
-        }));
-
-        // Lấy TẤT CẢ ảnh variant
-        const variantImgs = (data.variants || [])
-          .filter((v) => v.DuongDanAnhBienThe)
-          .map((v) => ({
-            src: v.DuongDanAnhBienThe,
-            type: "variant",
-            maBienThe: v.MaBienThe,
-          }));
-
-        // Lọc trùng
-        const seen = new Set(productImgs.map((i) => i.src));
-        const uniqueVariantImgs = variantImgs.filter((v) => {
-          if (seen.has(v.src)) {
-            // seen.add(v.src); xóa do bị lỗi trùng ảnh ở iphone 13 và 13 mini
-            return false; // true->false
-          }
-          seen.add(v.src);
-          return true;
-        });
-
-        const merged = [...productImgs, ...uniqueVariantImgs];
-        setAllImages(merged);
-
-        // Set initial active image
-        let initialIndex = 0;
-        if (defaultVariant?.DuongDanAnhBienThe) {
-          const found = merged.findIndex(
-            (i) =>
-              i.type === "variant" &&
-              String(i.maBienThe) === String(defaultVariant.MaBienThe)
-          );
-          if (found >= 0) initialIndex = found;
+      try {
+        // Fetch product detail
+        const productResult = await sanPhamAPI.getDetail(id);
+        if (!productResult.success) {
+          setError("Không thể tải thông tin sản phẩm");
+          setLoading(false);
+          return;
         }
-        setActiveImageIndex(initialIndex);
-        setThumbStart(
-          Math.max(0, initialIndex - Math.floor(THUMB_PER_ROW / 2))
-        );
-      })
-      .catch(() => setError("Không thể tải thông tin sản phẩm"))
-      .finally(() => setLoading(false));
+
+        setProduct(productResult.data);
+
+        // ✅ KHỞI TẠO allImages
+        const imagesList = [];
+        const seenUrls = new Set();
+
+        if (productResult.data.images?.length > 0) {
+          productResult.data.images.forEach((img) => {
+            if (!seenUrls.has(img.DuongDanLuuAnh)) {
+              imagesList.push({
+                src: img.DuongDanLuuAnh,
+                type: "product",
+                maSP: productResult.data.MaSP,
+              });
+              seenUrls.add(img.DuongDanLuuAnh);
+            }
+          });
+        }
+
+        if (productResult.data.variants?.length > 0) {
+          productResult.data.variants.forEach((variant) => {
+            if (variant.DuongDanAnhBienThe && !seenUrls.has(variant.DuongDanAnhBienThe)) {
+              imagesList.push({
+                src: variant.DuongDanAnhBienThe,
+                type: "variant",
+                maBienThe: variant.MaBienThe,
+              });
+              seenUrls.add(variant.DuongDanAnhBienThe);
+            }
+          });
+        }
+
+        setAllImages(imagesList);
+
+        // Fetch variant attributes
+        const attrResult = await sanPhamAPI.getVariantAttributes(id);
+
+        if (attrResult.success && attrResult.data.length > 0) {
+          setVariantAttributes(attrResult.data);
+
+          // ✅ Lấy variant ĐẦU TIÊN CÒN HÀNG
+          const firstAvailableVariant = productResult.data.variants?.find(
+            v => v.SoLuongTonKho > 0
+          ) || productResult.data.variants?.[0];
+
+          // ✅ FIX: Kiểm tra variant có thongSo không
+          if (firstAvailableVariant) {
+            if (firstAvailableVariant.thongSo && firstAvailableVariant.thongSo.length > 0) {
+              // Có thông số → khởi tạo selectedAttributes
+              const initialSelection = {};
+              firstAvailableVariant.thongSo.forEach((spec) => {
+                initialSelection[spec.maThongSo] = spec.giaTriNhap;
+              });
+              setSelectedAttributes(initialSelection);
+              setSelectedVariant(firstAvailableVariant);
+
+              // Tự động chuyển ảnh
+              if (firstAvailableVariant.DuongDanAnhBienThe && imagesList.length > 0) {
+                const imgIndex = imagesList.findIndex(
+                  (img) => img.src === firstAvailableVariant.DuongDanAnhBienThe
+                );
+                if (imgIndex >= 0) {
+                  setActiveImageIndex(imgIndex);
+                }
+              }
+            } else {
+              // ⚠️ KHÔNG CÓ thongSo → bỏ qua variant attributes, chọn variant đầu tiên
+              console.warn(`[Product ${id}] Variant ${firstAvailableVariant.MaBienThe} không có thông số biến thể`);
+              setSelectedVariant(firstAvailableVariant);
+              setVariantAttributes([]); // Reset về rỗng
+            }
+          }
+        } else {
+          // Không có variant attributes → chọn variant đầu tiên
+          if (productResult.data.variants?.length > 0) {
+            setSelectedVariant(productResult.data.variants[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+        setError("Không thể tải thông tin sản phẩm");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, [id]);
+
+  // ---------------------------
+  // 2. TÌM BIẾN THỂ PHÙ HỢP (COMPLETELY REWRITTEN)
+  // ---------------------------
+  useEffect(() => {
+    if (!product?.variants || Object.keys(selectedAttributes).length === 0)
+      return;
+
+    // ✅ Tìm variant khớp CHÍNH XÁC với tất cả attributes đã chọn
+    const matchingVariant = product.variants.find((variant) => {
+      if (!variant.thongSo || variant.thongSo.length === 0) {
+        return false;
+      }
+
+      // Kiểm tra số lượng thông số phải khớp
+      if (variant.thongSo.length !== Object.keys(selectedAttributes).length) {
+        return false;
+      }
+
+      // Kiểm tra TẤT CẢ thông số đã chọn phải khớp
+      return Object.entries(selectedAttributes).every(([maThongSo, giaTriNhap]) => {
+        const variantSpec = variant.thongSo.find(
+          (spec) => String(spec.maThongSo) === String(maThongSo)
+        );
+        return variantSpec && variantSpec.giaTriNhap === giaTriNhap;
+      });
+    });
+
+    if (matchingVariant) {
+      setSelectedVariant(matchingVariant);
+
+      // ✅ TỰ ĐỘNG CHUYỂN ẢNH KHI CHỌN VARIANT
+      if (matchingVariant.DuongDanAnhBienThe && allImages.length > 0) {
+        const imgIndex = allImages.findIndex(
+          (img) => img.src === matchingVariant.DuongDanAnhBienThe
+        );
+
+        if (imgIndex >= 0 && imgIndex !== activeImageIndex) {
+          changeActiveImage(imgIndex);
+        }
+      }
+    } else {
+      // ✅ Chỉ set null nếu đã chọn đủ số lượng attributes
+      if (Object.keys(selectedAttributes).length === variantAttributes.length) {
+        setSelectedVariant(null);
+      }
+    }
+  }, [selectedAttributes, product, allImages, variantAttributes, activeImageIndex]);
+
+  // ---------------------------
+  // 3. XỬ LÝ CHỌN THÔNG SỐ (CẢI TIẾN)
+  // ---------------------------
+  const handleSelectAttribute = (maThongSo, giaTriNhap) => {
+    setSelectedAttributes((prev) => {
+      const newSelection = { ...prev };
+      newSelection[maThongSo] = giaTriNhap;
+
+      // ✅ RESET các lựa chọn PHÍA SAU khi thay đổi lựa chọn trước
+      const currentIndex = variantAttributes.findIndex(
+        (attr) => attr.maThongSo === parseInt(maThongSo)
+      );
+
+      // Xóa tất cả lựa chọn sau vị trí hiện tại
+      variantAttributes.slice(currentIndex + 1).forEach((attr) => {
+        delete newSelection[attr.maThongSo];
+      });
+
+      return newSelection;
+    });
+  };
 
   // ---------------------------
   // 2. CHANGE ACTIVE IMAGE (Logic trượt thumbnail tự động)
@@ -125,34 +243,95 @@ export default function ProductDetail() {
   };
 
   // ---------------------------
-  // 3. SELECT VARIANT
+  // ✅ HELPER: TÍNH TOÁN OPTION KHẢ DỤNG (REWRITTEN)
   // ---------------------------
-  const handleSelectVariant = (variant) => {
-    setSelectedVariant(variant);
+  const getAvailableOptions = (attributeIndex) => {
+    const attribute = variantAttributes[attributeIndex];
+    if (!attribute) return { available: new Set(), disabled: new Set() };
 
-    if (!variant?.DuongDanAnhBienThe) return;
-
-    // Tìm ảnh variant theo MaBienThe (ưu tiên)
-    const exactMatch = allImages.findIndex(
-      (i) =>
-        i.type === "variant" &&
-        String(i.maBienThe) === String(variant.MaBienThe)
-    );
-
-    if (exactMatch >= 0) {
-      changeActiveImage(exactMatch);
-      return;
+    // Lấy tất cả lựa chọn ĐÃ CHỌN trước attributeIndex
+    const previousSelections = {};
+    for (let i = 0; i < attributeIndex; i++) {
+      const prevAttr = variantAttributes[i];
+      const value = selectedAttributes[prevAttr.maThongSo];
+      if (value !== undefined) {
+        previousSelections[prevAttr.maThongSo] = value;
+      }
     }
 
-    // Nếu không tìm thấy exact match, tìm theo URL ảnh
-    const urlMatch = allImages.findIndex(
-      (i) => i.src === variant.DuongDanAnhBienThe
-    );
+    // Nếu chưa có lựa chọn nào trước đó, tất cả options đều available
+    if (Object.keys(previousSelections).length === 0) {
+      const available = new Set();
+      const disabled = new Set();
 
-    if (urlMatch >= 0) {
-      changeActiveImage(urlMatch);
-      return;
+      product.variants.forEach((variant) => {
+        const variantSpec = variant.thongSo?.find(
+          (spec) => String(spec.maThongSo) === String(attribute.maThongSo)
+        );
+
+        if (variantSpec) {
+          if (variant.SoLuongTonKho > 0) {
+            available.add(variantSpec.giaTriNhap);
+          } else {
+            if (!available.has(variantSpec.giaTriNhap)) {
+              disabled.add(variantSpec.giaTriNhap);
+            }
+          }
+        }
+      });
+
+      return { available, disabled };
     }
+
+    // Lọc variants khớp với lựa chọn trước đó
+    const matchingVariants = product.variants.filter((variant) => {
+      if (!variant.thongSo || variant.thongSo.length === 0) return false;
+
+      // Kiểm tra TẤT CẢ thông số đã chọn trước đó
+      return Object.entries(previousSelections).every(([maThongSo, giaTriNhap]) => {
+        const variantSpec = variant.thongSo.find(
+          (spec) => String(spec.maThongSo) === String(maThongSo)
+        );
+        return variantSpec && variantSpec.giaTriNhap === giaTriNhap;
+      });
+    });
+
+    const available = new Set();
+    const disabled = new Set();
+
+    // Duyệt qua variants khớp để xác định options khả dụng
+    matchingVariants.forEach((variant) => {
+      const variantSpec = variant.thongSo.find(
+        (spec) => String(spec.maThongSo) === String(attribute.maThongSo)
+      );
+
+      if (variantSpec) {
+        const optionValue = variantSpec.giaTriNhap;
+        
+        if (variant.SoLuongTonKho > 0) {
+          available.add(optionValue);
+          disabled.delete(optionValue);
+        } else if (!available.has(optionValue)) {
+          disabled.add(optionValue);
+        }
+      }
+    });
+
+    return { available, disabled };
+  };
+
+  // ---------------------------
+  // ✅ HELPER: LỌC OPTIONS HIỂN THỊ
+  // ---------------------------
+  const getFilteredOptions = (attribute, attributeIndex) => {
+    const { available, disabled } = getAvailableOptions(attributeIndex);
+
+    // ✅ LUÔN hiển thị TẤT CẢ options từ DB, chỉ đánh dấu trạng thái
+    return attribute.options.map((option) => ({
+      ...option,
+      isAvailable: available.has(option.giaTriNhap),
+      isDisabled: disabled.has(option.giaTriNhap),
+    }));
   };
 
   // ---------------------------
@@ -164,7 +343,24 @@ export default function ProductDetail() {
       currency: "VND",
     }).format(price || 0);
 
-    const addToCart = async () => {
+  const formatSpecValue = (giaTriHienThi, donVi) => {
+    // Nếu DonVi trống hoặc GiaTriHienThi đã chứa DonVi, chỉ hiển thị GiaTriHienThi
+    if (!donVi || !giaTriHienThi) {
+      return giaTriHienThi;
+    }
+    
+    const displayValue = String(giaTriHienThi).trim();
+    const unit = String(donVi).trim();
+    
+    // Kiểm tra xem GiaTriHienThi đã chứa DonVi hay chưa
+    if (displayValue.includes(unit)) {
+      return displayValue;
+    }
+    
+    return `${displayValue} ${unit}`;
+  };
+
+  const addToCart = async () => {
     if (!isSignedIn) {
       return setShowLoginModal(true);
     }
@@ -174,11 +370,30 @@ export default function ProductDetail() {
     }
 
     if (!dbUser?.MaTaiKhoan) {
-      return alert("Không tìm thấy tài khoản trong hệ thống. Vui lòng đăng nhập lại.");
+      return alert(
+        "Không tìm thấy tài khoản trong hệ thống. Vui lòng đăng nhập lại."
+      );
+    }
+
+    // ✅ FIX: Kiểm tra đã chọn đủ thông số chưa
+    if (variantAttributes.length > 0) {
+      const missingAttributes = variantAttributes.filter(
+        attr => !selectedAttributes[attr.maThongSo]
+      );
+
+      if (missingAttributes.length > 0) {
+        const missingNames = missingAttributes.map(attr => attr.tenThongSo).join(', ');
+        return alert(`Vui lòng chọn: ${missingNames}`);
+      }
     }
 
     if (!selectedVariant) {
-      return alert("Vui lòng chọn phiên bản sản phẩm");
+      return alert("Không tìm thấy sản phẩm phù hợp với lựa chọn của bạn");
+    }
+
+    // ✅ Kiểm tra tồn kho
+    if (selectedVariant.SoLuongTonKho <= 0) {
+      return alert("Sản phẩm này hiện đã hết hàng");
     }
 
     try {
@@ -188,11 +403,9 @@ export default function ProductDetail() {
         1
       );
 
-      // Nếu backend trả success: true mới dispatch event
       if (response.success) {
         window.dispatchEvent(new CustomEvent("cartServerUpdated"));
-        alert("Đã thêm vào giỏ hàng! Nhấp OK để xem giỏ hàng.");
-        // navigate("/cart"); sau khi thêm vào giỏ hàng sẽ link tới giỏ hàng
+        alert("Đã thêm vào giỏ hàng!");
       } else {
         alert(response.message || "Không thể thêm vào giỏ hàng");
       }
@@ -201,7 +414,6 @@ export default function ProductDetail() {
       alert(err.message || "Lỗi khi thêm vào giỏ hàng. Vui lòng thử lại.");
     }
   };
-
 
   // ---------------------------
   // 5. NAVIGATION HANDLERS
@@ -236,6 +448,10 @@ export default function ProductDetail() {
 
   const thumbVisible = allImages.slice(thumbStart, thumbStart + THUMB_PER_ROW);
   const inStock = selectedVariant?.SoLuongTonKho > 0;
+  
+  // ✅ Kiểm tra đã chọn đủ thông số chưa
+  const hasAllAttributesSelected = variantAttributes.length === 0 || 
+    Object.keys(selectedAttributes).length === variantAttributes.length;
 
   // ---------------------------
   // 6. RENDER
@@ -435,62 +651,59 @@ export default function ProductDetail() {
                 )}
               </div>
 
-              {/* Variants */}
-              {product.variants?.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    Chọn phiên bản:
+              {/* THÔNG SỐ BIẾN THỂ */}
+              {variantAttributes.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Chọn cấu hình:
                   </h3>
+                  {variantAttributes.map((attr, index) => {
+                    const filteredOptions = getFilteredOptions(attr, index);
+                    
+                    return (
+                      <OptionSelector
+                        key={attr.maThongSo}
+                        attribute={{
+                          ...attr,
+                          options: filteredOptions,
+                        }}
+                        selectedValue={selectedAttributes[attr.maThongSo]}
+                        onSelect={handleSelectAttribute}
+                      />
+                    );
+                  })}
+                </div>
+              )}
 
-                  <div className="grid grid-cols-2 gap-3">
-                    {product.variants.map((variant) => {
-                      const isSelected =
-                        selectedVariant?.MaBienThe === variant.MaBienThe;
-                      const available = variant.SoLuongTonKho > 0;
-
-                      return (
-                        <button
-                          key={variant.MaBienThe}
-                          onClick={() => handleSelectVariant(variant)}
-                          disabled={!available}
-                          className={`p-4 rounded-xl border-2 text-left transition-all ${
-                            isSelected
-                              ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
-                              : available
-                              ? "border-gray-200 hover:border-blue-300"
-                              : "border-gray-200 opacity-50 cursor-not-allowed"
-                          }`}
-                        >
-                          <div className="font-medium text-gray-900">
-                            {variant.TenBienThe}
-                          </div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            {formatPrice(variant.GiaTienBienThe)}
-                          </div>
-                          {!available && (
-                            <div className="text-xs text-red-600 mt-1">
-                              Hết hàng
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+              {/* ✅ Hiển thị message khi không có variant khớp (CHỈ KHI ĐÃ CHỌN ĐẦY ĐỦ) */}
+              {variantAttributes.length > 0 && 
+               Object.keys(selectedAttributes).length === variantAttributes.length &&
+               !selectedVariant && (
+                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    ⚠️ Không tìm thấy biến thể phù hợp. Vui lòng chọn lại.
+                  </p>
                 </div>
               )}
 
               {/* Add to Cart */}
               <button
                 onClick={addToCart}
-                disabled={!inStock}
+                disabled={!hasAllAttributesSelected || !selectedVariant || !inStock}
                 className={`w-full py-4 px-6 rounded-xl font-semibold text-lg flex items-center justify-center gap-3 transition-all ${
-                  inStock
+                  hasAllAttributesSelected && selectedVariant && inStock
                     ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-xl"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
               >
                 <ShoppingCart className="w-6 h-6" />
-                {inStock ? "Thêm vào giỏ hàng" : "Hết hàng"}
+                {!hasAllAttributesSelected
+                  ? "Vui lòng chọn đầy đủ thông số"
+                  : !selectedVariant
+                  ? "Không có sản phẩm phù hợp"
+                  : !inStock
+                  ? "Hết hàng"
+                  : "Thêm vào giỏ hàng"}
               </button>
 
               {/* Specs */}
@@ -505,11 +718,9 @@ export default function ProductDetail() {
                         key={i}
                         className="flex justify-between py-2 border-b border-gray-100"
                       >
-                        <span className="text-gray-600">
-                          {spec.TenThongSo}:
-                        </span>
+                        <span className="text-gray-600">{spec.TenThongSo}:</span>
                         <span className="font-medium text-gray-900">
-                          {spec.GiaTriHienThi} {spec.DonVi}
+                          {formatSpecValue(spec.GiaTriHienThi, spec.DonVi)}
                         </span>
                       </div>
                     ))}

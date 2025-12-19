@@ -4,18 +4,13 @@ import BienThe from "../models/bienThe.model.js";
 
 const CheckoutService = {
   checkout: async ({ maTaiKhoan, phuongThucThanhToan }) => {
-    // ===== COD hoặc ONLINE: Lưu đơn hàng ngay =====
     const conn = await db.getConnection();
 
     try {
       await conn.beginTransaction();
 
-      // 1. Lấy giỏ hàng (PHẢI truyền conn)
+      // 1. Lấy giỏ hàng
       const cartItems = await GioHang.getByUser(maTaiKhoan, conn);
-
-      console.log(
-        `[CHECKOUT] User ${maTaiKhoan}: Found ${cartItems.length} cart items`
-      );
 
       if (!cartItems || cartItems.length === 0) {
         throw new Error(
@@ -23,11 +18,10 @@ const CheckoutService = {
         );
       }
 
-      // 2. Kiểm tra tồn kho + tính tổng tiền
+      // 2. Kiểm tra tồn kho
       let tongTien = 0;
 
       for (const item of cartItems) {
-        // ✅ Truyền conn
         const variant = await BienThe.getById(item.MaBienThe, conn);
 
         if (!variant) {
@@ -36,16 +30,12 @@ const CheckoutService = {
 
         if (item.SoLuong > variant.SoLuongTonKho) {
           throw new Error(
-            `Biến thể ${item.TenBienThe} chỉ còn ${variant.SoLuongTonKho} sản phẩm, bạn yêu cầu ${item.SoLuong}`
+            `Biến thể ${item.TenBienThe} chỉ còn ${variant.SoLuongTonKho} sản phẩm`
           );
         }
 
         tongTien += item.SoLuong * variant.GiaTienBienThe;
       }
-
-      console.log(
-        `[CHECKOUT] Total: ${tongTien}VND, Payment: ${phuongThucThanhToan}`
-      );
 
       // 3. Tạo đơn hàng
       const DonHang = (await import("../models/donHang.model.js")).default;
@@ -59,9 +49,7 @@ const CheckoutService = {
         conn
       );
 
-      console.log(`[CHECKOUT] Order created: #${maDonHang}`);
-
-      // 4. Tạo chi tiết đơn + trừ tồn kho
+      // 4. Tạo chi tiết đơn hàng
       for (const item of cartItems) {
         await DonHang.addOrderDetail(
           maDonHang,
@@ -72,24 +60,37 @@ const CheckoutService = {
           },
           conn
         );
-
-        // ✅ Truyền conn
-        await BienThe.decreaseStock(item.MaBienThe, item.SoLuong, conn);
       }
 
-      // ✅ KHÔNG cập nhật TinhTrangThanhToan cho COD & ONLINE
-      // Để mặc định = 0 (chưa thanh toán)
-      // - COD: Admin cập nhật sau khi nhận hàng
-      // - ONLINE: Callback MOMO cập nhật thành 1
+      // ✅ 5. XỬ LÝ THEO PHƯƠNG THỨC THANH TOÁN
+      if (phuongThucThanhToan === "COD") {
+        // ✅ COD: Trừ kho + Xóa giỏ NGAY
+        for (const item of cartItems) {
+          await BienThe.decreaseStock(item.MaBienThe, item.SoLuong, conn);
+        }
+        await GioHang.clearCart(maTaiKhoan, conn);
 
-      // 5. ✅ Xóa giỏ hàng (PHẢI truyền conn)
-      await GioHang.clearCart(maTaiKhoan, conn);
+        console.log(
+          `[CHECKOUT] ✅ COD Order #${maDonHang} - Cleared cart & decreased stock`
+        );
+      } else if (phuongThucThanhToan === "ONLINE") {
+        // ✅ ONLINE: KHÔNG trừ kho, KHÔNG xóa giỏ
+        // Tạo bản ghi ThongTinThanhToanOnline với TinhTrangThanhToan = 0 (Pending)
+        await DonHang.createOnlinePaymentInfo(
+          {
+            maDonHang,
+            soTien: tongTien,
+            maGiaoDich: null, // Chưa có mã giao dịch
+          },
+          conn
+        );
+
+        console.log(
+          `[CHECKOUT] ⏳ ONLINE Order #${maDonHang} - PENDING (cart preserved)`
+        );
+      }
 
       await conn.commit();
-
-      console.log(
-        `[CHECKOUT] ✅ Success: Order #${maDonHang}, Payment: ${phuongThucThanhToan}, TinhTrangThanhToan: 0`
-      );
 
       return { maDonHang, tongTien };
     } catch (error) {

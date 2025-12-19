@@ -1,4 +1,8 @@
-# React + Vite
+# 🍎 Apple Store E-Commerce Platform
+
+Full-stack e-commerce platform for selling Apple products built with **React 19**, **Node.js/Express**, and **MySQL**.
+
+## 📂 Project Structure
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

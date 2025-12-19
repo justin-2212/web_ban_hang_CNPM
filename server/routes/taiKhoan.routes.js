@@ -1,8 +1,9 @@
 // server/routes/taiKhoan.routes.js
 
 import express from "express";
-const router = express.Router();
 import TaiKhoan from "../models/taiKhoan.model.js";
+
+const router = express.Router();
 
 router.post("/sync-user", async (req, res) => {
   const { email, fullName, clerkId } = req.body;

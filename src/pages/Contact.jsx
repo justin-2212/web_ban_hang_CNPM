@@ -9,8 +9,10 @@ import {
   Instagram,
   Youtube,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Contact() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -20,6 +22,8 @@ export default function Contact() {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -28,23 +32,60 @@ export default function Contact() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Implement actual form submission to backend
-    console.log("Form submitted:", formData);
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
 
-    // Reset form sau 3 giây
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: "",
-      });
-    }, 3000);
+    try {
+      console.log("Sending request to:", "http://localhost:5000/api/email/send-contact");
+      console.log("Form data:", formData);
+      
+      // Send email via backend API
+      const response = await fetch(
+        "http://localhost:5000/api/email/send-contact",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customerEmail: formData.email,
+            customerName: formData.name,
+            subject: formData.subject,
+            message: formData.message,
+            phone: formData.phone,
+          }),
+        }
+      );
+
+      console.log("Response status:", response.status);
+      const result = await response.json();
+      console.log("Response data:", result);
+
+      if (result.success) {
+        setSubmitted(true);
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          subject: "",
+          message: "",
+        });
+
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => {
+          setSubmitted(false);
+        }, 5000);
+      } else {
+        setError(result.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+      }
+    } catch (err) {
+      console.error("Full error:", err);
+      setError("Không thể gửi tin nhắn. Vui lòng kiểm tra kết nối mạng.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const contactInfo = [
@@ -58,13 +99,13 @@ export default function Contact() {
       icon: <Phone className="w-6 h-6" />,
       title: "Điện thoại",
       content: "1900 1010",
-      link: "tel:1900xxxx",
+      link: "tel:19001010",
     },
     {
       icon: <Mail className="w-6 h-6" />,
       title: "Email",
-      content: "support@applestore.vn",
-      link: "mailto:support@applestore.vn",
+      content: "support@apple.com",
+      link: "mailto:support@apple.com",
     },
     {
       icon: <Clock className="w-6 h-6" />,
@@ -92,6 +133,25 @@ export default function Contact() {
       name: "YouTube",
       link: "https://www.youtube.com/@Apple",
       color: "hover:bg-red-600",
+    },
+  ];
+
+  const faqLinks = [
+    {
+      title: "Chính sách bảo hành",
+      path: "/warranty-policy",
+    },
+    {
+      title: "Chính sách đổi trả",
+      path: "/return-policy",
+    },
+    {
+      title: "Hướng dẫn thanh toán",
+      path: "/payment-guide",
+    },
+    {
+      title: "Hướng dẫn mua hàng",
+      path: "/shopping-guide",
     },
   ];
 
@@ -166,9 +226,14 @@ export default function Contact() {
               {submitted && (
                 <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
                   <p className="text-green-700 font-medium">
-                    ✓ Cảm ơn bạn! Chúng tôi đã nhận được tin nhắn và sẽ phản hồi
-                    sớm nhất.
+                    ✓ Cảm ơn bạn! Tin nhắn đã được gửi thành công. Vui lòng kiểm tra email của bạn.
                   </p>
+                </div>
+              )}
+
+              {error && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-red-700 font-medium">✕ {error}</p>
                 </div>
               )}
 
@@ -252,10 +317,11 @@ export default function Contact() {
 
                 <button
                   type="submit"
-                  className="w-full px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2"
+                  disabled={loading}
+                  className="w-full px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-5 h-5" />
-                  Gửi tin nhắn
+                  {loading ? "Đang gửi..." : "Gửi tin nhắn"}
                 </button>
               </form>
             </div>
@@ -306,39 +372,17 @@ export default function Contact() {
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
                   Câu hỏi thường gặp
                 </h3>
-                <ul className="space-y-3">
-                  <li>
-                    <a
-                      href="#"
-                      className="text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      → Chính sách bảo hành
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      → Chính sách đổi trả
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      → Hướng dẫn thanh toán
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      → Hướng dẫn mua hàng
-                    </a>
-                  </li>
+                <ul className="space-y-2">
+                  {faqLinks.map((link, index) => (
+                    <li key={index}>
+                      <button
+                        onClick={() => navigate(link.path)}
+                        className="text-blue-600 hover:text-blue-700 hover:underline font-medium text-sm bg-none border-none p-0 cursor-pointer text-left"
+                      >
+                        {link.title}
+                      </button>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>

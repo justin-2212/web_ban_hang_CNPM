@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import { sanPhamAPI, loaiSanPhamAPI } from "../services/api";
+import Sidebar from "../components/Sidebar";
 import CategoryTabs from "../components/CategoryTabs";
 import SortSelect from "../components/SortSelect";
 import ProductsList from "../components/ProductsList";
@@ -212,9 +213,9 @@ export default function Products() {
           />
         </div>
 
-        {/* Category Tabs fixxxxxxxxxxxxx*/}
+        {/* Mobile Category Tabs (Only show on mobile when not searching) */}
         {!searchQuery && (
-          <div data-aos="fade-up" className="mb-8">
+          <div data-aos="fade-up" className="lg:hidden mb-8">
             <CategoryTabs
               categories={categories}
               selected={selectedCategory}
@@ -222,68 +223,84 @@ export default function Products() {
                 setSelectedCategory(categoryId);
                 navigate(`/products?category=${categoryId}`, { replace: true });
               }}
-            /> 
+            />
           </div>
         )}
 
-        {/* Controls: Sort */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
-          <div className="text-sm text-gray-600">
-            Tìm thấy{" "}
-            <span className="font-semibold text-gray-900">
-              {filteredProducts.length}
-            </span>{" "}
-            sản phẩm
-            {searchQuery && (
-              <span className="ml-2">
-                cho "{searchQuery}"
-                <button
-                  onClick={() => handleSearch("")}
-                  className="ml-2 text-blue-600 hover:text-blue-700 underline"
-                >
-                  Xóa tìm kiếm
-                </button>
-              </span>
+        {/* Main Content: Sidebar + Products */}
+        <div className="flex gap-8">
+          {/* --- SIDEBAR (Desktop Only) --- */}
+          <Sidebar
+            categories={categories}
+            selected={selectedCategory}
+            onSelect={(categoryId) => {
+              setSelectedCategory(categoryId);
+              navigate(`/products?category=${categoryId}`, { replace: true });
+            }}
+          />
+
+          {/* --- MAIN CONTENT --- */}
+          <div className="flex-1">
+            {/* Controls: Sort */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+              <div className="text-sm text-gray-600">
+                Tìm thấy{" "}
+                <span className="font-semibold text-gray-900">
+                  {filteredProducts.length}
+                </span>{" "}
+                sản phẩm
+                {searchQuery && (
+                  <span className="ml-2">
+                    cho "{searchQuery}"
+                    <button
+                      onClick={() => handleSearch("")}
+                      className="ml-2 text-blue-600 hover:text-blue-700 underline"
+                    >
+                      Xóa tìm kiếm
+                    </button>
+                  </span>
+                )}
+              </div>
+              <SortSelect value={sortBy} onChange={setSortBy} />
+            </div>
+
+            {/* Loading */}
+            {loading && (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+              </div>
+            )}
+
+            {/* Error */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg text-center">
+                {error}
+              </div>
+            )}
+
+            {/* Products List */}
+            {!loading && !error && (
+              <div className="mt-6">
+                <ProductsList products={filteredProducts} />
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!loading && !error && filteredProducts.length === 0 && (
+              <div className="text-center py-20">
+                <div className="text-6xl mb-4">📱</div>
+                <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+                  Không tìm thấy sản phẩm
+                </h3>
+                <p className="text-gray-600">
+                  {searchQuery
+                    ? "Thử tìm kiếm với từ khóa khác"
+                    : "Chọn danh mục khác để xem sản phẩm"}
+                </p>
+              </div>
             )}
           </div>
-          <SortSelect value={sortBy} onChange={setSortBy} />
         </div>
-
-        {/* Loading */}
-        {loading && (
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-          </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg text-center">
-            {error}
-          </div>
-        )}
-
-        {/* Products List */}
-        {!loading && !error && (
-          <div className="mt-6">
-            <ProductsList products={filteredProducts} />
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!loading && !error && filteredProducts.length === 0 && (
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">📱</div>
-            <h3 className="text-2xl font-semibold text-gray-800 mb-2">
-              Không tìm thấy sản phẩm
-            </h3>
-            <p className="text-gray-600">
-              {searchQuery
-                ? "Thử tìm kiếm với từ khóa khác"
-                : "Chọn danh mục khác để xem sản phẩm"}
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

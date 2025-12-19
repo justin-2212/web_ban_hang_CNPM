@@ -1,12 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Search, X } from "lucide-react";
+import { useSearchHistory } from "../hooks/useSearchHistory";
 
 export default function SearchBar({ onSearch, placeholder = "Tìm kiếm..." }) {
   const [query, setQuery] = useState("");
+  const { addSearch } = useSearchHistory();
+  const searchRef = useRef(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSearch(query);
+    if (query.trim()) {
+      addSearch(query);
+      onSearch(query);
+    }
   };
 
   const handleClear = () => {
@@ -15,9 +21,12 @@ export default function SearchBar({ onSearch, placeholder = "Tìm kiếm..." }) 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-2xl mx-auto relative"
+      ref={searchRef}
+    >
       <div className="relative flex items-center">
-        
         {/* Icon Search bên trái */}
         <Search className="absolute left-4 w-5 h-5 text-gray-400 pointer-events-none" />
 
@@ -32,12 +41,12 @@ export default function SearchBar({ onSearch, placeholder = "Tìm kiếm..." }) 
                      transition-all duration-200 outline-none shadow-sm"
         />
 
-        {/* Dấu X bên phải – luôn căn giữa chuẩn */}
+        {/* Dấu X bên phải */}
         {query && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-4 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-5 top-1/4 -translate-y-1/2 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

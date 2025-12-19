@@ -9,10 +9,15 @@ import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
-import ProductDetail from "./pages/ProductsDetail";
+import ProductsDetail from './pages/ProductsDetail';
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import OrderHistory from "./pages/OrderHistory";
+import WarrantyPolicy from './pages/WarrantyPolicy';
+import Support from './pages/Support';
+import ReturnPolicy from './pages/ReturnPolicy';
+import PaymentGuide from './pages/PaymentGuide';
+import ShoppingGuide from './pages/ShoppingGuide';
 // === CHECKOUT & ORDER ===
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
@@ -57,13 +62,20 @@ const App = () => {
           <Route path="/orders" element={<OrderHistory />} />
           <Route path="/order-detail/:id" element={<OrderDetail />} />
 
+          
+          <Route path="/warranty-policy" element={<WarrantyPolicy />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/return-policy" element={<ReturnPolicy />} />
+          <Route path="/payment-guide" element={<PaymentGuide />} />
+          <Route path="/shopping-guide" element={<ShoppingGuide />} />
+
           {/* CHECKOUT */}
           <Route path="/checkout" element={<Checkout />} />
 
           {/* KẾT QUẢ ĐƠN HÀNG */}
           <Route path="/order-success" element={<OrderSuccess />} />
 
-          <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/products/:id" element={<ProductsDetail />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/profile" element={<Profile />} />
