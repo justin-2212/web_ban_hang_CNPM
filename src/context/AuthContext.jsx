@@ -53,4 +53,12 @@ export const AuthProvider = ({ children }) => {
 };
 
 // Hook để dùng nhanh ở các component khác
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+  return context;
+}
+
+export default AuthProvider;

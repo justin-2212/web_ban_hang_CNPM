@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { donHangAPI } from "../services/api";
-import { ArrowLeft, Loader2, AlertCircle, Package, DollarSign, Calendar, Truck, CreditCard } from "lucide-react";
+import { ArrowLeft, Loader2, AlertCircle, Package, DollarSign, Calendar, Truck, CreditCard, Trash2 } from "lucide-react";
 
 const OrderDetail = () => {
   const { id: maDonHang } = useParams();
@@ -10,6 +10,9 @@ const OrderDetail = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // ✅ NEW: State cho hủy đơn hàng
+  const [cancelling, setCancelling] = useState(false);
+  const [canCancelTime, setCanCancelTime] = useState(null);
 
   // =========================
   // Format tiền
@@ -53,6 +56,14 @@ const OrderDetail = () => {
         if (res.data) {
           setOrder(res.data);
           setError("");
+
+          // ✅ NEW: Tính thời gian còn lại để hủy (5 phút)
+          const createdTime = new Date(res.data.NgayDat).getTime();
+          const currentTime = new Date().getTime();
+          const diffSeconds = Math.floor((currentTime - createdTime) / 1000);
+          const remainingSeconds = Math.max(0, 300 - diffSeconds); // 5 phút = 300 giây
+
+          setCanCancelTime(remainingSeconds);
         } else {
           setError("Không tìm thấy thông tin đơn hàng");
         }
@@ -66,6 +77,23 @@ const OrderDetail = () => {
 
     fetchOrderDetail();
   }, [maDonHang]);
+
+  // ✅ NEW: Countdown timer cho hủy đơn
+  useEffect(() => {
+    if (canCancelTime === null || canCancelTime <= 0) return;
+
+    const timer = setInterval(() => {
+      setCanCancelTime((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [canCancelTime]);
 
   // =========================
   // Map trạng thái đơn hàng
@@ -90,6 +118,40 @@ const OrderDetail = () => {
       2: { text: "✅ Đã thanh toán", color: "text-green-600", bg: "bg-green-50" },
     };
     return paymentMap[status] || { text: "❓ Không xác định", color: "text-gray-600", bg: "bg-gray-50" };
+  };
+
+  // =========================
+  // Hủy đơn hàng
+  // =========================
+  const handleCancelOrder = async () => {
+    if (
+      !window.confirm(
+        "Bạn chắc chắn muốn hủy đơn hàng này? Thao tác này không thể hoàn tác."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setCancelling(true);
+      const res = await donHangAPI.cancelOrder(maDonHang);
+
+      if (res.success) {
+        alert("Đơn hàng đã hủy thành công!");
+        // Reload dữ liệu
+        const updatedRes = await donHangAPI.getById(maDonHang);
+        if (updatedRes.data) {
+          setOrder(updatedRes.data);
+        }
+      } else {
+        alert(res.message || "Không thể hủy đơn hàng");
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Lỗi khi hủy đơn hàng");
+    } finally {
+      setCancelling(false);
+    }
   };
 
   // =========================
@@ -156,6 +218,11 @@ const OrderDetail = () => {
 
   const orderStatusDisplay = getOrderStatusDisplay(order.TinhTrangDonHang);
   const paymentStatusDisplay = getPaymentStatusDisplay(order.TinhTrangThanhToan);
+  // ✅ NEW: Kiểm tra có thể hủy không
+  const canCancelOrder =
+    order.TinhTrangDonHang === 0 &&
+    order.PhuongThucThanhToan === "COD" &&
+    canCancelTime > 0;
 
   return (
     <div className="min-h-screen pt-24 pb-20 bg-gray-50">
@@ -339,6 +406,37 @@ const OrderDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* ✅ NEW: Cancel Button (nếu có thể hủy) */}
+        {canCancelOrder && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-800 font-semibold mb-1">
+                  ⏰ Bạn có thể hủy đơn hàng này
+                </p>
+                <p className="text-yellow-700 text-sm">
+                  Thời gian còn lại:{" "}
+                  <span className="font-bold text-lg text-red-600">
+                    {Math.floor(canCancelTime / 60)}:{String(canCancelTime % 60).padStart(2, "0")}
+                  </span>
+                </p>
+              </div>
+              <button
+                onClick={handleCancelOrder}
+                disabled={cancelling}
+                className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {cancelling ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {cancelling ? "Đang hủy..." : "Hủy đơn hàng"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

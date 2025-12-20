@@ -5,22 +5,23 @@ import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom"; // Dùng để chuyển trang
 import { useAuth } from "../context/AuthContext"; // Import hook vừa tạo
 import { taiKhoanAPI } from "../services/api";
-import { User, Phone, MapPin, Save, Loader2, ArrowLeft } from "lucide-react";
-
-// Validate thông tin input sdt email  trước khi chuyển vòa
-const validateForm = (phone) => {
-  const phoneRegex = /^0\d{9}$/;
-  if (!phone) return "Vui lòng nhập số điện thoại!";
-  if (!phoneRegex.test(phone))
-    return "Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0).";
-  return null;
-};
+import { validatePhoneNumber, validateAddress } from "../utils/validation";
+import {
+  User,
+  Phone,
+  MapPin,
+  Save,
+  Loader2,
+  ArrowLeft,
+  AlertCircle,
+} from "lucide-react";
 
 const Profile = () => {
   const { user, isLoaded } = useUser(); // Info từ Clerk (Avatar, Email)
   const { dbUser, refreshUser } = useAuth(); // Info từ MySQL (SĐT, Địa chỉ) lấy qua Context
   const navigate = useNavigate(); // Hook điều hướng
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     soDienThoai: "",
     diaChi: "",
@@ -41,8 +42,15 @@ const Profile = () => {
     if (name === "soDienThoai") {
       const numericValue = value.replace(/[^0-9]/g, "");
       setFormData({ ...formData, [name]: numericValue });
+      // Clear error when user starts typing
+      if (errors.soDienThoai) {
+        setErrors({ ...errors, soDienThoai: "" });
+      }
     } else {
       setFormData({ ...formData, [name]: value });
+      if (errors.diaChi) {
+        setErrors({ ...errors, diaChi: "" });
+      }
     }
   };
   // --- HÀM THOÁT (QUAY VỀ TRANG CHỦ) ---
@@ -54,9 +62,22 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate
-    const errorMsg = validateForm(formData.soDienThoai);
-    if (errorMsg) return alert(errorMsg);
+    // Validate cả 2 trường
+    const phoneValidation = validatePhoneNumber(formData.soDienThoai);
+    const addressValidation = validateAddress(formData.diaChi);
+
+    const newErrors = {};
+    if (!phoneValidation.isValid) {
+      newErrors.soDienThoai = phoneValidation.message;
+    }
+    if (!addressValidation.isValid) {
+      newErrors.diaChi = addressValidation.message;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
     if (!dbUser?.MaTaiKhoan) return alert("Chưa tải được thông tin tài khoản.");
 
@@ -122,7 +143,7 @@ const Profile = () => {
             {/* Input Số điện thoại */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Số điện thoại
+                Số điện thoại <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -132,15 +153,25 @@ const Profile = () => {
                   value={formData.soDienThoai}
                   onChange={handleChange}
                   placeholder="Nhập số điện thoại (0xxxxxxxxx)"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 outline-none transition-all"
+                  className={`w-full pl-10 pr-4 py-3 rounded-xl border transition-all outline-none ${
+                    errors.soDienThoai
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-gray-200 focus:border-blue-500"
+                  }`}
                 />
               </div>
+              {errors.soDienThoai && (
+                <div className="flex items-center gap-2 mt-2 text-red-600 text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.soDienThoai}
+                </div>
+              )}
             </div>
 
             {/* Input Địa chỉ */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Địa chỉ nhận hàng
+                Địa chỉ nhận hàng <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
@@ -150,9 +181,19 @@ const Profile = () => {
                   onChange={handleChange}
                   rows="3"
                   placeholder="Số nhà, đường, phường/xã..."
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 outline-none transition-all resize-none"
+                  className={`w-full pl-10 pr-4 py-3 rounded-xl border transition-all outline-none resize-none ${
+                    errors.diaChi
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-gray-200 focus:border-blue-500"
+                  }`}
                 />
               </div>
+              {errors.diaChi && (
+                <div className="flex items-center gap-2 mt-2 text-red-600 text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.diaChi}
+                </div>
+              )}
             </div>
 
             <button

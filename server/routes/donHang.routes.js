@@ -3,6 +3,13 @@ import donHangController from "../controllers/donHang.controller.js";
 
 const router = express.Router();
 
+// Specific routes BEFORE generic /:maDonHang
+/**
+ * POST /api/don-hang/:maDonHang/cancel
+ * Hủy đơn hàng (chỉ COD, trong 5 phút)
+ */
+router.post("/:maDonHang/cancel", donHangController.cancelOrder);
+
 /**
  * GET /api/don-hang/:maDonHang
  * Lấy chi tiết đơn hàng
