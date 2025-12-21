@@ -1,15 +1,18 @@
 // src/pages/admin/CategoryPage.jsx
 import React, { useState, useEffect } from "react";
-import categoryService from "../../services/categoryService";
+import categoryServiceAdmin from "../../services/categoryServiceAdmin.js";
 
 // Import các component con
 import CategoryTable from "../../components/admin/CategoryTable";
 import CreateModal from "../../components/admin/CreateModal";
+import ConfigDrawer from "../../components/admin/ConfigDrawer";
 
 const CategoryPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [configCategory, setConfigCategory] = useState(null);
 
   // State cho Modal thêm/sửa
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,7 +22,7 @@ const CategoryPage = () => {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const res = await categoryService.getAll();
+      const res = await categoryServiceAdmin.getAll();
       if (res.success) {
         setCategories(res.data);
       }
@@ -55,7 +58,7 @@ const CategoryPage = () => {
     // Bước 2: Lấy tên (nếu tìm thấy), ngược lại để chuỗi rỗng
     const categoryName = categoryToDelete ? categoryToDelete.TenLoai : "";
     try {
-      await categoryService.delete(id);
+      await categoryServiceAdmin.delete(id);
       fetchCategories(); // Load lại bảng sau khi ngừng kinh doanh
       alert(`đã ngừng kinh doanh "${categoryName}"`);
     } catch (err) {
@@ -76,7 +79,7 @@ const CategoryPage = () => {
   const handleRestore = async (category) => {
     try {
       // Gọi API Update, set TinhTrangLoaiSanPham = 1
-      await categoryService.update(category.MaLoai, {
+      await categoryServiceAdmin.update(category.MaLoai, {
         ...category, // Giữ nguyên các thông tin khác
         tinhTrang: 1, // Chỉ sửa tình trạng thành 1 (Hiện)
         tenLoai: category.TenLoai, // Map lại đúng tên trường backend cần
@@ -88,6 +91,11 @@ const CategoryPage = () => {
     } catch (err) {
       alert("Lỗi: " + err.message);
     }
+  };
+
+  const handleOpenConfig = (category) => {
+    setConfigCategory(category);
+    setIsConfigOpen(true);
   };
 
   return (
@@ -126,8 +134,8 @@ const CategoryPage = () => {
             data={categories}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            onConfig={(cat) => console.log("Mở Drawer cấu hình cho:", cat)}
             onRestore={handleRestore}
+            onConfig={handleOpenConfig}
           />
         )}
       </div>
@@ -140,6 +148,15 @@ const CategoryPage = () => {
           initialData={editingCategory}
           onSuccess={handleFormSubmitSuccess}
           existingCategories={categories}
+        />
+      )}
+
+      {/* 5. GỌI CONFIG DRAWER */}
+      {isConfigOpen && configCategory && (
+        <ConfigDrawer
+          isOpen={isConfigOpen}
+          onClose={() => setIsConfigOpen(false)}
+          category={configCategory}
         />
       )}
     </div>
