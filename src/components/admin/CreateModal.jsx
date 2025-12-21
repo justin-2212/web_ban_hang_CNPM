@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 
-import categoryService from "../../services/categoryService";
+import categoryServiceAdmin from "../../services/categoryServiceAdmin";
 
 const CreateModal = ({
   isOpen,
@@ -16,6 +16,8 @@ const CreateModal = ({
     thuTuHienThi: 0,
     tinhTrang: 1,
   });
+
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -28,41 +30,78 @@ const CreateModal = ({
     } else {
       setFormData({ tenLoai: "", thuTuHienThi: 0, tinhTrang: 1 });
     }
+    setErrors({});
   }, [initialData, isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "tenLoai" ? value : parseInt(value),
-    }));
+
+    // Xóa lỗi khi người dùng bắt đầu nhập
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: null }));
+    }
+
+    setFormData((prev) => {
+      // Xử lý riêng cho ô Thứ tự
+      if (name === "thuTuHienThi") {
+        if (value === "") return { ...prev, [name]: "" }; // Cho phép rỗng
+        if (value === "-") return { ...prev, [name]: "-" }; // Cho phép dấu trừ
+        return { ...prev, [name]: parseInt(value) }; // Ép kiểu số
+      }
+
+      // Các ô khác
+      return {
+        ...prev,
+        [name]: name === "tenLoai" ? value : parseInt(value),
+      };
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    // --- LOGIC KIỂM TRA TRÙNG THỨ TỰ ---
-    const orderToCheck = parseInt(formData.thuTuHienThi);
+    // --- 3. VALIDATION (Kiểm tra dữ liệu trước) ---
+    const newErrors = {};
 
-    // Tìm xem có loại nào đã dùng số thứ tự này chưa
+    // Kiểm tra tên
+    if (!formData.tenLoai.trim()) {
+      newErrors.tenLoai = "Tên loại không được để trống";
+    }
+
+    // Kiểm tra thứ tự
+    let orderToCheck = 0;
+    if (formData.thuTuHienThi === "" || formData.thuTuHienThi === "-") {
+      newErrors.thuTuHienThi = "Không được bỏ trống";
+    } else {
+      orderToCheck = parseInt(formData.thuTuHienThi);
+      if (orderToCheck < 0) {
+        newErrors.thuTuHienThi = "Thứ tự phải là số không âm (>= 0)";
+      }
+    }
+
+    // Nếu có lỗi thì dừng lại, không gửi server
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    // ----------------------------------------------
+
+    setLoading(true);
+
+    // --- LOGIC KIỂM TRA TRÙNG THỨ TỰ ---
     const isDuplicate = existingCategories.some((cat) => {
-      // Nếu đang Sửa (Edit mode), phải bỏ qua chính nó (không so sánh với chính mình)
+      // Nếu đang Sửa (Edit mode), phải bỏ qua chính nó
       if (initialData && cat.MaLoai === initialData.MaLoai) {
         return false;
       }
-      // So sánh thứ tự
       return cat.ThuTuHienThi === orderToCheck;
     });
 
     if (isDuplicate) {
-      // 1. Tìm số thứ tự lớn nhất hiện có trong danh sách
-      // Nếu danh sách rỗng thì mặc định là 0
       const maxOrder =
         existingCategories.length > 0
           ? Math.max(...existingCategories.map((c) => c.ThuTuHienThi))
           : 0;
 
-      // 2. Hiển thị thông báo kèm gợi ý số lớn nhất
       alert(
         `Thứ tự hiển thị "${orderToCheck}" đã tồn tại! Vui lòng chọn số khác.\nSố thứ tự lớn nhất hiện tại là: ${maxOrder}`
       );
@@ -72,10 +111,13 @@ const CreateModal = ({
     }
 
     try {
+      // Chuẩn bị payload (đảm bảo thứ tự là số chuẩn)
+      const payload = { ...formData, thuTuHienThi: orderToCheck };
+
       if (initialData) {
-        await categoryService.update(initialData.MaLoai, formData);
+        await categoryServiceAdmin.update(initialData.MaLoai, payload);
       } else {
-        await categoryService.create(formData);
+        await categoryServiceAdmin.create(payload);
       }
       onSuccess();
       alert(initialData ? "Cập nhật thành công!" : "Thêm mới thành công!");
@@ -93,7 +135,6 @@ const CreateModal = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
-
       {/* Container của Drawer - Cố định bên phải */}
       <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex">
         {/* Nội dung chính của Form */}
@@ -162,9 +203,16 @@ const CreateModal = ({
                   onChange={handleChange}
                   className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
-                <p className="text-xs text-gray-500 mt-2">
-                  Số nhỏ hiển thị trước. Không được trùng nhau.
-                </p>
+                {/* Hiển thị lỗi hoặc dòng chú thích */}
+                {errors.thuTuHienThi ? (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.thuTuHienThi}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Số nhỏ hiển thị trước. Không được trùng nhau.
+                  </p>
+                )}
               </div>
 
               {/* Tình trạng */}

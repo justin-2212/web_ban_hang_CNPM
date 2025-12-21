@@ -10,7 +10,7 @@ const getAuthHeader = () => {
   return { headers: { Authorization: `Bearer ${token}` } };
 };
 
-const categoryService = {
+const categoryServiceAdmin = {
   // 1. Lấy danh sách
   getAll: async () => {
     const response = await axios.get(API_URL, getAuthHeader());
@@ -43,4 +43,4 @@ const categoryService = {
   },
 };
 
-export default categoryService;
+export default categoryServiceAdmin;
