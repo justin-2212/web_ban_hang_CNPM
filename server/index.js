@@ -17,6 +17,7 @@ import donHangRoutes from "./routes/donHang.routes.js";
 import checkoutRoutes from "./routes/checkOut.routes.js";
 import thanhToanRoutes from "./routes/thanhToan.routes.js";
 import emailRoutes from "./routes/email.routes.js"; // ✅ Bỏ comment
+import uploadRoutes from "./routes/upload.routes.js"; // ✅ Route upload ảnh Cloudinary
 
 // === MIDDLEWARE ===
 import { errorHandler, notFound } from "./middleware/errorHandler.middleware.js";
@@ -75,6 +76,7 @@ app.use("/api/email", emailRoutes); // ✅ Bỏ comment
 app.use("/api/don-hang", donHangRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/thanh-toan", thanhToanRoutes);
+app.use("/api/upload", uploadRoutes); // ✅ Route upload ảnh
 
 // Test route
 app.get("/", (req, res) => {
