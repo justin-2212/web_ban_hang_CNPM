@@ -16,50 +16,56 @@ import taiKhoanRoutes from "./routes/taiKhoan.routes.js";
 import donHangRoutes from "./routes/donHang.routes.js";
 import checkoutRoutes from "./routes/checkOut.routes.js";
 import thanhToanRoutes from "./routes/thanhToan.routes.js";
+import loaiSanPhamAdminRoutes from "./routes/loaiSanPhamAdmin.routes.js";
 import emailRoutes from "./routes/email.routes.js"; // ✅ Bỏ comment
 
 // === MIDDLEWARE ===
-import { errorHandler, notFound } from "./middleware/errorHandler.middleware.js";
+import {
+  errorHandler,
+  notFound,
+} from "./middleware/errorHandler.middleware.js";
 
 const app = express();
 
 // === SECURITY MIDDLEWARE ===
 // Helmet - Set security headers
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
     },
-  },
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 
 // === MIDDLEWARE ===
 app.use(express.json());
 app.use(cors());
 
 // Request logging (development only) - Critical endpoints only
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === "development") {
   app.use((req, res, next) => {
     const criticalPaths = [
-      '/api/tai-khoan',
-      '/api/gio-hang',
-      '/api/don-hang',
-      '/api/checkout',
-      '/api/thanh-toan',
-      '/api/email'
+      "/api/tai-khoan",
+      "/api/gio-hang",
+      "/api/don-hang",
+      "/api/checkout",
+      "/api/thanh-toan",
+      "/api/email",
     ];
-    
-    const isCritical = criticalPaths.some(path => req.path.startsWith(path));
-    
+
+    const isCritical = criticalPaths.some((path) => req.path.startsWith(path));
+
     if (isCritical) {
       console.log(`🔒 ${req.method} ${req.path}`);
       if (req.body && Object.keys(req.body).length > 0) {
-        console.log('Body:', req.body);
+        console.log("Body:", req.body);
       }
     }
     next();
@@ -75,6 +81,7 @@ app.use("/api/email", emailRoutes); // ✅ Bỏ comment
 app.use("/api/don-hang", donHangRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/thanh-toan", thanhToanRoutes);
+app.use("/api/admin/loai-san-pham", loaiSanPhamAdminRoutes);
 
 // Test route
 app.get("/", (req, res) => {

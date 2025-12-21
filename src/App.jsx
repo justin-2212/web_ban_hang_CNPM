@@ -26,6 +26,7 @@ import OrderDetail from "./pages/OrderDetail";
 
 // === ADMIN PAGES ===
 import AdminDashboard from "./pages/admin/AdminDashboard"; // Import trang Admin
+import AdminCategoryManagement from "./pages/admin/CategoryPage"; // Import trang Quản lý loại sản phẩm
 
 // === LAYOUT ===
 import Header from "./components/Header";
@@ -87,6 +88,8 @@ const App = () => {
           <Route element={<AdminLayout />}>
             {/* Trang Dashboard (Mặc định khi vào /admin) */}
             <Route path="/admin" element={<AdminDashboard />} />
+            {/* Trang Quản lý loại sản phẩm */}
+             <Route path="/admin/categories" element={<AdminCategoryManagement />} />
             {/* Trang Quản lý User */}
             {/* (Chỗ này để dành cho các trang Sản phẩm, Đơn hàng sau này) 
                   <Route path="/admin/products" element={<ProductManagement />} />

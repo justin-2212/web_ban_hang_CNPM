@@ -1,3 +1,5 @@
+// server/middleware/errorHandler.middleware.js
+
 /**
  * Custom Error class
  */
