@@ -250,3 +250,46 @@ export const thanhToanAPI = {
       headers: getAuthHeaders(),
     }).then(handleResponse),
 };
+
+// ============ UPLOAD ẢNH CLOUDINARY ============
+export const uploadAPI = {
+  // Upload ảnh sản phẩm (AnhSP)
+  uploadAnhSanPham: (file, maSP, thuTuHienThi = 0) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('maSP', maSP);
+    formData.append('thuTuHienThi', thuTuHienThi);
+
+    return fetch(`${API_BASE_URL}/upload/anh-san-pham`, {
+      method: 'POST',
+      body: formData,
+    }).then(handleResponse);
+  },
+
+  // Upload ảnh biến thể (BienThe)
+  uploadAnhBienThe: (file, maBienThe) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('maBienThe', maBienThe);
+
+    return fetch(`${API_BASE_URL}/upload/anh-bien-the`, {
+      method: 'POST',
+      body: formData,
+    }).then(handleResponse);
+  },
+
+  // Upload nhiều ảnh cùng lúc cho sản phẩm
+  uploadMultipleImages: (files, maSP) => {
+    const formData = new FormData();
+    files.forEach((file, index) => {
+      formData.append('images', file);
+    });
+    formData.append('maSP', maSP);
+
+    return fetch(`${API_BASE_URL}/upload/anh-san-pham/bulk`, {
+      method: 'POST',
+      body: formData,
+    }).then(handleResponse);
+  },
+};
+

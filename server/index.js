@@ -17,8 +17,9 @@ import donHangRoutes from "./routes/donHang.routes.js";
 import checkoutRoutes from "./routes/checkOut.routes.js";
 import thanhToanRoutes from "./routes/thanhToan.routes.js";
 import loaiSanPhamAdminRoutes from "./routes/loaiSanPhamAdmin.routes.js";
-import emailRoutes from "./routes/email.routes.js"; //  Bỏ comment
 import thongSoAdminRoutes from "./routes/thongSoAdmin.routes.js";
+import emailRoutes from "./routes/email.routes.js"; //  Bỏ comment
+import uploadRoutes from "./routes/upload.routes.js"; //  Route upload ảnh Cloudinary
 
 // === MIDDLEWARE ===
 import {
@@ -82,6 +83,7 @@ app.use("/api/email", emailRoutes); // ✅ Bỏ comment
 app.use("/api/don-hang", donHangRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/thanh-toan", thanhToanRoutes);
+app.use("/api/upload", uploadRoutes); // ✅ Route upload ảnh
 app.use("/api/admin/loai-san-pham", loaiSanPhamAdminRoutes);
 app.use("/api/admin/thong-so", thongSoAdminRoutes);
 
