@@ -200,6 +200,13 @@ export const donHangAPI = {
       headers: getAuthHeaders(),
     }).then(handleResponse),
 
+  // ✅ NEW: Hủy đơn hàng
+  cancelOrder: (maDonHang) =>
+    fetch(`${API_BASE_URL}/don-hang/${maDonHang}/cancel`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    }).then(handleResponse),
+
   updateStatus: (id, status) =>
     fetch(`${API_BASE_URL}/don-hang/${id}/status`, {
       method: "PUT",

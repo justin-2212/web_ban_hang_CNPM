@@ -211,6 +211,45 @@ const DonHang = {
 
     return rows.length > 0 ? rows[0] : null;
   },
+
+  // ===============================
+  // Kiểm tra đơn hàng có thể hủy không (COD, trong vòng 5 phút)
+  // ===============================
+  canCancelOrder: async (maDonHang) => {
+    const [order] = await db.query(
+      `
+      SELECT MaDonHang, NgayDat, PhuongThucThanhToan, TinhTrangDonHang
+      FROM DonHang
+      WHERE MaDonHang = ?
+      `,
+      [maDonHang]
+    );
+
+    if (order.length === 0) return { canCancel: false, reason: "Không tìm thấy đơn hàng" };
+
+    const orderData = order[0];
+
+    // Chỉ hủy được nếu là COD
+    if (orderData.PhuongThucThanhToan !== "COD") {
+      return { canCancel: false, reason: "Chỉ có thể hủy đơn hàng thanh toán COD" };
+    }
+
+    // Chỉ hủy được nếu trạng thái là "Đang xử lý" (0)
+    if (orderData.TinhTrangDonHang !== 0) {
+      return { canCancel: false, reason: "Đơn hàng không ở trạng thái có thể hủy" };
+    }
+
+    // Kiểm tra thời gian
+    const createdTime = new Date(orderData.NgayDat).getTime();
+    const currentTime = new Date().getTime();
+    const diffMinutes = (currentTime - createdTime) / (1000 * 60);
+
+    if (diffMinutes > 5) {
+      return { canCancel: false, reason: "Quá thời gian hủy (5 phút)" };
+    }
+
+    return { canCancel: true, reason: "OK" };
+  },
 };
 
 export default DonHang;

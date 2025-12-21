@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { gioHangAPI, checkoutAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { ArrowLeft, CreditCard, Truck } from "lucide-react";
+import { ArrowLeft, CreditCard, Truck, AlertCircle, Loader2 } from "lucide-react";
+import { validateDeliveryInfo } from "../utils/validation";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -13,8 +14,11 @@ const Checkout = () => {
   const [selectedMaBienThe, setSelectedMaBienThe] = useState(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [phuongThucThanhToan, setPhuongThucThanhToan] =
-    useState("COD");
+  const [phuongThucThanhToan, setPhuongThucThanhToan] = useState("COD");
+
+  // ✅ NEW: State cho confirmation modal
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // =========================
   // Format tiền
@@ -79,10 +83,8 @@ const Checkout = () => {
     0
   );
 
-  // =========================
-  // Checkout
-  // =========================
-  const handleCheckout = async () => {
+  // ✅ NEW: Xử lý thanh toán thực tế (gọi từ modal)
+  const processCheckout = async () => {
     if (!dbUser?.MaTaiKhoan) {
       navigate("/login");
       return;
@@ -94,7 +96,7 @@ const Checkout = () => {
     }
 
     try {
-      setLoading(true);
+      setIsProcessing(true);
       setError("");
 
       // ===== COD =====
@@ -111,6 +113,7 @@ const Checkout = () => {
         });
 
         window.dispatchEvent(new CustomEvent("cartServerUpdated"));
+        setShowConfirmModal(false);
         navigate(`/order-success?orderId=${res.data.maDonHang}&status=success`);
         return;
       }
@@ -138,6 +141,7 @@ const Checkout = () => {
         const data = await res.json();
 
         if (data.success && data.data?.paymentUrl) {
+          setShowConfirmModal(false);
           window.location.href = data.data.paymentUrl;
         } else {
           throw new Error(
@@ -149,8 +153,17 @@ const Checkout = () => {
       console.error(err);
       setError(err.message || "Thanh toán thất bại");
     } finally {
-      setLoading(false);
+      setIsProcessing(false);
     }
+  };
+
+  // ✅ NEW: Nút xác nhận thanh toán (mở modal thay vì xử lý trực tiếp)
+  const handleCheckoutClick = () => {
+    if (selectedItems.length === 0) {
+      alert("Vui lòng chọn ít nhất 1 sản phẩm");
+      return;
+    }
+    setShowConfirmModal(true);
   };
 
   // =========================
@@ -185,6 +198,85 @@ const Checkout = () => {
   // =========================
   return (
     <div className="bg-gray-50 min-h-screen pt-24 pb-20">
+      {/* ✅ NEW: Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <AlertCircle className="w-8 h-8 text-blue-600 flex-shrink-0" />
+              <h3 className="text-2xl font-bold text-gray-900">
+                Xác nhận đặt hàng
+              </h3>
+            </div>
+
+            {/* Order Summary */}
+            <div className="mb-6 space-y-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  Phương thức thanh toán
+                </p>
+                <p className="font-semibold text-gray-900">
+                  {phuongThucThanhToan === "COD"
+                    ? "💳 Thanh toán khi nhận hàng"
+                    : "📱 Thanh toán Momo"}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  Số sản phẩm
+                </p>
+                <p className="font-semibold text-gray-900">
+                  {selectedItems.length} sản phẩm ({selectedItems.reduce((sum, item) => sum + item.SoLuong, 0)} item)
+                </p>
+              </div>
+
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <p className="text-sm text-blue-600 mb-2">
+                  Tổng cộng
+                </p>
+                <p className="text-3xl font-bold text-blue-600">
+                  {formatPrice(tongTien)}
+                </p>
+              </div>
+            </div>
+
+            {/* Warning Message */}
+            <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                ⚠️ Vui lòng kiểm tra lại thông tin trước khi xác nhận
+              </p>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={processCheckout}
+                disabled={isProcessing}
+                className={`flex-1 py-3 px-6 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2 ${
+                  isProcessing
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
+              >
+                {isProcessing && (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                )}
+                Đồng ý
+              </button>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                disabled={isProcessing}
+                className="flex-1 py-3 px-6 rounded-lg font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Quay lại
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-6 max-w-5xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -203,6 +295,27 @@ const Checkout = () => {
         {error && (
           <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-lg">
             {error}
+          </div>
+        )}
+
+        {/* Show warning if delivery info is incomplete */}
+        {(!dbUser?.SoDienThoai || !dbUser?.DiaChi) && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-yellow-800 font-medium">
+                Cập nhật thông tin giao hàng
+              </p>
+              <p className="text-yellow-700 text-sm mt-1">
+                Vui lòng điền đầy đủ số điện thoại và địa chỉ trước khi thanh toán.{" "}
+                <button
+                  onClick={() => navigate("/profile")}
+                  className="underline font-semibold hover:text-yellow-900"
+                >
+                  Cập nhật ngay
+                </button>
+              </p>
+            </div>
           </div>
         )}
 
@@ -305,18 +418,17 @@ const Checkout = () => {
               </label>
             </div>
 
+            {/* ✅ NEW: Nút xác nhận (mở modal thay vì xử lý trực tiếp) */}
             <button
-              onClick={handleCheckout}
-              disabled={loading || selectedItems.length === 0}
+              onClick={handleCheckoutClick}
+              disabled={selectedItems.length === 0}
               className={`w-full py-3 rounded-lg font-semibold text-white transition ${
-                loading || selectedItems.length === 0
+                selectedItems.length === 0
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
-              {loading
-                ? "Đang xử lý..."
-                : `Xác nhận thanh toán (${selectedItems.length})`}
+              Xác nhận thanh toán ({selectedItems.length})
             </button>
           </div>
         </div>

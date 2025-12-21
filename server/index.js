@@ -5,6 +5,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
 
+// ✅ Tắt logging từ dotenv
+dotenv.config({ debug: false });
+
 // === ROUTES ===
 import sanPhamRoutes from "./routes/sanPham.routes.js";
 import loaiSanPhamRoutes from "./routes/loaiSanPham.routes.js";
@@ -13,8 +16,8 @@ import taiKhoanRoutes from "./routes/taiKhoan.routes.js";
 import donHangRoutes from "./routes/donHang.routes.js";
 import checkoutRoutes from "./routes/checkOut.routes.js";
 import thanhToanRoutes from "./routes/thanhToan.routes.js";
-import emailRoutes from "./routes/email.routes.js";
 import loaiSanPhamAdminRoutes from "./routes/loaiSanPhamAdmin.routes.js";
+import emailRoutes from "./routes/email.routes.js"; // ✅ Bỏ comment
 
 // === MIDDLEWARE ===
 import {
@@ -22,7 +25,6 @@ import {
   notFound,
 } from "./middleware/errorHandler.middleware.js";
 
-dotenv.config();
 const app = express();
 
 // === SECURITY MIDDLEWARE ===
@@ -75,7 +77,7 @@ app.use("/api/san-pham", sanPhamRoutes);
 app.use("/api/loai-san-pham", loaiSanPhamRoutes);
 app.use("/api/gio-hang", gioHangRoutes);
 app.use("/api/tai-khoan", taiKhoanRoutes);
-app.use("/api/email", emailRoutes);
+app.use("/api/email", emailRoutes); // ✅ Bỏ comment
 app.use("/api/don-hang", donHangRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/thanh-toan", thanhToanRoutes);
