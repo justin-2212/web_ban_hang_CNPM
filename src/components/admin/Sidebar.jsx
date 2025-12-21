@@ -17,14 +17,18 @@ const Sidebar = () => {
   // Định nghĩa danh sách menu để dễ quản lý
   const menuItems = [
     {
-      path: "/admin",
+      path: "/admin/dashboard",
       icon: <LayoutDashboard size={20} />,
-      label: "Tổng quan",
+      label: "Dashboard",
       end: true,
     },
-    { path: "/admin/products", icon: <Package size={20} />, label: "Sản phẩm" },
+    { 
+      path: "/admin/products", 
+      icon: <Package size={20} />, 
+      label: "Sản phẩm" 
+    },
     {
-      path: "/admin/categories", // Đường dẫn sẽ trỏ tới trang Quản lý loại
+      path: "/admin/categories",
       icon: <Layers size={20} />,
       label: "Loại sản phẩm",
     },
@@ -33,7 +37,11 @@ const Sidebar = () => {
       icon: <ShoppingBag size={20} />,
       label: "Đơn hàng",
     },
-    { path: "/admin/users", icon: <Users size={20} />, label: "Khách hàng" },
+    { 
+      path: "/admin/users", 
+      icon: <Users size={20} />, 
+      label: "Người dùng" 
+    },
   ];
 
   // Style cho từng link (Active vs Inactive)

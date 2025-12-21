@@ -19,9 +19,9 @@ const AdminRoute = () => {
     );
   }
 
-  // 2. Nếu chưa đăng nhập HOẶC Quyền không phải là 0 (Nhân viên)
+  // 2. Nếu chưa đăng nhập HOẶC Quyền không phải là 0 (Admin)
   // -> Đá về trang chủ
-  if (!dbUser || dbUser.Quyen !== 0) {
+  if (!dbUser || (dbUser.Quyen !== 0 && dbUser.Quyen !== '0')) {
     return <Navigate to="/" replace />;
   }
 

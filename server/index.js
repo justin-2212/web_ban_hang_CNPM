@@ -18,8 +18,18 @@ import checkoutRoutes from "./routes/checkOut.routes.js";
 import thanhToanRoutes from "./routes/thanhToan.routes.js";
 import loaiSanPhamAdminRoutes from "./routes/loaiSanPhamAdmin.routes.js";
 import thongSoAdminRoutes from "./routes/thongSoAdmin.routes.js";
-import emailRoutes from "./routes/email.routes.js"; //  Bỏ comment
-import uploadRoutes from "./routes/upload.routes.js"; //  Route upload ảnh Cloudinary
+import emailRoutes from "./routes/email.routes.js";
+import uploadRoutes from "./routes/upload.routes.js";
+
+// === ADMIN ROUTES ===
+import sanPhamAdminRoutes from "./routes/sanPhamAdmin.routes.js";
+import bienTheAdminRoutes from "./routes/bienTheAdmin.routes.js";
+import donHangAdminRoutes from "./routes/donHangAdmin.routes.js";
+import taiKhoanAdminRoutes from "./routes/taiKhoanAdmin.routes.js";
+import thongKeAdminRoutes from "./routes/thongKeAdmin.routes.js";
+import anhSPRoutes from "./routes/anhSP.routes.js";
+import thongSoBienTheMauRoutes from "./routes/thongSoBienTheMau.routes.js";
+import giaTriBienTheRoutes from "./routes/giaTriBienThe.routes.js";
 
 // === MIDDLEWARE ===
 import {
@@ -79,13 +89,23 @@ app.use("/api/san-pham", sanPhamRoutes);
 app.use("/api/loai-san-pham", loaiSanPhamRoutes);
 app.use("/api/gio-hang", gioHangRoutes);
 app.use("/api/tai-khoan", taiKhoanRoutes);
-app.use("/api/email", emailRoutes); // ✅ Bỏ comment
+app.use("/api/email", emailRoutes);
 app.use("/api/don-hang", donHangRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/thanh-toan", thanhToanRoutes);
-app.use("/api/upload", uploadRoutes); // ✅ Route upload ảnh
+app.use("/api/upload", uploadRoutes);
+
+// === ADMIN ROUTES ===
 app.use("/api/admin/loai-san-pham", loaiSanPhamAdminRoutes);
 app.use("/api/admin/thong-so", thongSoAdminRoutes);
+app.use("/api/admin/san-pham", sanPhamAdminRoutes);
+app.use("/api/admin/bien-the", bienTheAdminRoutes);
+app.use("/api/admin/don-hang", donHangAdminRoutes);
+app.use("/api/admin/tai-khoan", taiKhoanAdminRoutes);
+app.use("/api/admin/thong-ke", thongKeAdminRoutes);
+app.use("/api/anh-sp", anhSPRoutes);
+app.use("/api/thong-so-bien-the-mau", thongSoBienTheMauRoutes);
+app.use("/api/gia-tri-bien-the", giaTriBienTheRoutes);
 
 // Test route
 app.get("/", (req, res) => {
