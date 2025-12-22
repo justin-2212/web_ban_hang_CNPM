@@ -25,14 +25,20 @@ import Profile from "./pages/Profile";
 import OrderDetail from "./pages/OrderDetail";
 
 // === ADMIN PAGES ===
-import AdminDashboard from "./pages/admin/AdminDashboard"; // Import trang Admin
-import AdminCategoryManagement from "./pages/admin/CategoryPage"; // Import trang Quản lý loại sản phẩm
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminCategoryManagement from "./pages/admin/CategoryPage";
+import ProductsManagement from "./pages/admin/ProductsManagement";
+import ProductDetailManagement from "./pages/admin/ProductDetailManagement";
+import OrdersManagement from "./pages/admin/OrdersManagement";
+import UsersManagement from "./pages/admin/UsersManagement";
+import Dashboard from "./pages/admin/Dashboard";
 
 // === LAYOUT ===
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { LogIn } from "lucide-react";
-import AdminRoute from "./components/admin/AdminRouter"; // Import bảo vệ
+import AdminRoute from "./components/admin/AdminRouter"; // Import bảo vệ admin
+import CustomerRoute from "./components/CustomerRoute"; // Import bảo vệ customer
 import AuthRedirect from "./components/AuthRedirect"; // Import chuyển hướng tự động
 import MainLayout from "./components/MainLayout";
 import AdminLayout from "./components/admin/AdminLayout";
@@ -54,53 +60,57 @@ const App = () => {
       <AuthRedirect />
       {/* Nội dung chính – thay đổi theo route */}
       <Routes>
-        <Route element={<MainLayout />}>
-          {/* --- CÁC ROUTE khách hàng--- */}
-          <Route path="/" element={<Home />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/cart" element={<Cart />} />
+        {/* --- TẤT CẢ CÁC ROUTE CUSTOMER (Chặn admin) --- */}
+        <Route element={<CustomerRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:id" element={<ProductsDetail />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            
+            <Route path="/warranty-policy" element={<WarrantyPolicy />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/return-policy" element={<ReturnPolicy />} />
+            <Route path="/payment-guide" element={<PaymentGuide />} />
+            <Route path="/shopping-guide" element={<ShoppingGuide />} />
 
-          <Route path="/orders" element={<OrderHistory />} />
-          <Route path="/order-detail/:id" element={<OrderDetail />} />
-
-          
-          <Route path="/warranty-policy" element={<WarrantyPolicy />} />
-          <Route path="/support" element={<Support />} />
-          <Route path="/return-policy" element={<ReturnPolicy />} />
-          <Route path="/payment-guide" element={<PaymentGuide />} />
-          <Route path="/shopping-guide" element={<ShoppingGuide />} />
-
-          {/* CHECKOUT */}
-          <Route path="/checkout" element={<Checkout />} />
-
-          {/* KẾT QUẢ ĐƠN HÀNG */}
-          <Route path="/order-success" element={<OrderSuccess />} />
-
-          <Route path="/products/:id" element={<ProductsDetail />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/profile" element={<Profile />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-success" element={<OrderSuccess />} />
+            <Route path="/orders" element={<OrderHistory />} />
+            <Route path="/order-detail/:id" element={<OrderDetail />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
         </Route>
 
         {/* --- CÁC ROUTE ADMIN (Được bảo vệ) --- */}
-        {/* AdminRoute sẽ chặn khách thường, chỉ cho Quyen=0 đi qua */}
         <Route element={<AdminRoute />}>
           <Route element={<AdminLayout />}>
-            {/* Trang Dashboard (Mặc định khi vào /admin) */}
-            <Route path="/admin" element={<AdminDashboard />} />
-            {/* Trang Quản lý loại sản phẩm */}
-             <Route path="/admin/categories" element={<AdminCategoryManagement />} />
-            {/* Trang Quản lý User */}
-            {/* (Chỗ này để dành cho các trang Sản phẩm, Đơn hàng sau này) 
-                  <Route path="/admin/products" element={<ProductManagement />} />
-                  <Route path="/admin/orders" element={<OrderManagement />} />
-              */}
+            {/* Dashboard mới */}
+            <Route path="/admin" element={<Dashboard />} />
+            <Route path="/admin/dashboard" element={<Dashboard />} />
+            
+            {/* Quản lý loại sản phẩm */}
+            <Route path="/admin/categories" element={<AdminCategoryManagement />} />
+            
+            {/* Quản lý sản phẩm */}
+            <Route path="/admin/products" element={<ProductsManagement />} />
+            <Route path="/admin/products/:id" element={<ProductDetailManagement />} />
+            
+            {/* Quản lý đơn hàng */}
+            <Route path="/admin/orders" element={<OrdersManagement />} />
+            
+            {/* Quản lý người dùng */}
+            <Route path="/admin/users" element={<UsersManagement />} />
+            
+            {/* Legacy dashboard (giữ lại để tương thích) */}
+            <Route path="/admin/old-dashboard" element={<AdminDashboard />} />
           </Route>
-
-          <Route path="*" element={<NotFound />} />
         </Route>
 
         {/* Route 404 - Phải để cuối cùng */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   );

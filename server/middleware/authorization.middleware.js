@@ -9,7 +9,7 @@ export const requireAdmin = (req, res, next) => {
     });
   }
 
-  if (req.user.Quyen !== 'Admin') {
+  if (req.user.Quyen !== 0) {
     return res.status(403).json({
       success: false,
       message: 'Bạn không có quyền truy cập'

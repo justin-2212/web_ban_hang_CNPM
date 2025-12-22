@@ -10,10 +10,18 @@ export const authenticate = async (req, res, next) => {
     const clerkId = req.headers['x-clerk-id'];
     const userEmail = req.headers['x-user-email'];
     
+    // Debug logging
+    console.log('🔐 Auth Middleware:', {
+      clerkId: clerkId ? clerkId.substring(0, 10) + '...' : 'missing',
+      userEmail: userEmail || 'missing',
+      headers: Object.keys(req.headers)
+    });
+    
     if (!clerkId && !userEmail) {
       return res.status(401).json({
         success: false,
-        message: 'Vui lòng đăng nhập để tiếp tục'
+        message: 'Vui lòng đăng nhập để tiếp tục',
+        debug: 'Missing X-Clerk-Id and X-User-Email headers'
       });
     }
 
@@ -82,3 +90,8 @@ export const optionalAuth = async (req, res, next) => {
     next();
   }
 };
+
+/**
+ * Alias cho authenticate để tương thích với code cũ
+ */
+export const authenticateToken = authenticate;
