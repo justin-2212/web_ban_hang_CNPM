@@ -72,7 +72,7 @@ const Checkout = () => {
   }, [loadingUser, dbUser, fetchCart]);
 
   // =========================
-  // ✅ NEW: Tổng tiền (chỉ sản phẩm được chọn)
+  // Tổng tiền (chỉ sản phẩm được chọn)
   // =========================
   const selectedItems = cartItems.filter((item) =>
     selectedMaBienThe.has(item.MaBienThe)
@@ -83,7 +83,7 @@ const Checkout = () => {
     0
   );
 
-  // ✅ NEW: Xử lý thanh toán thực tế (gọi từ modal)
+  // Xử lý thanh toán thực tế (gọi từ modal)
   const processCheckout = async () => {
     if (!dbUser?.MaTaiKhoan) {
       navigate("/login");
@@ -104,7 +104,6 @@ const Checkout = () => {
         const res = await checkoutAPI.checkout({
           maTaiKhoan: dbUser.MaTaiKhoan,
           phuongThucThanhToan: "COD",
-          // ✅ NEW: Chỉ gửi sản phẩm được chọn
           cartItems: selectedItems.map(item => ({
             MaBienThe: item.MaBienThe,
             SoLuong: item.SoLuong,
@@ -127,7 +126,6 @@ const Checkout = () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               maTaiKhoan: dbUser.MaTaiKhoan,
-              // ✅ NEW: Chỉ gửi sản phẩm được chọn
               cartItems: selectedItems.map(item => ({
                 MaBienThe: item.MaBienThe,
                 SoLuong: item.SoLuong,
@@ -334,7 +332,7 @@ const Checkout = () => {
                   key={item.MaBienThe}
                   className="flex items-center justify-between border-b pb-4"
                 >
-                  <div>
+                  <div className="flex-1">
                     <p className="font-medium">
                       {item.TenSanPham}
                     </p>
@@ -342,11 +340,11 @@ const Checkout = () => {
                       {item.TenBienThe} × {item.SoLuong}
                     </p>
                   </div>
-                  <p className="font-semibold">
-                    {formatPrice(
-                      item.GiaTienBienThe * item.SoLuong
-                    )}
-                  </p>
+                  <div className="text-right">
+                    <p className="font-semibold">
+                      {formatPrice(item.GiaTienBienThe * item.SoLuong)}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>

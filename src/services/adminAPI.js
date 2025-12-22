@@ -244,8 +244,12 @@ export const donHangAdminAPI = {
   // Lấy danh sách đơn hàng (có filter)
   getAll: async (filters = {}) => {
     const queryParams = new URLSearchParams();
-    if (filters.tinhTrangDonHang !== undefined) queryParams.append('tinhTrangDonHang', filters.tinhTrangDonHang);
-    if (filters.tinhTrangThanhToan !== undefined) queryParams.append('tinhTrangThanhToan', filters.tinhTrangThanhToan);
+    if (filters.tinhTrangDonHang !== '' && filters.tinhTrangDonHang !== undefined) {
+      queryParams.append('tinhTrangDonHang', filters.tinhTrangDonHang);
+    }
+    if (filters.tinhTrangThanhToan !== '' && filters.tinhTrangThanhToan !== undefined) {
+      queryParams.append('tinhTrangThanhToan', filters.tinhTrangThanhToan);
+    }
     if (filters.phuongThucThanhToan) queryParams.append('phuongThucThanhToan', filters.phuongThucThanhToan);
     if (filters.search) queryParams.append('search', filters.search);
     if (filters.fromDate) queryParams.append('fromDate', filters.fromDate);
@@ -535,6 +539,49 @@ export const giaTriBienTheAPI = {
   // Xóa giá trị
   delete: async (id) => {
     const response = await fetch(`${API_BASE_URL}/gia-tri-bien-the/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+  }
+};
+
+// ==================== THÔNG SỐ MẪU (ThongSoMau) ====================
+export const thongSoMauAPI = {
+  // Lấy thông số mẫu theo loại sản phẩm
+  getByCategory: async (maLoai) => {
+    const response = await fetch(`${API_BASE_URL}/thong-so-mau/loai/${maLoai}`);
+    return handleResponse(response);
+  },
+
+  // Lấy tất cả
+  getAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/thong-so-mau`);
+    return handleResponse(response);
+  }
+};
+
+// ==================== GIÁ TRỊ THÔNG SỐ (GiaTriThongSo) ====================
+export const giaTriThongSoAPI = {
+  // Lấy giá trị thông số của sản phẩm
+  getByProduct: async (maSP) => {
+    const response = await fetch(`${API_BASE_URL}/gia-tri-thong-so/san-pham/${maSP}`);
+    return handleResponse(response);
+  },
+
+  // Thêm/Cập nhật giá trị thông số (UPSERT)
+  upsert: async (data) => {
+    const response = await fetch(`${API_BASE_URL}/gia-tri-thong-so`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(response);
+  },
+
+  // Xóa giá trị thông số
+  delete: async (maSP, maThongSoMau) => {
+    const response = await fetch(`${API_BASE_URL}/gia-tri-thong-so/${maSP}/${maThongSoMau}`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });

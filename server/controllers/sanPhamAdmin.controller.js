@@ -53,17 +53,23 @@ export const getSanPhamByIdAdmin = async (req, res, next) => {
  */
 export const createSanPhamAdmin = async (req, res, next) => {
   try {
-    const { ten, moTa, maLoai, tinhTrangSanPham } = req.body;
+    // Nhận cả viết hoa và viết thường để tương thích
+    const { ten, Ten, moTa, MoTa, maLoai, MaLoai, tinhTrangSanPham, TinhTrangSanPham } = req.body;
+    
+    const productName = Ten || ten;
+    const productDesc = MoTa || moTa || '';
+    const categoryId = MaLoai || maLoai;
+    const productStatus = TinhTrangSanPham !== undefined ? TinhTrangSanPham : (tinhTrangSanPham !== undefined ? tinhTrangSanPham : 1);
 
     // Validation
-    if (!ten || !ten.trim()) {
+    if (!productName || !productName.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Tên sản phẩm không được để trống'
       });
     }
 
-    if (!maLoai) {
+    if (!categoryId) {
       return res.status(400).json({
         success: false,
         message: 'Loại sản phẩm không được để trống'
@@ -71,10 +77,10 @@ export const createSanPhamAdmin = async (req, res, next) => {
     }
 
     const maSP = await SanPhamAdmin.create({
-      ten: ten.trim(),
-      moTa: moTa || '',
-      maLoai,
-      tinhTrangSanPham: tinhTrangSanPham !== undefined ? tinhTrangSanPham : 1
+      ten: productName.trim(),
+      moTa: productDesc,
+      maLoai: categoryId,
+      tinhTrangSanPham: productStatus
     });
 
     res.status(201).json({
@@ -93,17 +99,23 @@ export const createSanPhamAdmin = async (req, res, next) => {
 export const updateSanPhamAdmin = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { ten, moTa, maLoai, tinhTrangSanPham } = req.body;
+    // Nhận cả viết hoa và viết thường để tương thích
+    const { ten, Ten, moTa, MoTa, maLoai, MaLoai, tinhTrangSanPham, TinhTrangSanPham } = req.body;
+    
+    const productName = Ten || ten;
+    const productDesc = MoTa || moTa || '';
+    const categoryId = MaLoai || maLoai;
+    const productStatus = TinhTrangSanPham !== undefined ? TinhTrangSanPham : (tinhTrangSanPham !== undefined ? tinhTrangSanPham : 1);
 
     // Validation
-    if (!ten || !ten.trim()) {
+    if (!productName || !productName.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Tên sản phẩm không được để trống'
       });
     }
 
-    if (!maLoai) {
+    if (!categoryId) {
       return res.status(400).json({
         success: false,
         message: 'Loại sản phẩm không được để trống'
@@ -111,10 +123,10 @@ export const updateSanPhamAdmin = async (req, res, next) => {
     }
 
     const affectedRows = await SanPhamAdmin.update(id, {
-      ten: ten.trim(),
-      moTa: moTa || '',
-      maLoai,
-      tinhTrangSanPham: tinhTrangSanPham !== undefined ? tinhTrangSanPham : 1
+      ten: productName.trim(),
+      moTa: productDesc,
+      maLoai: categoryId,
+      tinhTrangSanPham: productStatus
     });
 
     if (affectedRows === 0) {

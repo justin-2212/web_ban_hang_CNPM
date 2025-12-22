@@ -9,6 +9,7 @@ import CategoryTabs from "../components/CategoryTabs";
 import SortSelect from "../components/SortSelect";
 import ProductsList from "../components/ProductsList";
 import SearchBar from "../components/SearchBar";
+import PriceRangeSlider from "../components/PriceRangeSlider";
 import { Loader2 } from "lucide-react";
 
 
@@ -25,6 +26,9 @@ export default function Products() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("default");
+  
+  // State cho bộ lọc giá
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 100000000 });
 
   const navigate = useNavigate(); 
   // ============================================================
@@ -101,7 +105,10 @@ export default function Products() {
     setError(null);
     
     sanPhamAPI
-      .getByCategory(selectedCategory)
+      .getByCategory(selectedCategory, {
+        minPrice: priceRange.min,
+        maxPrice: priceRange.max
+      })
       .then((res) => {
         return fetchProductsWithVariants(res.data);
       })
@@ -113,7 +120,7 @@ export default function Products() {
       .finally(() => {
         setLoading(false);
       });
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, priceRange]);
 
   // ------------------------------------------------------------
   // 3. SEARCH PRODUCTS
@@ -146,8 +153,15 @@ export default function Products() {
       });
   };
 
+  // ------------------------------------------------------------
+  // 4. HANDLE PRICE FILTER
+  // ------------------------------------------------------------
+  const handlePriceChange = (min, max) => {
+    setPriceRange({ min, max });
+  };
+
   // ------------------------------------------------------------ 
-  // 4. FILTER & SORT PRODUCTS 
+  // 5. FILTER & SORT PRODUCTS 
   // ------------------------------------------------------------ 
   const filteredProducts = useMemo(() => {
     let result = [...products];
@@ -230,14 +244,27 @@ export default function Products() {
         {/* Main Content: Sidebar + Products */}
         <div className="flex gap-8">
           {/* --- SIDEBAR (Desktop Only) --- */}
-          <Sidebar
-            categories={categories}
-            selected={selectedCategory}
-            onSelect={(categoryId) => {
-              setSelectedCategory(categoryId);
-              navigate(`/products?category=${categoryId}`, { replace: true });
-            }}
-          />
+          <div className="hidden lg:block w-72 space-y-6">
+            <Sidebar
+              categories={categories}
+              selected={selectedCategory}
+              onSelect={(categoryId) => {
+                setSelectedCategory(categoryId);
+                navigate(`/products?category=${categoryId}`, { replace: true });
+              }}
+            />
+            
+            {/* Price Range Filter - Chỉ hiển thị khi không tìm kiếm */}
+            {!searchQuery && (
+              <div data-aos="fade-up" data-aos-delay="100">
+                <PriceRangeSlider
+                  minPrice={0}
+                  maxPrice={100000000}
+                  onPriceChange={handlePriceChange}
+                />
+              </div>
+            )}
+          </div>
 
           {/* --- MAIN CONTENT --- */}
           <div className="flex-1">

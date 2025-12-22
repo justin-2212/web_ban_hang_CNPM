@@ -39,10 +39,10 @@ const LoaiSanPhamAdmin = {
     return result.affectedRows;
   },
 
-  // 5. Xóa loại sản phẩm (Admin)
+  // 5. Xóa loại sản phẩm (Admin) - Hard delete
   deleteAdmin: async (id) => {
     const [result] = await pool.query(
-      "UPDATE LoaiSanPham SET TinhTrangLoaiSanPham = 0 WHERE MaLoai = ?",
+      "DELETE FROM LoaiSanPham WHERE MaLoai = ?",
       [id]
     );
     return result.affectedRows;

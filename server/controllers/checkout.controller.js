@@ -23,6 +23,8 @@ class CheckoutController {
 
       // ✅ NEW: Nếu không có cartItems, lấy toàn bộ (fallback)
       let itemsToCheckout = cartItems;
+      
+      console.log('[CHECKOUT] Received cartItems:', JSON.stringify(cartItems, null, 2));
 
       if (!itemsToCheckout || itemsToCheckout.length === 0) {
         try {
@@ -49,14 +51,34 @@ class CheckoutController {
         conn = await db.getConnection();
         await conn.beginTransaction();
 
-        // ✅ NEW: Tính tổng tiền từ sản phẩm được chọn
-        const tongTien = itemsToCheckout.reduce(
+        // Lấy giá từ DB
+        const itemsWithPrice = await Promise.all(
+          itemsToCheckout.map(async (item) => {
+            const [rows] = await conn.query(`
+              SELECT bt.GiaTienBienThe
+              FROM bienthe bt
+              WHERE bt.MaBienThe = ?
+            `, [item.MaBienThe]);
+            
+            if (rows.length === 0) {
+              throw new Error(`Không tìm thấy biến thể ${item.MaBienThe}`);
+            }
+            
+            return {
+              ...item,
+              GiaTienBienThe: parseFloat(rows[0].GiaTienBienThe)
+            };
+          })
+        );
+
+        // Tính tổng tiền
+        const tongTien = itemsWithPrice.reduce(
           (sum, item) => sum + item.GiaTienBienThe * item.SoLuong,
           0
         );
 
         // 1. Kiểm tra tồn kho
-        for (const item of itemsToCheckout) {
+        for (const item of itemsWithPrice) {
           const variant = await BienThe.getById(item.MaBienThe, conn);
           if (!variant || item.SoLuong > variant.SoLuongTonKho) {
             throw new Error(`Sản phẩm ${item.MaBienThe} không đủ tồn kho`);
@@ -74,7 +96,7 @@ class CheckoutController {
         );
 
         // 3. Tạo chi tiết đơn hàng
-        for (const item of itemsToCheckout) {
+        for (const item of itemsWithPrice) {
           await DonHang.addOrderDetail(
             maDonHang,
             {
@@ -86,12 +108,14 @@ class CheckoutController {
           );
         }
 
-        // 4. COD: Trừ kho + xóa giỏ
+        // 4. COD: Trừ kho + xóa sản phẩm đã thanh toán khỏi giỏ
         if (phuongThucThanhToan === 'COD') {
-          for (const item of itemsToCheckout) {
+          for (const item of itemsWithPrice) {
             await BienThe.decreaseStock(item.MaBienThe, item.SoLuong, conn);
           }
-          await GioHang.clearCart(maTaiKhoan, conn);
+          // ✅ Chỉ xóa những sản phẩm đã thanh toán, không xóa hết giỏ
+          const maBienTheList = itemsWithPrice.map(item => item.MaBienThe);
+          await GioHang.removeItems(maTaiKhoan, maBienTheList, conn);
         }
 
         await conn.commit();

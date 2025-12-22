@@ -65,6 +65,10 @@ export const sanPhamAPI = {
       handleResponse
     ),
 
+  // Lấy top sản phẩm bán chạy
+  getTopSelling: (limit = 5) =>
+    fetch(`${API_BASE_URL}/san-pham/top-selling?limit=${limit}`).then(handleResponse),
+
   create: (data) =>
     fetch(`${API_BASE_URL}/san-pham`, {
       method: "POST",
@@ -292,4 +296,3 @@ export const uploadAPI = {
     }).then(handleResponse);
   },
 };
-

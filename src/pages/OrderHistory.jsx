@@ -82,7 +82,7 @@ const OrderHistory = () => {
   const getPaymentStatusDisplay = (status) => {
     const paymentMap = {
       0: { text: "Chưa thanh toán", color: "text-orange-600" },
-      1: { text: "Đã thanh toán (COD)", color: "text-orange-600" },
+      1: { text: "❌ Thanh toán lỗi", color: "text-red-600" },
       2: { text: "✅ Đã thanh toán", color: "text-green-600" },
     };
     return paymentMap[status] || { text: "❓ Không xác định", color: "text-gray-600" };

@@ -76,7 +76,7 @@ export const updateLoaiSanPhamAdmin = async (req, res) => {
   }
 };
 
-// Xóa
+// Xóa (Hard delete)
 export const deleteLoaiSanPhamAdmin = async (req, res) => {
   const { id } = req.params;
   try {
@@ -88,7 +88,7 @@ export const deleteLoaiSanPhamAdmin = async (req, res) => {
     }
     res.status(200).json({
       success: true,
-      message: "Đã ngừng kinh doanh sản phẩm thành công",
+      message: "Đã xóa loại sản phẩm thành công",
     });
   } catch (error) {
     res.status(500).json({

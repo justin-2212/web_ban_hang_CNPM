@@ -114,7 +114,7 @@ const OrderDetail = () => {
   const getPaymentStatusDisplay = (status) => {
     const paymentMap = {
       0: { text: "Chưa thanh toán", color: "text-orange-600", bg: "bg-orange-50" },
-      1: { text: "Thanh toán khi nhận (COD)", color: "text-orange-600", bg: "bg-orange-50" },
+      1: { text: "❌ Thanh toán bị lỗi", color: "text-red-600", bg: "bg-red-50" },
       2: { text: "✅ Đã thanh toán", color: "text-green-600", bg: "bg-green-50" },
     };
     return paymentMap[status] || { text: "❓ Không xác định", color: "text-gray-600", bg: "bg-gray-50" };
@@ -249,7 +249,7 @@ const OrderDetail = () => {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             <div className="flex items-center gap-3">
               <Calendar className="w-5 h-5 text-gray-400" />
               <div>
@@ -281,7 +281,17 @@ const OrderDetail = () => {
             <div className="flex items-center gap-3">
               <CreditCard className="w-5 h-5 text-gray-400" />
               <div>
-                <p className="text-xs text-gray-500">Thanh toán</p>
+                <p className="text-xs text-gray-500">Phương thức</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {order.PhuongThucThanhToan === 'COD' ? '💵 COD' : '💳 Online'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <CreditCard className="w-5 h-5 text-gray-400" />
+              <div>
+                <p className="text-xs text-gray-500">Trạng thái TT</p>
                 <p
                   className={`text-sm font-semibold ${paymentStatusDisplay.color}`}
                 >

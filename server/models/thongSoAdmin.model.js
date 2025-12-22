@@ -53,7 +53,7 @@ export const ThongSoBienTheModel = {
   // Lấy danh sách
   getByLoai: async (maLoai) => {
     const [rows] = await pool.query(
-      "SELECT * FROM ThongSoBienTheMau WHERE MaLoai = ? ORDER BY ThuTuHienThi ASC",
+      "SELECT DISTINCT MaThongSoBienTheMau, TenThongSoBienThe, DonVi, ThuTuHienThi, TinhTrangThongSoBienThe, MaLoai FROM ThongSoBienTheMau WHERE MaLoai = ? GROUP BY MaThongSoBienTheMau, TenThongSoBienThe, DonVi, ThuTuHienThi, TinhTrangThongSoBienThe, MaLoai ORDER BY ThuTuHienThi ASC",
       [maLoai]
     );
     return rows;

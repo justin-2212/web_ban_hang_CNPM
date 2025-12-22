@@ -11,9 +11,9 @@ const GioHang = {
                 ghct.*,
                 bt.TenBienThe, bt.GiaTienBienThe, bt.DuongDanAnhBienThe, bt.SoLuongTonKho,
                 sp.Ten AS TenSanPham, sp.MaSP
-            FROM GioHangChiTiet ghct
-            JOIN BienThe bt ON ghct.MaBienThe = bt.MaBienThe
-            JOIN SanPham sp ON bt.MaSP = sp.MaSP
+            FROM giohangchitiet ghct
+            JOIN bienthe bt ON ghct.MaBienThe = bt.MaBienThe
+            JOIN sanpham sp ON bt.MaSP = sp.MaSP
             WHERE ghct.MaTaiKhoan = ?
             ORDER BY ghct.ThoiGianThem DESC
         `, [maTaiKhoan]);
@@ -47,7 +47,7 @@ const GioHang = {
         // 1. Kiểm tra biến thể có tồn tại
         const [variant] = await connection.query(`
             SELECT MaBienThe, SoLuongTonKho 
-            FROM BienThe 
+            FROM bienthe 
             WHERE MaBienThe = ?
         `, [maBienThe]);
 
@@ -60,7 +60,7 @@ const GioHang = {
         // 2. Kiểm tra đã có trong giỏ chưa
         const [existing] = await connection.query(`
             SELECT SoLuong 
-            FROM GioHangChiTiet 
+            FROM giohangchitiet 
             WHERE MaTaiKhoan = ? AND MaBienThe = ?
         `, [maTaiKhoan, maBienThe]);
 
@@ -72,7 +72,7 @@ const GioHang = {
             }
 
             const [result] = await connection.query(`
-                UPDATE GioHangChiTiet 
+                UPDATE giohangchitiet 
                 SET SoLuong = ?, ThoiGianThem = NOW()
                 WHERE MaTaiKhoan = ? AND MaBienThe = ?
             `, [newQuantity, maTaiKhoan, maBienThe]);
@@ -90,7 +90,7 @@ const GioHang = {
         }
 
         const [result] = await connection.query(`
-            INSERT INTO GioHangChiTiet (MaTaiKhoan, MaBienThe, SoLuong, ThoiGianThem)
+            INSERT INTO giohangchitiet (MaTaiKhoan, MaBienThe, SoLuong, ThoiGianThem)
             VALUES (?, ?, ?, NOW())
         `, [maTaiKhoan, maBienThe, soLuong]);
 
@@ -113,7 +113,7 @@ const GioHang = {
         // Kiểm tra tồn kho
         const [variant] = await connection.query(`
             SELECT SoLuongTonKho 
-            FROM BienThe 
+            FROM bienthe 
             WHERE MaBienThe = ?
         `, [maBienThe]);
 
@@ -126,7 +126,7 @@ const GioHang = {
         }
 
         const [result] = await connection.query(`
-            UPDATE GioHangChiTiet 
+            UPDATE giohangchitiet 
             SET SoLuong = ?
             WHERE MaTaiKhoan = ? AND MaBienThe = ?
         `, [soLuong, maTaiKhoan, maBienThe]);
@@ -140,9 +140,24 @@ const GioHang = {
     removeItem: async (maTaiKhoan, maBienThe, conn) => {
         const connection = conn || db;
         const [result] = await connection.query(`
-            DELETE FROM GioHangChiTiet 
+            DELETE FROM giohangchitiet 
             WHERE MaTaiKhoan = ? AND MaBienThe = ?
         `, [maTaiKhoan, maBienThe]);
+        return result.affectedRows;
+    },
+
+    // ===============================
+    // Xóa nhiều sản phẩm cụ thể khỏi giỏ (dùng khi checkout một phần)
+    // ===============================
+    removeItems: async (maTaiKhoan, maBienTheList, conn) => {
+        if (!maBienTheList || maBienTheList.length === 0) return 0;
+        
+        const connection = conn || db;
+        const placeholders = maBienTheList.map(() => '?').join(',');
+        const [result] = await connection.query(`
+            DELETE FROM giohangchitiet 
+            WHERE MaTaiKhoan = ? AND MaBienThe IN (${placeholders})
+        `, [maTaiKhoan, ...maBienTheList]);
         return result.affectedRows;
     },
 
@@ -152,7 +167,7 @@ const GioHang = {
     clearCart: async (maTaiKhoan, conn) => {
         const connection = conn || db;
         const [result] = await connection.query(`
-            DELETE FROM GioHangChiTiet WHERE MaTaiKhoan = ?
+            DELETE FROM giohangchitiet WHERE MaTaiKhoan = ?
         `, [maTaiKhoan]);
         return result.affectedRows;
     },
@@ -164,7 +179,7 @@ const GioHang = {
         const connection = conn || db;
         const [rows] = await connection.query(`
             SELECT SUM(SoLuong) AS total 
-            FROM GioHangChiTiet 
+            FROM giohangchitiet 
             WHERE MaTaiKhoan = ?
         `, [maTaiKhoan]);
 

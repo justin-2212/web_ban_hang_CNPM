@@ -57,15 +57,18 @@ const CategoryPage = () => {
     const categoryToDelete = categories.find((cat) => cat.MaLoai === id);
     // Bước 2: Lấy tên (nếu tìm thấy), ngược lại để chuỗi rỗng
     const categoryName = categoryToDelete ? categoryToDelete.TenLoai : "";
+    
+    if (!confirm(`⚠️ XÓA VĨNH VIỄN loại "${categoryName}"? KHÔNG THỂ KHÔI PHỤC!`)) return;
+    
     try {
       await categoryServiceAdmin.delete(id);
-      fetchCategories(); // Load lại bảng sau khi ngừng kinh doanh
-      alert(`đã ngừng kinh doanh "${categoryName}"`);
+      fetchCategories(); // Load lại bảng sau khi xóa
+      alert(`Đã xóa "${categoryName}" thành công`);
     } catch (err) {
       alert(
         "Lỗi: " +
           (err.response?.data?.message ||
-            "Không thể ngừng kinh doanh mời bạn thử lại")
+            "Không thể xóa, mời bạn thử lại")
       );
     }
   };

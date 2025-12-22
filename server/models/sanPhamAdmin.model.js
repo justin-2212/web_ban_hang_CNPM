@@ -124,15 +124,29 @@ const SanPhamAdmin = {
   },
 
   /**
-   * Xóa sản phẩm (soft delete - đổi trạng thái)
+   * Xóa sản phẩm (hard delete - xóa vĩnh viễn)
    */
   delete: async (maSP) => {
+    // 1. Lấy danh sách biến thể
+    const [variants] = await db.query('SELECT MaBienThe FROM BienThe WHERE MaSP = ?', [maSP]);
+    
+    // 2. Xóa GiaTriBienThe của từng biến thể
+    for (const variant of variants) {
+      await db.query('DELETE FROM GiaTriBienThe WHERE MaBienThe = ?', [variant.MaBienThe]);
+    }
+    
+    // 3. Xóa các biến thể
+    await db.query('DELETE FROM BienThe WHERE MaSP = ?', [maSP]);
+    
+    // 4. Xóa thông số sản phẩm
+    await db.query('DELETE FROM GiaTriThongSo WHERE MaSP = ?', [maSP]);
+    
+    // 5. Xóa ảnh sản phẩm
+    await db.query('DELETE FROM AnhSP WHERE MaSP = ?', [maSP]);
+    
+    // 6. Xóa sản phẩm
     const [result] = await db.query(
-      `
-      UPDATE SanPham
-      SET TinhTrangSanPham = 0
-      WHERE MaSP = ?
-      `,
+      'DELETE FROM SanPham WHERE MaSP = ?',
       [maSP]
     );
 

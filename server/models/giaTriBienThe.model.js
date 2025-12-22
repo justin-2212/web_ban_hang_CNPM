@@ -21,7 +21,7 @@ const GiaTriBienThe = {
   },
 
   /**
-   * Thêm giá trị cho biến thể
+   * Thêm giá trị cho biến thể (UPSERT - INSERT hoặc UPDATE nếu đã tồn tại)
    */
   create: async (data) => {
     const { maBienThe, maThongSoBienTheMau, giaTriHienThi, giaTriNhap, thuTuHienThi } = data;
@@ -30,6 +30,10 @@ const GiaTriBienThe = {
       INSERT INTO GiaTriBienThe 
       (MaBienThe, MaThongSoBienTheMau, GiaTriHienThi, GiaTriNhap, ThuTuHienThi)
       VALUES (?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE 
+        GiaTriHienThi = VALUES(GiaTriHienThi),
+        GiaTriNhap = VALUES(GiaTriNhap),
+        ThuTuHienThi = VALUES(ThuTuHienThi)
       `,
       [maBienThe, maThongSoBienTheMau, giaTriHienThi, giaTriNhap, thuTuHienThi]
     );
