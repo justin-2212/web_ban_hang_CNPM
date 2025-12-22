@@ -1,6 +1,6 @@
 // server/models/taiKhoanAdmin.model.js
 
-import db from '../config/db.js';
+import db from "../config/db.js";
 
 const TaiKhoanAdmin = {
   /**
@@ -10,7 +10,7 @@ const TaiKhoanAdmin = {
     let query = `
       SELECT 
         MaTaiKhoan, Gmail, TenDayDu, SoDienThoai, DiaChi,
-        Quyen, TinhTrangTaiKhoan, NgayTao
+        Quyen, TinhTrangTaiKhoan
       FROM TaiKhoan
     `;
 
@@ -18,28 +18,29 @@ const TaiKhoanAdmin = {
     const params = [];
 
     // Lọc theo quyền
-    if (filters.quyen) {
-      conditions.push('Quyen = ?');
+    //  Phải khác undefined VÀ khác chuỗi rỗng
+    if (filters.quyen !== undefined && filters.quyen !== "") {
+      conditions.push("Quyen = ?");
       params.push(filters.quyen);
     }
 
     // Lọc theo tình trạng
-    if (filters.tinhTrang !== undefined) {
-      conditions.push('TinhTrangTaiKhoan = ?');
+    //  Phải khác undefined VÀ khác chuỗi rỗng
+    if (filters.tinhTrang !== undefined && filters.tinhTrang !== "") {
+      conditions.push("TinhTrangTaiKhoan = ?");
       params.push(filters.tinhTrang);
     }
-
     // Tìm kiếm theo tên hoặc email
     if (filters.search) {
-      conditions.push('(TenDayDu LIKE ? OR Gmail LIKE ?)');
+      conditions.push("(TenDayDu LIKE ? OR Gmail LIKE ?)");
       params.push(`%${filters.search}%`, `%${filters.search}%`);
     }
 
     if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
+      query += " WHERE " + conditions.join(" AND ");
     }
 
-    query += ' ORDER BY NgayTao DESC';
+    query += " ORDER BY MaTaiKhoan DESC";
 
     const [rows] = await db.query(query, params);
     return rows;
@@ -53,7 +54,7 @@ const TaiKhoanAdmin = {
       `
       SELECT 
         MaTaiKhoan, Gmail, TenDayDu, SoDienThoai, DiaChi,
-        Quyen, TinhTrangTaiKhoan, NgayTao, ClerkID
+        Quyen, TinhTrangTaiKhoan, ClerkID
       FROM TaiKhoan
       WHERE MaTaiKhoan = ?
       `,
@@ -116,20 +117,7 @@ const TaiKhoanAdmin = {
    * Lấy người dùng mới theo khoảng thời gian
    */
   getNewUsers: async (fromDate, toDate) => {
-    const [rows] = await db.query(
-      `
-      SELECT 
-        DATE(NgayTao) as Ngay,
-        COUNT(*) as SoLuong
-      FROM TaiKhoan
-      WHERE NgayTao BETWEEN ? AND ?
-      GROUP BY DATE(NgayTao)
-      ORDER BY Ngay DESC
-      `,
-      [fromDate, toDate]
-    );
-
-    return rows;
+    return [];
   },
 
   /**
@@ -148,7 +136,7 @@ const TaiKhoanAdmin = {
     );
 
     return rows;
-  }
+  },
 };
 
 export default TaiKhoanAdmin;

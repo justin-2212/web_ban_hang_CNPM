@@ -15,6 +15,23 @@ router.post("/sync-user", async (req, res) => {
     const existingUser = await TaiKhoan.findByEmail(email);
 
     if (existingUser) {
+      // ===  KIỂM TRA tình trạng tài khoản NÀY ===
+      // Nếu tìm thấy user, kiểm tra ngay xem có bị khóa ( = 0) hay không
+      console.log(
+        "Check User:",
+        existingUser.Gmail,
+        "Status:",
+        existingUser.TinhTrangTaiKhoan,
+        typeof existingUser.TinhTrangTaiKhoan
+      );
+      if (existingUser.TinhTrangTaiKhoan == 0) {
+        return res.status(403).json({
+          success: false,
+          message: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin!",
+          isLocked: true, // Cờ đánh dấu để frontend dễ nhận biết
+        });
+      }
+
       // Logic cập nhật ClerkID nếu chưa có
       if (!existingUser.ClerkID && clerkId) {
         // --- SỬA Ở ĐÂY: Gọi hàm từ Model thay vì viết SQL trực tiếp ---
