@@ -1,7 +1,4 @@
-// src/components/admin/CreateModal.jsx
-
 import React, { useState, useEffect } from "react";
-
 import categoryServiceAdmin from "../../services/categoryServiceAdmin";
 
 const CreateModal = ({
@@ -35,36 +32,63 @@ const CreateModal = ({
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // Xóa lỗi khi người dùng bắt đầu nhập
+    // Xóa error khi user bắt đầu sửa
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
-
     setFormData((prev) => {
-      // Xử lý riêng cho ô Thứ tự
       if (name === "thuTuHienThi") {
-        if (value === "") return { ...prev, [name]: "" }; // Cho phép rỗng
-        if (value === "-") return { ...prev, [name]: "-" }; // Cho phép dấu trừ
-        return { ...prev, [name]: parseInt(value) }; // Ép kiểu số
+        if (value === "") return { ...prev, [name]: "" };
+        return { ...prev, [name]: parseInt(value) };
       }
-
-      // Các ô khác
-      return {
-        ...prev,
-        [name]: name === "tenLoai" ? value : parseInt(value),
-      };
+      return { ...prev, [name]: value };
     });
+  };
+
+  // ============ KIỂM TRA TRÙNG TÊN ============
+  const checkDuplicateName = (tenMoi, idDangSua = null) => {
+    return existingCategories.some((cat) => {
+      // Nếu đang sửa, bỏ qua item hiện tại
+      if (idDangSua && cat.MaLoai === idDangSua) {
+        return false;
+      }
+      // So sánh tên (không phân biệt hoa/thường, loại bỏ khoảng trắng)
+      return cat.TenLoai.trim().toLowerCase() === tenMoi.trim().toLowerCase();
+    });
+  };
+
+  // ============ KIỂM TRA TRÙNG THỨ TỰ ============
+  const checkDuplicateOrder = (thuTuMoi, idDangSua = null) => {
+    return existingCategories.some((cat) => {
+      // Nếu đang sửa, bỏ qua item hiện tại
+      if (idDangSua && cat.MaLoai === idDangSua) {
+        return false;
+      }
+      return cat.ThuTuHienThi === thuTuMoi;
+    });
+  };
+
+  // ============ TÍNH TOÁN SỐ THỨ TỰ GỢI Ý ============
+  const getNextAvailableOrder = () => {
+    if (existingCategories.length === 0) return 0;
+    return Math.max(...existingCategories.map((cat) => cat.ThuTuHienThi)) + 1;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // --- 3. VALIDATION (Kiểm tra dữ liệu trước) ---
+    // ---  VALIDATION (Kiểm tra dữ liệu trước) ---
     const newErrors = {};
 
     // Kiểm tra tên
     if (!formData.tenLoai.trim()) {
       newErrors.tenLoai = "Tên loại không được để trống";
+    }
+
+    // KIỂM TRA TRÙNG TÊN
+    if (formData.tenLoai.trim()) {
+      if (checkDuplicateName(formData.tenLoai, initialData?.MaLoai)) {
+        newErrors.tenLoai = `Loại sản phẩm "${formData.tenLoai.trim()}" đã tồn tại`;
+      }
     }
 
     // Kiểm tra thứ tự
@@ -78,6 +102,15 @@ const CreateModal = ({
       }
     }
 
+    //  KIỂM TRA TRÙNG THỨ TỰ
+    if (
+      orderToCheck >= 0 &&
+      checkDuplicateOrder(orderToCheck, initialData?.MaLoai)
+    ) {
+      const nextOrder = getNextAvailableOrder();
+      newErrors.thuTuHienThi = `Thứ tự ${orderToCheck} đã tồn tại! Gợi ý: ${nextOrder}`;
+    }
+
     // Nếu có lỗi thì dừng lại, không gửi server
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -87,44 +120,24 @@ const CreateModal = ({
 
     setLoading(true);
 
-    // --- LOGIC KIỂM TRA TRÙNG THỨ TỰ ---
-    const isDuplicate = existingCategories.some((cat) => {
-      // Nếu đang Sửa (Edit mode), phải bỏ qua chính nó
-      if (initialData && cat.MaLoai === initialData.MaLoai) {
-        return false;
-      }
-      return cat.ThuTuHienThi === orderToCheck;
-    });
-
-    if (isDuplicate) {
-      const maxOrder =
-        existingCategories.length > 0
-          ? Math.max(...existingCategories.map((c) => c.ThuTuHienThi))
-          : 0;
-
-      alert(
-        `Thứ tự hiển thị "${orderToCheck}" đã tồn tại! Vui lòng chọn số khác.\nSố thứ tự lớn nhất hiện tại là: ${maxOrder}`
-      );
-
-      setLoading(false);
-      return;
-    }
-
     try {
       // Chuẩn bị payload (đảm bảo thứ tự là số chuẩn)
       const payload = { ...formData, thuTuHienThi: orderToCheck };
 
       if (initialData) {
         await categoryServiceAdmin.update(initialData.MaLoai, payload);
+        alert(`Đã cập nhật loại sản phẩm "${formData.tenLoai}" thành công!`);
       } else {
         await categoryServiceAdmin.create(payload);
+        alert(`Đã thêm loại sản phẩm "${formData.tenLoai}" thành công!`);
       }
       onSuccess();
-      alert(initialData ? "Cập nhật thành công!" : "Thêm mới thành công!");
     } catch (error) {
       console.error(error);
+      const errorMessage =
+        error.response?.data?.message || error.message || "Có lỗi xảy ra";
       alert(
-        "Có lỗi xảy ra: " + (error.response?.data?.message || error.message)
+        `${initialData ? "Lỗi cập nhật" : "Lỗi thêm mới"}: ${errorMessage}`
       );
     } finally {
       setLoading(false);
@@ -151,7 +164,6 @@ const CreateModal = ({
               className="text-gray-400 hover:text-gray-500 focus:outline-none"
             >
               <span className="sr-only">Đóng</span>
-              {/* Icon X lớn hơn một chút */}
               <svg
                 className="h-6 w-6"
                 fill="none"
@@ -161,34 +173,37 @@ const CreateModal = ({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth="2"
+                  strokeWidth={2}
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
             </button>
           </div>
 
-          {/* BODY Drawer - Có thanh cuộn nếu nội dung dài */}
-          <div className="flex-1 h-full overflow-y-auto p-6">
-            <form
-              id="drawer-form"
-              onSubmit={handleSubmit}
-              className="space-y-6"
-            >
-              {/* Tên loại */}
+          {/* FORM */}
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+            <div className="space-y-6 px-4 py-6 sm:px-6">
+              {/* Tên loại sản phẩm */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tên loại <span className="text-red-500">*</span>
+                  Tên loại sản phẩm <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="tenLoai"
                   value={formData.tenLoai}
                   onChange={handleChange}
-                  placeholder="VD: Điện thoại, Laptop..."
-                  required
-                  className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="vd: iPhone, iPad, MacBook"
+                  className={`w-full border rounded-md shadow-sm px-4 py-3 focus:outline-none focus:ring-2 ${
+                    errors.tenLoai
+                      ? "border-red-500 focus:ring-red-200"
+                      : "border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  }`}
                 />
+                {/*  HIỂN THỊ LỖI TÊN DƯỚI INPUT */}
+                {errors.tenLoai && (
+                  <p className="text-red-500 text-xs mt-1">{errors.tenLoai}</p>
+                )}
               </div>
 
               {/* Thứ tự hiển thị */}
@@ -201,9 +216,13 @@ const CreateModal = ({
                   name="thuTuHienThi"
                   value={formData.thuTuHienThi}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full border rounded-md shadow-sm px-4 py-3 focus:outline-none focus:ring-2 ${
+                    errors.thuTuHienThi
+                      ? "border-red-500 focus:ring-red-200"
+                      : "border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  }`}
                 />
-                {/* Hiển thị lỗi hoặc dòng chú thích */}
+                {/*  HIỂN THỊ LỖI THỨ TỰ DƯỚI INPUT */}
                 {errors.thuTuHienThi ? (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.thuTuHienThi}
@@ -230,25 +249,30 @@ const CreateModal = ({
                   <option value={0}>Ngừng kinh doanh</option>
                 </select>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
 
           {/* FOOTER Drawer - Cố định ở đáy */}
           <div className="border-t border-gray-200 px-4 py-4 sm:px-6 bg-gray-50 flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Hủy
             </button>
             <button
-              type="submit"
-              form="drawer-form" // Link button này với form ở trên
+              onClick={handleSubmit}
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none disabled:bg-blue-300"
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Đang lưu..." : initialData ? "Cập nhật" : "Thêm mới"}
+              {loading
+                ? initialData
+                  ? "Đang cập nhật..."
+                  : "Đang thêm..."
+                : initialData
+                ? "Cập nhật"
+                : "Thêm mới"}
             </button>
           </div>
         </div>
