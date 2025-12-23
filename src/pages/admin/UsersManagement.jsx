@@ -10,6 +10,7 @@ import {
   Ban,
   CheckCircle,
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 const ROLES = {
   0: { label: "Admin", color: "bg-red-100 text-red-800" },
@@ -31,6 +32,9 @@ const UsersManagement = () => {
     quyen: "",
     tinhTrang: "",
   });
+
+  // LẤY THÔNG TIN CỦA CHÍNH MÌNH (Admin đang đăng nhập)
+  const { dbUser } = useAuth();
 
   useEffect(() => {
     fetchUsers();
@@ -68,12 +72,25 @@ const UsersManagement = () => {
   };
 
   const handleUpdateRole = async (userId, newRole) => {
-    if (!confirm(`Bạn có chắc muốn đổi quyền thành ${newRole}?`)) return;
+    const confirmMessage =
+      newRole === 0
+        ? "Bạn có chắc muốn đổi quyền của tài khoản này thành Admin?"
+        : "Bạn có chắc muốn đổi quyền của tài khoản này thành người dùng?";
+
+    // 2. Hiện thông báo xác nhận
+    if (!confirm(confirmMessage)) return;
 
     try {
       const response = await taiKhoanAdminAPI.updateRole(userId, newRole);
       if (response.success) {
-        alert("Cập nhật quyền thành công");
+        // Thông báo thành công cũng nên rõ ràng hơn (tuỳ chọn)
+        const successMessage =
+          newRole === 0
+            ? "Đã thăng cấp Admin thành công!"
+            : "Đã hạ quyền thành người dùng thành công!"; 
+
+        alert(successMessage);
+
         fetchUsers();
         if (selectedUser && selectedUser.MaTaiKhoan === userId) {
           setShowDetail(false);
@@ -202,80 +219,105 @@ const UsersManagement = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user) => (
-                  <tr key={user.MaTaiKhoan} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {user.MaTaiKhoan}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {user.TenDayDu || "N/A"}
-                        </p>
-                        <p className="text-gray-500 text-xs">{user.Gmail}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      <div>
-                        <p>{user.SoDienThoai || "Chưa có"}</p>
-                        <p className="text-xs truncate max-w-xs">
-                          {user.DiaChi || "Chưa có"}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          ROLES[user.Quyen]?.color ||
-                          "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {ROLES[user.Quyen]?.label || user.Quyen}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          STATUS[user.TinhTrangTaiKhoan]?.color
-                        }`}
-                      >
-                        {STATUS[user.TinhTrangTaiKhoan]?.label}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => handleViewDetail(user.MaTaiKhoan)}
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                          title="Xem chi tiết"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        {user.Quyen !== 0 && (
-                          <button
-                            onClick={() => handleToggleStatus(user.MaTaiKhoan)}
-                            className={`p-1 rounded ${
-                              user.TinhTrangTaiKhoan === 1
-                                ? "text-red-600 hover:bg-red-50"
-                                : "text-green-600 hover:bg-green-50"
-                            }`}
-                            title={
-                              user.TinhTrangTaiKhoan === 1
-                                ? "Khóa tài khoản"
-                                : "Mở khóa"
-                            }
-                          >
-                            {user.TinhTrangTaiKhoan === 1 ? (
-                              <Ban className="w-4 h-4" />
-                            ) : (
-                              <CheckCircle className="w-4 h-4" />
+                {users.map((user) => {
+                  // Kiểm tra xem dòng này có phải là bản thân mình không
+                  const isMe = dbUser && dbUser.MaTaiKhoan === user.MaTaiKhoan;
+
+                  return (
+                    <tr
+                      key={user.MaTaiKhoan}
+                      className={`hover:bg-gray-50 ${isMe ? "bg-blue-50" : ""}`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {user.MaTaiKhoan}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {user.TenDayDu || "N/A"}{" "}
+                            {isMe && (
+                              <span className="text-xs text-blue-600 font-bold">
+                                (Bạn)
+                              </span>
                             )}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          </p>
+                          <p className="text-gray-500 text-xs">{user.Gmail}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        <div>
+                          <p>{user.SoDienThoai || "Chưa có"}</p>
+                          <p className="text-xs truncate max-w-xs">
+                            {user.DiaChi || "Chưa có"}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span
+                          className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                            ROLES[user.Quyen]?.color ||
+                            "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {ROLES[user.Quyen]?.label || user.Quyen}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span
+                          className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                            STATUS[user.TinhTrangTaiKhoan]?.color
+                          }`}
+                        >
+                          {STATUS[user.TinhTrangTaiKhoan]?.label}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          {/* === LOGIC MỚI: Chỉ hiện nút Xem chi tiết nếu KHÔNG PHẢI LÀ MÌNH === */}
+                          {!isMe && (
+                            <button
+                              onClick={() => handleViewDetail(user.MaTaiKhoan)}
+                              className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                              title="Xem chi tiết"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          {/* Chỉ hiện nút Khóa/Mở nếu không phải là mình VÀ không phải Admin khác (tùy chọn) */}
+                          {!isMe && user.Quyen !== 0 && (
+                            <button
+                              onClick={() =>
+                                handleToggleStatus(user.MaTaiKhoan)
+                              }
+                              className={`p-1 rounded ${
+                                user.TinhTrangTaiKhoan === 1
+                                  ? "text-red-600 hover:bg-red-50"
+                                  : "text-green-600 hover:bg-green-50"
+                              }`}
+                              title={
+                                user.TinhTrangTaiKhoan === 1
+                                  ? "Khóa tài khoản"
+                                  : "Mở khóa"
+                              }
+                            >
+                              {user.TinhTrangTaiKhoan === 1 ? (
+                                <Ban className="w-4 h-4" />
+                              ) : (
+                                <CheckCircle className="w-4 h-4" />
+                              )}
+                            </button>
+                          )}
+
+                          {/* Nếu là mình thì hiện text thông báo thay vì nút */}
+                          {isMe && (
+                            <span className="text-xs text-gray-400 italic cursor-default select-none"></span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
 
@@ -370,44 +412,48 @@ const UsersManagement = () => {
 
               {/* Actions */}
               <div className="flex gap-3">
-                {selectedUser.Quyen !== 0 && (
-                  <>
-                    <button
-                      onClick={() =>
-                        handleUpdateRole(
-                          selectedUser.MaTaiKhoan,
-                          selectedUser.Quyen === 0 ? 1 : 0
-                        )
-                      }
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
-                    >
-                      <ShieldCheck className="w-4 h-4" />
-                      {selectedUser.Quyen === 0 ? "Hạ xuống User" : "Lên Admin"}
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleToggleStatus(selectedUser.MaTaiKhoan)
-                      }
-                      className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                        selectedUser.TinhTrangTaiKhoan === 1
-                          ? "bg-red-600 hover:bg-red-700 text-white"
-                          : "bg-green-600 hover:bg-green-700 text-white"
-                      }`}
-                    >
-                      {selectedUser.TinhTrangTaiKhoan === 1 ? (
-                        <>
-                          <Ban className="w-4 h-4" />
-                          Khóa tài khoản
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="w-4 h-4" />
-                          Mở khóa
-                        </>
-                      )}
-                    </button>
-                  </>
+                {selectedUser.Quyen === 1 ? (
+                  // TRƯỜNG HỢP 1: Đang là USER -> Hiện nút "LÊN ADMIN" (Màu xanh)
+                  <button
+                    onClick={() => handleUpdateRole(selectedUser.MaTaiKhoan, 0)} // Truyền 0 để lên Admin
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    Thăng cấp Admin
+                  </button>
+                ) : (
+                  // TRƯỜNG HỢP 2: Đang là ADMIN -> Hiện nút "HẠ QUYỀN" (Màu cam/đỏ)
+                  <button
+                    onClick={() => handleUpdateRole(selectedUser.MaTaiKhoan, 1)} // Truyền 1 để xuống User
+                    className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center justify-center gap-2"
+                  >
+                    <ShieldOff className="w-4 h-4" />{" "}
+                    {/* Nhớ import ShieldOff từ lucide-react */}
+                    Hạ xuống User
+                  </button>
                 )}
+
+                {/* Nút Khóa/Mở khóa giữ nguyên */}
+                <button
+                  onClick={() => handleToggleStatus(selectedUser.MaTaiKhoan)}
+                  className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+                    selectedUser.TinhTrangTaiKhoan === 1
+                      ? "bg-red-600 hover:bg-red-700 text-white"
+                      : "bg-green-600 hover:bg-green-700 text-white"
+                  }`}
+                >
+                  {selectedUser.TinhTrangTaiKhoan === 1 ? (
+                    <>
+                      <Ban className="w-4 h-4" />
+                      Khóa tài khoản
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Mở khóa
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>

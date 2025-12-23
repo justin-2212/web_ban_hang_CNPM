@@ -1,6 +1,6 @@
 // server/controllers/taiKhoanAdmin.controller.js
 
-import TaiKhoanAdmin from '../models/taiKhoanAdmin.model.js';
+import TaiKhoanAdmin from "../models/taiKhoanAdmin.model.js";
 
 /**
  * Lấy danh sách tài khoản (có thể lọc)
@@ -10,14 +10,14 @@ export const getAllUsers = async (req, res, next) => {
     const filters = {
       quyen: req.query.quyen,
       tinhTrang: req.query.tinhTrang,
-      search: req.query.search
+      search: req.query.search,
     };
 
     const users = await TaiKhoanAdmin.getAllAdmin(filters);
 
     res.json({
       success: true,
-      data: users
+      data: users,
     });
   } catch (error) {
     next(error);
@@ -35,13 +35,13 @@ export const getUserById = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy tài khoản'
+        message: "Không tìm thấy tài khoản",
       });
     }
 
     res.json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (error) {
     next(error);
@@ -57,18 +57,17 @@ export const updateUserRole = async (req, res, next) => {
     const { quyen } = req.body;
 
     // Validation
-    if (!quyen) {
+    if (quyen === undefined || quyen === null) {
       return res.status(400).json({
         success: false,
-        message: 'Quyền không được để trống'
+        message: "Quyền không được để trống",
       });
     }
-
     // Validate quyền hợp lệ
     if (![0, 1].includes(quyen)) {
       return res.status(400).json({
         success: false,
-        message: 'Quyền không hợp lệ. Chỉ chấp nhận 0 (Admin) hoặc 1 (User)'
+        message: "Quyền không hợp lệ. Chỉ chấp nhận 0 (Admin) hoặc 1 (User)",
       });
     }
 
@@ -77,13 +76,13 @@ export const updateUserRole = async (req, res, next) => {
     if (affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy tài khoản'
+        message: "Không tìm thấy tài khoản",
       });
     }
 
     res.json({
       success: true,
-      message: 'Cập nhật quyền thành công'
+      message: "Cập nhật quyền thành công",
     });
   } catch (error) {
     next(error);
@@ -102,13 +101,13 @@ export const toggleUserStatus = async (req, res, next) => {
     if (affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy tài khoản'
+        message: "Không tìm thấy tài khoản",
       });
     }
 
     res.json({
       success: true,
-      message: 'Cập nhật trạng thái tài khoản thành công'
+      message: "Cập nhật trạng thái tài khoản thành công",
     });
   } catch (error) {
     next(error);
@@ -124,7 +123,7 @@ export const getUserStats = async (req, res, next) => {
 
     res.json({
       success: true,
-      data: stats
+      data: stats,
     });
   } catch (error) {
     next(error);
@@ -141,7 +140,7 @@ export const getNewUsers = async (req, res, next) => {
     if (!fromDate || !toDate) {
       return res.status(400).json({
         success: false,
-        message: 'Vui lòng cung cấp fromDate và toDate'
+        message: "Vui lòng cung cấp fromDate và toDate",
       });
     }
 
@@ -149,7 +148,7 @@ export const getNewUsers = async (req, res, next) => {
 
     res.json({
       success: true,
-      data
+      data,
     });
   } catch (error) {
     next(error);
@@ -166,7 +165,7 @@ export const getUserOrders = async (req, res, next) => {
 
     res.json({
       success: true,
-      data: orders
+      data: orders,
     });
   } catch (error) {
     next(error);
