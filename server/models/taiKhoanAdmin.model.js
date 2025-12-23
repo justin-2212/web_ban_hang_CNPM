@@ -1,6 +1,6 @@
 // server/models/taiKhoanAdmin.model.js
 
-import db from '../config/db.js';
+import db from "../config/db.js";
 
 const TaiKhoanAdmin = {
   /**
@@ -19,27 +19,27 @@ const TaiKhoanAdmin = {
 
     // Lọc theo quyền
     if (filters.quyen) {
-      conditions.push('Quyen = ?');
+      conditions.push("Quyen = ?");
       params.push(filters.quyen);
     }
 
     // Lọc theo tình trạng
     if (filters.tinhTrang !== undefined) {
-      conditions.push('TinhTrangTaiKhoan = ?');
+      conditions.push("TinhTrangTaiKhoan = ?");
       params.push(filters.tinhTrang);
     }
 
     // Tìm kiếm theo tên hoặc email
     if (filters.search) {
-      conditions.push('(TenDayDu LIKE ? OR Gmail LIKE ?)');
+      conditions.push("(TenDayDu LIKE ? OR Gmail LIKE ?)");
       params.push(`%${filters.search}%`, `%${filters.search}%`);
     }
 
     if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
+      query += " WHERE " + conditions.join(" AND ");
     }
 
-    query += ' ORDER BY NgayTao DESC';
+    query += " ORDER BY NgayTao DESC";
 
     const [rows] = await db.query(query, params);
     return rows;
@@ -148,7 +148,7 @@ const TaiKhoanAdmin = {
     );
 
     return rows;
-  }
+  },
 };
 
 export default TaiKhoanAdmin;
