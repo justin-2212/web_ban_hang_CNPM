@@ -241,7 +241,8 @@ const DonHang = {
     }
 
     // Chỉ hủy được nếu trạng thái là "Đang xử lý" (0)
-    if (orderData.TinhTrangDonHang !== 0) {
+    // ✅ FIX: Dùng != thay vì !== để xử lý cả string và number
+    if (orderData.TinhTrangDonHang != 0) {
       return { canCancel: false, reason: "Đơn hàng không ở trạng thái có thể hủy" };
     }
 

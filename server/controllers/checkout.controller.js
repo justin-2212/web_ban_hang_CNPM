@@ -11,7 +11,7 @@ class CheckoutController {
       const {
         maTaiKhoan,
         phuongThucThanhToan,
-        cartItems, // ✅ NEW: Nhận danh sách sản phẩm được chọn
+        cartItems, 
       } = req.body;
 
       if (!maTaiKhoan || !phuongThucThanhToan) {

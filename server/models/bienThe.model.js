@@ -40,6 +40,28 @@ const BienThe = {
 
     return result.affectedRows;
   },
+
+  // ===============================
+  // Trả lại tồn kho (khi hủy đơn)
+  // ===============================
+  increaseStock: async (maBienThe, soLuong, conn) => {
+    const connection = conn || db;
+
+    const [result] = await connection.query(
+      `
+      UPDATE BienThe
+      SET SoLuongTonKho = SoLuongTonKho + ?
+      WHERE MaBienThe = ?
+      `,
+      [soLuong, maBienThe]
+    );
+
+    if (result.affectedRows === 0) {
+      throw new Error("Không tìm thấy biến thể để trả lại tồn kho");
+    }
+
+    return result.affectedRows;
+  },
 };
 
 export default BienThe;

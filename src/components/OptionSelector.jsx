@@ -37,7 +37,7 @@ const COLOR_MAP = {
   'Space Black': '#2C2C2E',
   'Titan Tự Nhiên': '#E5E4E2',
   'Natural Titanium': '#E5E4E2',
-  'Titan Xanh': '#5F9EA0',
+  'Titan Xanh': '#526bafff',
   'Blue Titanium': '#5F9EA0',
   'Titan Trắng': '#F8F8FF',
   'White Titanium': '#F8F8FF',

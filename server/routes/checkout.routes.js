@@ -1,6 +1,7 @@
 import express from "express";
 import db from "../config/db.js";
 import DonHang from "../models/donHang.model.js";
+import BienThe from "../models/bienThe.model.js";
 import {
   sendOrderConfirmationCOD,
   sendOrderConfirmationMomo,
@@ -46,6 +47,18 @@ router.post("/", async (req, res, next) => {
       });
     }
 
+    // ✅ 1. KIỂM TRA TỒN KHO TRƯỚC KHI TẠO ĐƠN HÀNG
+    for (const item of cartItems) {
+      const variant = await BienThe.getById(item.MaBienThe, connection);
+      if (!variant || item.SoLuong > variant.SoLuongTonKho) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: `Sản phẩm ${item.MaBienThe} không đủ tồn kho`,
+        });
+      }
+    }
+
     // Tính tổng tiền
     const tongTien = cartItems.reduce(
       (sum, item) => sum + item.GiaTienBienThe * item.SoLuong,
@@ -73,6 +86,13 @@ router.post("/", async (req, res, next) => {
         },
         connection
       );
+    }
+
+    // ✅ 2. TRỪ TỒN KHO CHO COD (MOMO sẽ trừ kho sau khi callback thành công)
+    if (phuongThucThanhToan === "COD") {
+      for (const item of cartItems) {
+        await BienThe.decreaseStock(item.MaBienThe, item.SoLuong, connection);
+      }
     }
 
     // Xóa giỏ hàng
