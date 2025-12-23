@@ -1,17 +1,24 @@
 // src/pages/admin/UsersManagement.jsx
 
-import { useEffect, useState } from 'react';
-import { taiKhoanAdminAPI } from '../../services/adminAPI';
-import { Search, Eye, ShieldCheck, ShieldOff, Ban, CheckCircle } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { taiKhoanAdminAPI } from "../../services/adminAPI";
+import {
+  Search,
+  Eye,
+  ShieldCheck,
+  ShieldOff,
+  Ban,
+  CheckCircle,
+} from "lucide-react";
 
 const ROLES = {
-  0: { label: 'Admin', color: 'bg-red-100 text-red-800' },
-  1: { label: 'Người dùng', color: 'bg-blue-100 text-blue-800' }
+  0: { label: "Admin", color: "bg-red-100 text-red-800" },
+  1: { label: "Người dùng", color: "bg-blue-100 text-blue-800" },
 };
 
 const STATUS = {
-  1: { label: 'Hoạt động', color: 'bg-green-100 text-green-800' },
-  0: { label: 'Bị khóa', color: 'bg-red-100 text-red-800' }
+  1: { label: "Hoạt động", color: "bg-green-100 text-green-800" },
+  0: { label: "Bị khóa", color: "bg-red-100 text-red-800" },
 };
 
 const UsersManagement = () => {
@@ -20,9 +27,9 @@ const UsersManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [filters, setFilters] = useState({
-    search: '',
-    quyen: '',
-    tinhTrang: ''
+    search: "",
+    quyen: "",
+    tinhTrang: "",
   });
 
   useEffect(() => {
@@ -37,7 +44,7 @@ const UsersManagement = () => {
         setUsers(response.data);
       }
     } catch (err) {
-      console.error('Error fetching users:', err);
+      console.error("Error fetching users:", err);
     } finally {
       setLoading(false);
     }
@@ -51,12 +58,12 @@ const UsersManagement = () => {
         const ordersResponse = await taiKhoanAdminAPI.getUserOrders(userId);
         setSelectedUser({
           ...response.data,
-          orders: ordersResponse.success ? ordersResponse.data : []
+          orders: ordersResponse.success ? ordersResponse.data : [],
         });
         setShowDetail(true);
       }
     } catch (err) {
-      alert('Lỗi: ' + err.message);
+      alert("Lỗi: " + err.message);
     }
   };
 
@@ -66,43 +73,43 @@ const UsersManagement = () => {
     try {
       const response = await taiKhoanAdminAPI.updateRole(userId, newRole);
       if (response.success) {
-        alert('Cập nhật quyền thành công');
+        alert("Cập nhật quyền thành công");
         fetchUsers();
         if (selectedUser && selectedUser.MaTaiKhoan === userId) {
           setShowDetail(false);
         }
       }
     } catch (err) {
-      alert('Lỗi: ' + err.message);
+      alert("Lỗi: " + err.message);
     }
   };
 
   const handleToggleStatus = async (userId) => {
-    if (!confirm('Bạn có chắc muốn thay đổi trạng thái tài khoản này?')) return;
+    if (!confirm("Bạn có chắc muốn thay đổi trạng thái tài khoản này?")) return;
 
     try {
       const response = await taiKhoanAdminAPI.toggleStatus(userId);
       if (response.success) {
-        alert('Cập nhật trạng thái thành công');
+        alert("Cập nhật trạng thái thành công");
         fetchUsers();
         if (selectedUser && selectedUser.MaTaiKhoan === userId) {
           setShowDetail(false);
         }
       }
     } catch (err) {
-      alert('Lỗi: ' + err.message);
+      alert("Lỗi: " + err.message);
     }
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('vi-VN');
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("vi-VN");
   };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(value || 0);
   };
 
@@ -111,7 +118,9 @@ const UsersManagement = () => {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Quản lý Người dùng</h1>
-        <p className="text-gray-600 mt-1">Quản lý tài khoản và quyền truy cập</p>
+        <p className="text-gray-600 mt-1">
+          Quản lý tài khoản và quyền truy cập
+        </p>
       </div>
 
       {/* Filters */}
@@ -124,7 +133,9 @@ const UsersManagement = () => {
               placeholder="Tìm kiếm..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, search: e.target.value })
+              }
             />
           </div>
 
@@ -134,14 +145,16 @@ const UsersManagement = () => {
             onChange={(e) => setFilters({ ...filters, quyen: e.target.value })}
           >
             <option value="">Tất cả quyền</option>
-            <option value="Admin">Admin</option>
-            <option value="User">Người dùng</option>
+            <option value="0">Admin</option>
+            <option value="1">Người dùng</option>
           </select>
 
           <select
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             value={filters.tinhTrang}
-            onChange={(e) => setFilters({ ...filters, tinhTrang: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, tinhTrang: e.target.value })
+            }
           >
             <option value="">Tất cả trạng thái</option>
             <option value="1">Hoạt động</option>
@@ -150,7 +163,7 @@ const UsersManagement = () => {
 
           <button
             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-            onClick={() => setFilters({ search: '', quyen: '', tinhTrang: '' })}
+            onClick={() => setFilters({ search: "", quyen: "", tinhTrang: "" })}
           >
             Đặt lại
           </button>
@@ -183,9 +196,6 @@ const UsersManagement = () => {
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                     Trạng thái
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Ngày tạo
-                  </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                     Thao tác
                   </th>
@@ -199,20 +209,25 @@ const UsersManagement = () => {
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <div>
-                        <p className="font-medium text-gray-900">{user.TenDayDu || 'N/A'}</p>
+                        <p className="font-medium text-gray-900">
+                          {user.TenDayDu || "N/A"}
+                        </p>
                         <p className="text-gray-500 text-xs">{user.Gmail}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       <div>
-                        <p>{user.SoDienThoai || 'Chưa có'}</p>
-                        <p className="text-xs truncate max-w-xs">{user.DiaChi || 'Chưa có'}</p>
+                        <p>{user.SoDienThoai || "Chưa có"}</p>
+                        <p className="text-xs truncate max-w-xs">
+                          {user.DiaChi || "Chưa có"}
+                        </p>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <span
                         className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          ROLES[user.Quyen]?.color || 'bg-gray-100 text-gray-800'
+                          ROLES[user.Quyen]?.color ||
+                          "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {ROLES[user.Quyen]?.label || user.Quyen}
@@ -226,9 +241,6 @@ const UsersManagement = () => {
                       >
                         {STATUS[user.TinhTrangTaiKhoan]?.label}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(user.NgayTao)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -244,11 +256,13 @@ const UsersManagement = () => {
                             onClick={() => handleToggleStatus(user.MaTaiKhoan)}
                             className={`p-1 rounded ${
                               user.TinhTrangTaiKhoan === 1
-                                ? 'text-red-600 hover:bg-red-50'
-                                : 'text-green-600 hover:bg-green-50'
+                                ? "text-red-600 hover:bg-red-50"
+                                : "text-green-600 hover:bg-green-50"
                             }`}
                             title={
-                              user.TinhTrangTaiKhoan === 1 ? 'Khóa tài khoản' : 'Mở khóa'
+                              user.TinhTrangTaiKhoan === 1
+                                ? "Khóa tài khoản"
+                                : "Mở khóa"
                             }
                           >
                             {user.TinhTrangTaiKhoan === 1 ? (
@@ -293,22 +307,25 @@ const UsersManagement = () => {
             <div className="p-6 space-y-6">
               {/* User Info */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Thông tin cá nhân</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  Thông tin cá nhân
+                </h3>
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                   <p className="text-sm">
-                    <span className="font-medium">Tên:</span> {selectedUser.TenDayDu || 'N/A'}
+                    <span className="font-medium">Tên:</span>{" "}
+                    {selectedUser.TenDayDu || "N/A"}
                   </p>
                   <p className="text-sm">
-                    <span className="font-medium">Email:</span> {selectedUser.Gmail}
+                    <span className="font-medium">Email:</span>{" "}
+                    {selectedUser.Gmail}
                   </p>
                   <p className="text-sm">
-                    <span className="font-medium">SĐT:</span> {selectedUser.SoDienThoai || 'Chưa có'}
+                    <span className="font-medium">SĐT:</span>{" "}
+                    {selectedUser.SoDienThoai || "Chưa có"}
                   </p>
                   <p className="text-sm">
-                    <span className="font-medium">Địa chỉ:</span> {selectedUser.DiaChi || 'Chưa có'}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-medium">Ngày tạo:</span> {formatDate(selectedUser.NgayTao)}
+                    <span className="font-medium">Địa chỉ:</span>{" "}
+                    {selectedUser.DiaChi || "Chưa có"}
                   </p>
                 </div>
               </div>
@@ -326,20 +343,28 @@ const UsersManagement = () => {
                         className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
                       >
                         <div>
-                          <p className="text-sm font-medium">Đơn #{order.MaDonHang}</p>
-                          <p className="text-xs text-gray-500">{formatDate(order.NgayDat)}</p>
+                          <p className="text-sm font-medium">
+                            Đơn #{order.MaDonHang}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatDate(order.NgayDat)}
+                          </p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-semibold text-green-600">
                             {formatCurrency(order.TongTien)}
                           </p>
-                          <p className="text-xs text-gray-500">{order.PhuongThucThanhToan}</p>
+                          <p className="text-xs text-gray-500">
+                            {order.PhuongThucThanhToan}
+                          </p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500 text-center py-4">Chưa có đơn hàng</p>
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    Chưa có đơn hàng
+                  </p>
                 )}
               </div>
 
@@ -357,14 +382,16 @@ const UsersManagement = () => {
                       className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
                     >
                       <ShieldCheck className="w-4 h-4" />
-                      {selectedUser.Quyen === 0 ? 'Hạ xuống User' : 'Lên Admin'}
+                      {selectedUser.Quyen === 0 ? "Hạ xuống User" : "Lên Admin"}
                     </button>
                     <button
-                      onClick={() => handleToggleStatus(selectedUser.MaTaiKhoan)}
+                      onClick={() =>
+                        handleToggleStatus(selectedUser.MaTaiKhoan)
+                      }
                       className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
                         selectedUser.TinhTrangTaiKhoan === 1
-                          ? 'bg-red-600 hover:bg-red-700 text-white'
-                          : 'bg-green-600 hover:bg-green-700 text-white'
+                          ? "bg-red-600 hover:bg-red-700 text-white"
+                          : "bg-green-600 hover:bg-green-700 text-white"
                       }`}
                     >
                       {selectedUser.TinhTrangTaiKhoan === 1 ? (

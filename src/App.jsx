@@ -9,15 +9,15 @@ import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
-import ProductsDetail from './pages/ProductsDetail';
+import ProductsDetail from "./pages/ProductsDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import OrderHistory from "./pages/OrderHistory";
-import WarrantyPolicy from './pages/WarrantyPolicy';
-import Support from './pages/Support';
-import ReturnPolicy from './pages/ReturnPolicy';
-import PaymentGuide from './pages/PaymentGuide';
-import ShoppingGuide from './pages/ShoppingGuide';
+import WarrantyPolicy from "./pages/WarrantyPolicy";
+import Support from "./pages/Support";
+import ReturnPolicy from "./pages/ReturnPolicy";
+import PaymentGuide from "./pages/PaymentGuide";
+import ShoppingGuide from "./pages/ShoppingGuide";
 // === CHECKOUT & ORDER ===
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
@@ -40,6 +40,7 @@ import { LogIn } from "lucide-react";
 import AdminRoute from "./components/admin/AdminRouter"; // Import bảo vệ admin
 import CustomerRoute from "./components/CustomerRoute"; // Import bảo vệ customer
 import AuthRedirect from "./components/AuthRedirect"; // Import chuyển hướng tự động
+import AuthSync from "./components/AuthSync"; // Import đồng bộ auth
 import MainLayout from "./components/MainLayout";
 import AdminLayout from "./components/admin/AdminLayout";
 
@@ -56,6 +57,8 @@ const App = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* COMPONENT NÀY Ở ĐÂY ĐỂ NÓ CHẠY NGẦM */}
+      <AuthSync />
       {/* Component này sẽ tự động check quyền và chuyển trang khi load web */}
       <AuthRedirect />
       {/* Nội dung chính – thay đổi theo route */}
@@ -68,7 +71,7 @@ const App = () => {
             <Route path="/products/:id" element={<ProductsDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
-            
+
             <Route path="/warranty-policy" element={<WarrantyPolicy />} />
             <Route path="/support" element={<Support />} />
             <Route path="/return-policy" element={<ReturnPolicy />} />
@@ -90,20 +93,26 @@ const App = () => {
             {/* Dashboard mới */}
             <Route path="/admin" element={<Dashboard />} />
             <Route path="/admin/dashboard" element={<Dashboard />} />
-            
+
             {/* Quản lý loại sản phẩm */}
-            <Route path="/admin/categories" element={<AdminCategoryManagement />} />
-            
+            <Route
+              path="/admin/categories"
+              element={<AdminCategoryManagement />}
+            />
+
             {/* Quản lý sản phẩm */}
             <Route path="/admin/products" element={<ProductsManagement />} />
-            <Route path="/admin/products/:id" element={<ProductDetailManagement />} />
-            
+            <Route
+              path="/admin/products/:id"
+              element={<ProductDetailManagement />}
+            />
+
             {/* Quản lý đơn hàng */}
             <Route path="/admin/orders" element={<OrdersManagement />} />
-            
+
             {/* Quản lý người dùng */}
             <Route path="/admin/users" element={<UsersManagement />} />
-            
+
             {/* Legacy dashboard (giữ lại để tương thích) */}
             <Route path="/admin/old-dashboard" element={<AdminDashboard />} />
           </Route>
