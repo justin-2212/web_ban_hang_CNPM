@@ -159,14 +159,14 @@ const Cart = () => {
   };
 
   // =========================
-  // ✅ NEW: Tổng tiền (chỉ tính sản phẩm được chọn)
+  // Tổng tiền (chỉ tính sản phẩm được chọn)
   // =========================
   const totalPrice = cart
     .filter((item) => selectedItems.has(item.MaBienThe))
     .reduce((sum, item) => sum + item.GiaTienBienThe * item.SoLuong, 0);
 
   // =========================
-  // ✅ NEW: Tổng số sản phẩm được chọn
+  // Tổng số sản phẩm được chọn
   // =========================
   const totalSelectedItems = cart
     .filter((item) => selectedItems.has(item.MaBienThe))
@@ -264,13 +264,22 @@ const Cart = () => {
               {cart.map((item) => (
                 <div
                   key={item.MaBienThe}
-                  className={`bg-white rounded-xl shadow-sm p-6 flex items-center gap-6 transition ${
+                  className={`bg-white rounded-xl shadow-sm p-6 flex items-center gap-6 transition relative ${
                     selectedItems.has(item.MaBienThe)
                       ? "border-2 border-blue-500"
                       : "border-2 border-transparent"
                   }`}
                 >
-                  {/* ✅ NEW: Checkbox để chọn sản phẩm */}
+                  {/* Nút xóa - góc trên phải */}
+                  <button
+                    onClick={() => removeItem(item.MaBienThe)}
+                    className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition"
+                    title="Xóa sản phẩm"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+
+                  {/* Checkbox để chọn sản phẩm */}
                   <input
                     type="checkbox"
                     checked={selectedItems.has(item.MaBienThe)}
@@ -323,18 +332,9 @@ const Cart = () => {
 
                   <div className="min-w-[120px] text-right">
                     <p className="font-bold">
-                      {formatPrice(
-                        item.SoLuong * item.GiaTienBienThe
-                      )}
+                      {formatPrice(item.SoLuong * item.GiaTienBienThe)}
                     </p>
                   </div>
-
-                  <button
-                    onClick={() => removeItem(item.MaBienThe)}
-                    className="text-red-500 hover:text-red-600"
-                  >
-                    <Trash2 />
-                  </button>
                 </div>
               ))}
 
@@ -386,7 +386,11 @@ const Cart = () => {
                     alert("Vui lòng chọn ít nhất 1 sản phẩm để thanh toán");
                     return;
                   }
-                  navigate("/checkout");
+                  // ✅ Truyền danh sách sản phẩm được chọn qua URL params
+                  const selectedArray = Array.from(selectedItems);
+                  const params = new URLSearchParams();
+                  params.set("selected", JSON.stringify(selectedArray));
+                  navigate(`/checkout?${params.toString()}`);
                 }}
                 disabled={selectedItems.size === 0}
                 className={`w-full py-3 rounded-lg font-semibold text-white transition ${

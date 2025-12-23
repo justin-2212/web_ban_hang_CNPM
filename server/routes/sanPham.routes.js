@@ -18,6 +18,17 @@ router.get('/search', async (req, res) => {
     }
 });
 
+// GET /api/san-pham/top-selling - Lấy top sản phẩm bán chạy (ĐẶT TRƯỚC)
+router.get('/top-selling', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 5;
+        const products = await SanPham.getTopSelling(limit);
+        res.json({ success: true, data: products });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 // GET /api/san-pham/chi-tiet/:id - Lấy sản phẩm đầy đủ (ĐẶT TRƯỚC)
 router.get('/chi-tiet/:id', async (req, res) => {
     try {
@@ -41,10 +52,11 @@ router.get('/variant-attributes/:maSP', async (req, res) => {
     }
 });
 
-// GET /api/san-pham - Lấy tất cả sản phẩm
+// GET /api/san-pham - Lấy tất cả sản phẩm (với bộ lọc giá)
 router.get('/', async (req, res) => {
     try {
-        const products = await SanPham.getAll();
+        const { minPrice, maxPrice } = req.query;
+        const products = await SanPham.getAll({ minPrice, maxPrice });
         res.json({ success: true, data: products });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
@@ -67,7 +79,8 @@ router.get('/:id', async (req, res) => {
 // GET /api/san-pham/loai/:maLoai - Lấy sản phẩm theo loại (ĐẶT CUỐI)
 router.get('/loai/:maLoai', async (req, res) => {
     try {
-        const products = await SanPham.getByCategory(req.params.maLoai);
+        const { minPrice, maxPrice } = req.query;
+        const products = await SanPham.getByCategory(req.params.maLoai, { minPrice, maxPrice });
         res.json({ success: true, data: products });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });

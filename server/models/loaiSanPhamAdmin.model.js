@@ -39,10 +39,23 @@ const LoaiSanPhamAdmin = {
     return result.affectedRows;
   },
 
-  // 5. Xóa loại sản phẩm (Admin)
+  // Hàm này kiểm tra tất cả các bảng con liên quan cùng lúc
+  checkDependencies: async (id) => {
+    const [rows] = await pool.query(`
+      SELECT 
+        (SELECT COUNT(*) FROM SanPham WHERE MaLoai = ?) as sanPhamCount,
+        (SELECT COUNT(*) FROM ThongSoMau WHERE MaLoai = ?) as thongSoMauCount,
+        (SELECT COUNT(*) FROM ThongSoBienTheMau WHERE MaLoai = ?) as thongSoBienTheCount
+    `, [id, id, id]);
+    
+    // Trả về object chứa số lượng của cả 3 bảng
+    return rows[0]; 
+  },
+
+  // 5. Xóa loại sản phẩm - Hard delete
   deleteAdmin: async (id) => {
     const [result] = await pool.query(
-      "UPDATE LoaiSanPham SET TinhTrangLoaiSanPham = 0 WHERE MaLoai = ?",
+      "DELETE FROM LoaiSanPham WHERE MaLoai = ?",
       [id]
     );
     return result.affectedRows;

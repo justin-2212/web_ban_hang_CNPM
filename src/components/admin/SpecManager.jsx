@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { Edit, Eye, EyeOff } from "lucide-react";
+import { Edit, Eye, EyeOff, Trash2 } from "lucide-react";
 
 const SpecManager = ({
   type,
   data,
   onAdd,
-  onDelete,
+  onDelete, // xóa mềm
+  onHardDelete, // Nhận thêm prop Hard delete
   onRestore,
   onUpdate,
   loading,
@@ -36,9 +37,7 @@ const SpecManager = ({
 
   const handleStartEdit = (item) => {
     const status =
-      type === "tech"
-        ? item.TinhTrangThongSoMau
-        : item.TinhTrangThongSoBienThe;
+      type === "tech" ? item.TinhTrangThongSoMau : item.TinhTrangThongSoBienThe;
     setEditingId(
       type === "tech" ? item.MaThongSoMau : item.MaThongSoBienTheMau
     );
@@ -72,8 +71,7 @@ const SpecManager = ({
 
       // So sánh tên (không phân biệt hoa/thường, loại bỏ khoảng trắng)
       return (
-        tenItemHienTai.trim().toLowerCase() ===
-        tenMoi.trim().toLowerCase()
+        tenItemHienTai.trim().toLowerCase() === tenMoi.trim().toLowerCase()
       );
     });
   };
@@ -360,6 +358,14 @@ const SpecManager = ({
                             <Eye className="w-4 h-4" />
                           </button>
                         )}
+                        <button
+                          onClick={() => onHardDelete(id, tenThongSo)} // Gọi hàm xóa cứng
+                          title="Xóa vĩnh viễn (Chỉ khi chưa dùng)"
+                          disabled={loading}
+                          className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition disabled:opacity-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>

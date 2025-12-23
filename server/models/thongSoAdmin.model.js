@@ -46,6 +46,25 @@ export const ThongSoMauModel = {
     );
     return result.affectedRows;
   },
+
+  // Kiểm tra ràng buộc trước khi xóa cứng
+  checkDependencies: async (id) => {
+    // Kiểm tra xem thông số này đã được điền giá trị cho sản phẩm nào chưa
+    const [rows] = await pool.query(
+      "SELECT COUNT(*) as count FROM GiaTriThongSo WHERE MaThongSoMau = ?",
+      [id]
+    );
+    return rows[0].count;
+  },
+
+  // Xóa vĩnh viễn
+  hardDelete: async (id) => {
+    const [result] = await pool.query(
+      "DELETE FROM ThongSoMau WHERE MaThongSoMau = ?",
+      [id]
+    );
+    return result.affectedRows;
+  },
 };
 
 // --- XỬ LÝ BẢNG THÔNG SỐ BIẾN THỂ MẪU (Bán hàng) ---
@@ -53,7 +72,7 @@ export const ThongSoBienTheModel = {
   // Lấy danh sách
   getByLoai: async (maLoai) => {
     const [rows] = await pool.query(
-      "SELECT * FROM ThongSoBienTheMau WHERE MaLoai = ? ORDER BY ThuTuHienThi ASC",
+      "SELECT DISTINCT MaThongSoBienTheMau, TenThongSoBienThe, DonVi, ThuTuHienThi, TinhTrangThongSoBienThe, MaLoai FROM ThongSoBienTheMau WHERE MaLoai = ? GROUP BY MaThongSoBienTheMau, TenThongSoBienThe, DonVi, ThuTuHienThi, TinhTrangThongSoBienThe, MaLoai ORDER BY ThuTuHienThi ASC",
       [maLoai]
     );
     return rows;
@@ -91,6 +110,24 @@ export const ThongSoBienTheModel = {
     const [result] = await pool.query(
       "UPDATE ThongSoBienTheMau SET TenThongSoBienThe = ?, DonVi = ?, ThuTuHienThi = ?, TinhTrangThongSoBienThe = ? WHERE MaThongSoBienTheMau = ?",
       [ten, donVi, thuTu, tinhTrang, id]
+    );
+    return result.affectedRows;
+  },
+
+  //MỚI] Kiểm tra ràng buộc
+  checkDependencies: async (id) => {
+    const [rows] = await pool.query(
+      "SELECT COUNT(*) as count FROM GiaTriBienThe WHERE MaThongSoBienTheMau = ?",
+      [id]
+    );
+    return rows[0].count;
+  },
+
+  //  Xóa vĩnh viễn
+  hardDelete: async (id) => {
+    const [result] = await pool.query(
+      "DELETE FROM ThongSoBienTheMau WHERE MaThongSoBienTheMau = ?",
+      [id]
     );
     return result.affectedRows;
   },

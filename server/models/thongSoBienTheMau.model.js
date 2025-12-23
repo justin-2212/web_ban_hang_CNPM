@@ -9,8 +9,10 @@ const ThongSoBienTheMau = {
   getByCategory: async (maLoai) => {
     const [rows] = await db.query(
       `
-      SELECT * FROM ThongSoBienTheMau 
+      SELECT DISTINCT MaThongSoBienTheMau, TenThongSoBienThe, DonVi, ThuTuHienThi, TinhTrangThongSoBienThe, MaLoai
+      FROM ThongSoBienTheMau 
       WHERE MaLoai = ? AND TinhTrangThongSoBienThe = 1
+      GROUP BY MaThongSoBienTheMau, TenThongSoBienThe, DonVi, ThuTuHienThi, TinhTrangThongSoBienThe, MaLoai
       ORDER BY ThuTuHienThi ASC
       `,
       [maLoai]

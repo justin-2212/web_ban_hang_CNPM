@@ -6,11 +6,13 @@ import {
   deleteSpec,
   restoreSpec,
   updateSpec,
+  hardDeleteSpec,
   getVariants,
   createVariant,
   deleteVariant,
   restoreVariant,
-  updateVariant
+  updateVariant,
+  hardDeleteVariant,
 } from "../controllers/thongSoAdmin.controller.js";
 
 const router = express.Router();
@@ -19,7 +21,8 @@ const router = express.Router();
 // Đường dẫn gốc: /api/admin/thong-so
 router.get("/specs/:maLoai", getSpecs); // Lấy danh sách
 router.post("/specs", createSpec); // Thêm mới
-router.delete("/specs/:id", deleteSpec); // Xóa
+router.delete("/specs/:id", deleteSpec); // Xóa mềm
+router.delete("/specs/hard-delete/:id", hardDeleteSpec); // Xóa cứng
 router.put("/specs/restore/:id", restoreSpec); // Khôi phục
 router.put("/specs/:id", updateSpec);
 
@@ -27,6 +30,7 @@ router.put("/specs/:id", updateSpec);
 router.get("/variants/:maLoai", getVariants);
 router.post("/variants", createVariant);
 router.delete("/variants/:id", deleteVariant);
+router.delete("/variants/hard-delete/:id", hardDeleteVariant);
 router.put("/variants/restore/:id", restoreVariant);    
 router.put("/variants/:id", updateVariant); //
 

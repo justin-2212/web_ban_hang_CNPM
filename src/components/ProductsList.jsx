@@ -50,10 +50,10 @@ export default function ProductsList({ products, priceRange }) {
         })
     );
 
-    // ✅ SỬA: Dùng Promise.all GIỮ NGUYÊN THỨ TỰ
+    // Dùng Promise.all GIỮ NGUYÊN THỨ TỰ
     Promise.all(fetchVariants)
       .then(results => {
-        // ✅ results giữ nguyên thứ tự của products[] prop
+        // results giữ nguyên thứ tự của products[] prop
         // Filter by price range if provided
         const filtered = priceRange
           ? results.filter(p =>
@@ -153,7 +153,7 @@ export default function ProductsList({ products, priceRange }) {
 
         const hasMultipleVariants = product.variants.length > 1;
         const inStock = product.variants.some(v => v.SoLuongTonKho > 0);
-
+        
         return (
           <Link
             key={product.MaSP}
@@ -179,7 +179,7 @@ export default function ProductsList({ products, priceRange }) {
                   Hết hàng
                 </div>
               )}
-
+              
               {/* Hover overlay */}
               <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-all duration-300 flex items-center justify-center">
                 <Eye className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -206,15 +206,17 @@ export default function ProductsList({ products, priceRange }) {
 
               {/* Price */}
               <div className="mb-4">
-                {hasMultipleVariants ? (
-                  <div className="text-blue-600 font-bold text-lg">
-                    {formatPrice(product.minPrice)} - {formatPrice(product.maxPrice)}
-                  </div>
-                ) : (
-                  <div className="text-blue-600 font-bold text-lg">
-                    {formatPrice(product.minPrice)}
-                  </div>
-                )}
+                <div>
+                  {hasMultipleVariants ? (
+                    <div className="text-blue-600 font-bold text-lg">
+                      {formatPrice(product.minPrice)} - {formatPrice(product.maxPrice)}
+                    </div>
+                  ) : (
+                    <div className="text-blue-600 font-bold text-lg">
+                      {formatPrice(product.minPrice)}
+                    </div>
+                  )}
+                </div>
                 <div className="text-xs text-gray-500 mt-1">
                   {product.variants.length} phiên bản
                 </div>

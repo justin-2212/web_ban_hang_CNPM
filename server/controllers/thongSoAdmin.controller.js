@@ -72,6 +72,35 @@ export const restoreSpec = async (req, res) => {
   }
 };
 
+//  XÓA CỨNG THÔNG SỐ KỸ THUẬT
+export const hardDeleteSpec = async (req, res) => {
+  const { id } = req.params;
+  try {
+    // 1. Kiểm tra ràng buộc
+    const count = await ThongSoMauModel.checkDependencies(id);
+    if (count > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể xóa vĩnh viễn! Thông số này đang được sử dụng bởi ${count} sản phẩm.`,
+      });
+    }
+
+    // 2. Xóa
+    const result = await ThongSoMauModel.hardDelete(id);
+    if (result === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy thông số để xóa" });
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "Đã xóa vĩnh viễn thông số kỹ thuật" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // --- CONTROLLER CHO BIẾN THỂ (Variant) ---
 export const getVariants = async (req, res) => {
   const { maLoai } = req.params;
@@ -137,6 +166,35 @@ export const updateVariant = async (req, res) => {
   try {
     await ThongSoBienTheModel.update(id, ten, donVi, thuTu, tinhTrang);
     res.status(200).json({ success: true, message: "Cập nhật thành công" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+//   XÓA CỨNG BIẾN THỂ MẪU
+export const hardDeleteVariant = async (req, res) => {
+  const { id } = req.params;
+  try {
+    // 1. Kiểm tra ràng buộc
+    const count = await ThongSoBienTheModel.checkDependencies(id);
+    if (count > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể xóa vĩnh viễn! Thuộc tính này đang được sử dụng bởi ${count} biến thể sản phẩm.`,
+      });
+    }
+
+    // 2. Xóa
+    const result = await ThongSoBienTheModel.hardDelete(id);
+    if (result === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy thuộc tính để xóa" });
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "Đã xóa vĩnh viễn thuộc tính biến thể" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

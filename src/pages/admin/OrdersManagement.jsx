@@ -13,7 +13,8 @@ const ORDER_STATUS = {
 
 const PAYMENT_STATUS = {
   0: { label: 'Chưa thanh toán', color: 'bg-gray-100 text-gray-800' },
-  1: { label: 'Đã thanh toán', color: 'bg-green-100 text-green-800' }
+  1: { label: 'Thanh toán bị lỗi', color: 'bg-red-100 text-red-800' },
+  2: { label: 'Đã thanh toán', color: 'bg-green-100 text-green-800' }
 };
 
 const OrdersManagement = () => {
@@ -160,7 +161,8 @@ const OrdersManagement = () => {
           >
             <option value="">Tất cả thanh toán</option>
             <option value="0">Chưa thanh toán</option>
-            <option value="1">Đã thanh toán</option>
+            <option value="1">Thanh toán lỗi</option>
+            <option value="2">Đã thanh toán</option>
           </select>
 
           <select
@@ -170,7 +172,7 @@ const OrdersManagement = () => {
           >
             <option value="">Tất cả phương thức</option>
             <option value="COD">COD</option>
-            <option value="Online">Online</option>
+            <option value="ONLINE">Online</option>
           </select>
 
           <button

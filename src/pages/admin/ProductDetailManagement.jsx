@@ -8,7 +8,9 @@ import {
   bienTheAdminAPI,
   thongSoBienTheMauAPI,
   giaTriBienTheAPI,
-  uploadAPI
+  uploadAPI,
+  thongSoMauAPI,
+  giaTriThongSoAPI
 } from '../../services/adminAPI';
 import { loaiSanPhamAPI } from '../../services/api';
 import { 
@@ -18,7 +20,8 @@ import {
   Upload,
   X,
   Save,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Power
 } from 'lucide-react';
 
 const ProductDetailManagement = () => {
@@ -51,6 +54,11 @@ const ProductDetailManagement = () => {
   const [showVariantModal, setShowVariantModal] = useState(false);
   const [editingVariant, setEditingVariant] = useState(null);
   const [variantSpecs, setVariantSpecs] = useState([]);
+  
+  // Product Specs (Thông số kỹ thuật)
+  const [productSpecs, setProductSpecs] = useState([]);
+  const [productSpecValues, setProductSpecValues] = useState({});
+  const [showSpecsModal, setShowSpecsModal] = useState(false);
   
   // Variant form
   const [variantForm, setVariantForm] = useState({
@@ -96,7 +104,37 @@ const ProductDetailManagement = () => {
         if (prod.MaLoai) {
           const specsRes = await thongSoBienTheMauAPI.getByCategory(prod.MaLoai);
           if (specsRes.success) {
-            setVariantSpecs(specsRes.data);
+            // Dedupe at frontend as safety layer
+            const uniqueSpecs = Array.from(
+              new Map(
+                specsRes.data.map(s => [s.MaThongSoBienTheMau, s])
+              ).values()
+            );
+            setVariantSpecs(uniqueSpecs);
+          }
+
+          // Load product specs (ThongSoMau)
+          const productSpecsRes = await thongSoMauAPI.getByCategory(prod.MaLoai);
+          if (productSpecsRes.success) {
+            setProductSpecs(productSpecsRes.data);
+          }
+
+          // Load existing spec values
+          const specValuesRes = await giaTriThongSoAPI.getByProduct(id);
+          if (specValuesRes.success) {
+            // Dedupe by MaThongSoMau (take last value if duplicate)
+            const valuesMap = {};
+            specValuesRes.data.forEach(spec => {
+              // Only set if not already exist or overwrite with latest
+              if (!valuesMap[spec.MaThongSoMau] || 
+                  spec.GiaTriHienThi !== valuesMap[spec.MaThongSoMau].giaTriHienThi) {
+                valuesMap[spec.MaThongSoMau] = {
+                  giaTriHienThi: spec.GiaTriHienThi,
+                  giaTriNhap: spec.GiaTriNhap
+                };
+              }
+            });
+            setProductSpecValues(valuesMap);
           }
         }
       }
@@ -166,7 +204,7 @@ const ProductDetailManagement = () => {
   };
 
   const handleDeleteImage = async (maAnhSP) => {
-    if (!confirm('Xóa ảnh này?')) return;
+    if (!confirm('⚠️ Xóa vĩnh viễn ảnh này? KHÔNG THỂ KHÔI PHỤC!')) return;
     try {
       await anhSPAPI.delete(maAnhSP);
       setImages(images.filter(img => img.MaAnhSP !== maAnhSP));
@@ -323,14 +361,18 @@ const ProductDetailManagement = () => {
         variantId = res.data.maBienThe;
       }
 
-      // Save attributes
+      // Save attributes - use UPSERT to handle both create and update
       for (const [maThongSo, value] of Object.entries(variantForm.attributes)) {
-        if (value.giaTriHienThi && value.giaTriNhap) {
+        // Only save if at least one value is provided
+        const giaTriHienThi = (value.giaTriHienThi || value.giaTriNhap || '').trim();
+        const giaTriNhap = (value.giaTriNhap || value.giaTriHienThi || '').trim();
+        
+        if (giaTriHienThi && giaTriNhap) {
           await giaTriBienTheAPI.create({
             maBienThe: variantId,
             maThongSoBienTheMau: parseInt(maThongSo),
-            giaTriHienThi: value.giaTriHienThi,
-            giaTriNhap: value.giaTriNhap,
+            giaTriHienThi: giaTriHienThi,
+            giaTriNhap: giaTriNhap,
             thuTuHienThi: 1
           });
         }
@@ -345,9 +387,72 @@ const ProductDetailManagement = () => {
   };
 
   const handleDeleteVariant = async (maBienThe) => {
-    if (!confirm('Xóa biến thể này?')) return;
+    if (!confirm('⚠️ Xóa vĩnh viễn biến thể này? KHÔNG THỂ KHÔI PHỤC!')) return;
     try {
       await bienTheAdminAPI.delete(maBienThe);
+      fetchProductDetail();
+    } catch (err) {
+      alert('Lỗi: ' + err.message);
+    }
+  };
+
+  const handleToggleVariantStatus = async (maBienThe, currentStatus) => {
+    const action = currentStatus === 1 ? 'vô hiệu hóa' : 'kích hoạt';
+    if (!confirm(`Bạn có chắc muốn ${action} biến thể này?`)) return;
+    try {
+      await bienTheAdminAPI.toggleStatus(maBienThe);
+      alert(`${action.charAt(0).toUpperCase() + action.slice(1)} biến thể thành công!`);
+      fetchProductDetail();
+    } catch (err) {
+      alert('Lỗi: ' + err.message);
+    }
+  };
+
+  // ==================== PRODUCT SPECS HANDLERS ====================
+  const handleOpenSpecsModal = () => {
+    if (id === 'new') {
+      alert('Vui lòng lưu sản phẩm trước khi thêm thông số kỹ thuật');
+      return;
+    }
+    if (!formData.MaLoai) {
+      alert('Vui lòng chọn loại sản phẩm trước');
+      return;
+    }
+    setShowSpecsModal(true);
+  };
+
+  const handleSpecValueChange = (maThongSoMau, field, value) => {
+    setProductSpecValues(prev => ({
+      ...prev,
+      [maThongSoMau]: {
+        ...prev[maThongSoMau],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSaveSpecs = async () => {
+    try {
+      // Get unique entries only (dedupe by maThongSoMau)
+      const uniqueEntries = new Map();
+      Object.entries(productSpecValues).forEach(([maThongSoMau, values]) => {
+        if (values.giaTriHienThi && values.giaTriNhap) {
+          uniqueEntries.set(parseInt(maThongSoMau), values);
+        }
+      });
+
+      // Save all unique spec values
+      for (const [maThongSoMau, values] of uniqueEntries) {
+        await giaTriThongSoAPI.upsert({
+          maSP: id,
+          maThongSoMau: maThongSoMau,
+          giaTriHienThi: values.giaTriHienThi.trim(),
+          giaTriNhap: values.giaTriNhap.trim()
+        });
+      }
+
+      alert('Lưu thông số kỹ thuật thành công!');
+      setShowSpecsModal(false);
       fetchProductDetail();
     } catch (err) {
       alert('Lỗi: ' + err.message);
@@ -522,8 +627,54 @@ const ProductDetailManagement = () => {
           </div>
         </div>
 
-        {/* Right Column - Variants */}
+        {/* Right Column - Variants & Specs */}
         <div className="space-y-6">
+          {/* Product Specs Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Thông số kỹ thuật</h2>
+              {id !== 'new' && formData.MaLoai && (
+                <button
+                  onClick={handleOpenSpecsModal}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                >
+                  <Plus className="w-5 h-5" />
+                  Thêm thông số
+                </button>
+              )}
+            </div>
+
+            {id === 'new' ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>Vui lòng lưu sản phẩm trước</p>
+              </div>
+            ) : !formData.MaLoai ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>Vui lòng chọn loại sản phẩm trước</p>
+              </div>
+            ) : Object.keys(productSpecValues).length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>Chưa có thông số kỹ thuật</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {productSpecs.map(spec => {
+                  const value = productSpecValues[spec.MaThongSoMau];
+                  if (!value) return null;
+                  return (
+                    <div key={spec.MaThongSoMau} className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">{spec.TenThongSo}:</span>
+                      <span className="font-medium text-gray-900">
+                        {value.giaTriHienThi}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Variants Section */}
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Biến thể sản phẩm</h2>
@@ -578,14 +729,27 @@ const ProductDetailManagement = () => {
                       </div>
                       <div className="flex gap-2">
                         <button
+                          onClick={() => handleToggleVariantStatus(variant.MaBienThe, variant.TinhTrangHoatDong)}
+                          className={`p-2 rounded-lg ${
+                            variant.TinhTrangHoatDong === 1 
+                              ? 'text-green-600 hover:bg-green-50' 
+                              : 'text-gray-400 hover:bg-gray-50'
+                          }`}
+                          title={variant.TinhTrangHoatDong === 1 ? 'Vô hiệu hóa' : 'Kích hoạt'}
+                        >
+                          <Power className="w-5 h-5" />
+                        </button>
+                        <button
                           onClick={() => handleOpenVariantModal(variant)}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                          title="Chỉnh sửa"
                         >
                           <Plus className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDeleteVariant(variant.MaBienThe)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          title="Xóa"
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>
@@ -838,6 +1002,80 @@ const ProductDetailManagement = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Product Specs Modal */}
+      {showSpecsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold">Thông số kỹ thuật</h3>
+                <button
+                  onClick={() => setShowSpecsModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                Nhập thông tin kỹ thuật hiển thị cho khách hàng
+              </p>
+            </div>
+
+            <div className="p-6">
+              <div className="space-y-4">
+                {productSpecs.map(spec => (
+                  <div key={spec.MaThongSoMau} className="border border-gray-200 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      {spec.TenThongSo}
+                      {spec.DonVi && <span className="text-gray-500 ml-1">({spec.DonVi})</span>}
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                          placeholder={`Giá trị hiển thị (vd: 6.1 ${spec.DonVi || ''})`}
+                          value={productSpecValues[spec.MaThongSoMau]?.giaTriHienThi || ''}
+                          onChange={(e) => handleSpecValueChange(spec.MaThongSoMau, 'giaTriHienThi', e.target.value)}
+                        />
+                        <span className="text-xs text-gray-500 mt-1 block">Hiển thị cho khách hàng</span>
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                          placeholder="Giá trị nhập (vd: 6.1)"
+                          value={productSpecValues[spec.MaThongSoMau]?.giaTriNhap || ''}
+                          onChange={(e) => handleSpecValueChange(spec.MaThongSoMau, 'giaTriNhap', e.target.value)}
+                        />
+                        <span className="text-xs text-gray-500 mt-1 block">Dùng để so sánh/tìm kiếm</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-3 pt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowSpecsModal(false)}
+                  className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveSpecs}
+                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                >
+                  Lưu thông số
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

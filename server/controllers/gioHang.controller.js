@@ -8,26 +8,23 @@ class GioHangController {
     try {
       const { maTaiKhoan } = req.params;
 
-    //   console.log('📦 Fetching cart for user:', maTaiKhoan);
-
       const [items] = await db.query(
         `SELECT 
-          GioHangChiTiet.MaBienThe,
-          GioHangChiTiet.SoLuong,
-          BienThe.TenBienThe,
-          BienThe.GiaTienBienThe,
-          BienThe.DuongDanAnhBienThe,
-          BienThe.SoLuongTonKho,
-          SanPham.MaSP,
-          SanPham.Ten AS TenSanPham
-        FROM GioHangChiTiet
-        JOIN BienThe ON GioHangChiTiet.MaBienThe = BienThe.MaBienThe
-        JOIN SanPham ON BienThe.MaSP = SanPham.MaSP
-        WHERE GioHangChiTiet.MaTaiKhoan = ?`,
+          ghct.MaBienThe,
+          ghct.SoLuong,
+          bt.TenBienThe,
+          bt.GiaTienBienThe,
+          bt.DuongDanAnhBienThe,
+          bt.SoLuongTonKho,
+          sp.MaSP,
+          sp.Ten AS TenSanPham
+        FROM giohangchitiet ghct
+        JOIN bienthe bt ON ghct.MaBienThe = bt.MaBienThe
+        JOIN sanpham sp ON bt.MaSP = sp.MaSP
+        WHERE ghct.MaTaiKhoan = ?
+        ORDER BY ghct.ThoiGianThem DESC`,
         [maTaiKhoan]
       );
-
-    //   console.log('✅ Cart items found:', items.length);
 
       const totalItems = items.reduce((sum, item) => sum + item.SoLuong, 0);
 

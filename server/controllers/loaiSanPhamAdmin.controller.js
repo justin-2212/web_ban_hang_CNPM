@@ -76,21 +76,60 @@ export const updateLoaiSanPhamAdmin = async (req, res) => {
   }
 };
 
-// Xóa
+// Xóa (Hard delete)
 export const deleteLoaiSanPhamAdmin = async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await LoaiSanPhamAdmin.deleteAdmin(id);
-    if (result === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy để xóa" });
+    // 1. GỌI MODEL KIỂM TRA RÀNG BUỘC
+    const deps = await LoaiSanPhamAdmin.checkDependencies(id);
+
+    // Kiểm tra từng trường hợp và thông báo lỗi cụ thể
+    if (deps.sanPhamCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể xóa! Loại này đang chứa ${deps.sanPhamCount} sản phẩm.`,
+      });
     }
+
+    if (deps.thongSoMauCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể xóa! Loại này đang có ${deps.thongSoMauCount} cấu hình Thông số mẫu. Hãy xóa thông số mẫu trước.`,
+      });
+    }
+
+    if (deps.thongSoBienTheCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể xóa! Loại này đang có ${deps.thongSoBienTheCount} cấu hình Thông số biến thể mẫu.`,
+      });
+    }
+
+    // 2. Nếu tất cả đều bằng 0 thì mới xóa
+    const result = await LoaiSanPhamAdmin.deleteAdmin(id);
+
+    if (result === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy loại sản phẩm để xóa",
+      });
+    }
+
     res.status(200).json({
       success: true,
-      message: "Đã ngừng kinh doanh sản phẩm thành công",
+      message: "Đã xóa vĩnh viễn loại sản phẩm thành công",
     });
   } catch (error) {
+    console.error("Lỗi xóa loại SP:", error);
+    // Nếu vẫn còn lỗi ràng buộc nào đó chưa check hết, backend sẽ trả về lỗi này
+    if (error.code === "ER_ROW_IS_REFERENCED_2") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Không thể xóa do dữ liệu này đang được sử dụng ở bảng khác (Ràng buộc khóa ngoại).",
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Lỗi server: " + error.message,

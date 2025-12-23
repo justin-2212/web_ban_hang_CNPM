@@ -58,6 +58,16 @@ const thongSoServiceAdmin = {
     );
     return response.data;
   },
+
+  // Xóa cứng thông số
+  hardDeleteSpec: async (id) => {
+    const response = await axios.delete(
+      `${API_URL}/specs/hard-delete/${id}`,
+      getAuthHeader()
+    );
+    return response.data;
+  },
+
   // --- NHÓM 2: BIẾN THỂ MẪU (Variants - ThongSoBienTheMau) ---
 
   // Lấy danh sách biến thể mẫu của 1 loại
@@ -107,6 +117,16 @@ const thongSoServiceAdmin = {
     );
     return response.data;
   },
+
+  // Xóa cứng biến thể
+  hardDeleteVariant: async (id) => {
+    const response = await axios.delete(
+      `${API_URL}/variants/hard-delete/${id}`,
+      getAuthHeader()
+    );
+    return response.data;
+  },
+
 };
 
 export default thongSoServiceAdmin;

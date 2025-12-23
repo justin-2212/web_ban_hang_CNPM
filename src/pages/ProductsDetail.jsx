@@ -58,6 +58,7 @@ export default function ProductDetail() {
 
         setProduct(productResult.data);
 
+
         // ✅ KHỞI TẠO allImages
         const imagesList = [];
         const seenUrls = new Set();
@@ -640,7 +641,7 @@ export default function ProductDetail() {
                   {formatPrice(selectedVariant?.GiaTienBienThe)}
                 </div>
                 {inStock ? (
-                  <div className="flex items-center gap-2 text-green-600">
+                  <div className="flex items-center gap-2 text-green-600 mt-3">
                     <Check className="w-5 h-5" />
                     <span>
                       Còn hàng ({selectedVariant.SoLuongTonKho} sản phẩm)

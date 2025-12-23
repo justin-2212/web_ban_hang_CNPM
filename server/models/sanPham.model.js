@@ -3,11 +3,13 @@ import db from '../config/db.js';
 const SanPham = {
     // --- SỬA ĐỔI QUAN TRỌNG TẠI ĐÂY ---
     // Lấy tất cả sản phẩm KÈM BIẾN THỂ để Hero.jsx hiển thị ảnh và giá đúng
-    getAll: async () => {
+    getAll: async (filters = {}) => {
         try {
+            const { minPrice, maxPrice } = filters;
+            
             // 1. Truy vấn SQL: Lấy thông tin SP + Biến thể
             // Sắp xếp theo MaSP giảm dần (sản phẩm mới lên đầu) và ThuTuHienThi biến thể
-            const [rows] = await db.query(`
+            let query = `
                 SELECT 
                     sp.MaSP, sp.Ten, sp.MoTa, sp.TinhTrangSanPham, sp.MaLoai, 
                     lsp.TenLoai,
@@ -17,8 +19,28 @@ const SanPham = {
                 LEFT JOIN LoaiSanPham lsp ON sp.MaLoai = lsp.MaLoai
                 LEFT JOIN BienThe bt ON sp.MaSP = bt.MaSP AND bt.TinhTrangHoatDong = 1
                 WHERE sp.TinhTrangSanPham = 1
-                ORDER BY sp.MaSP DESC, bt.ThuTuHienThi ASC
-            `);
+            `;
+
+            // Thêm điều kiện lọc giá nếu có
+            // Sản phẩm sẽ được giữ lại nếu có ít nhất 1 biến thể trong khoảng giá
+            if (minPrice || maxPrice) {
+                query += ` AND sp.MaSP IN (
+                    SELECT DISTINCT MaSP FROM BienThe 
+                    WHERE TinhTrangHoatDong = 1`;
+                
+                if (minPrice) {
+                    query += ` AND GiaTienBienThe >= ${parseFloat(minPrice)}`;
+                }
+                if (maxPrice) {
+                    query += ` AND GiaTienBienThe <= ${parseFloat(maxPrice)}`;
+                }
+                
+                query += `)`;
+            }
+
+            query += ` ORDER BY sp.MaSP DESC, bt.ThuTuHienThi ASC`;
+
+            const [rows] = await db.query(query);
 
             // 2. Xử lý gom nhóm (Grouping)
             // Vì LEFT JOIN sẽ trả về nhiều dòng cho 1 sản phẩm nếu có nhiều biến thể
@@ -74,27 +96,47 @@ const SanPham = {
     },
 
     // Lấy sản phẩm theo loại
-    getByCategory: async (maLoai) => {
-        // Hàm này giữ nguyên hoặc sửa logic giống getAll nếu cần
-        const [rows] = await db.query(`
+    getByCategory: async (maLoai, filters = {}) => {
+        const { minPrice, maxPrice } = filters;
+        
+        let query = `
             SELECT sp.MaSP, sp.Ten, sp.MoTa, sp.TinhTrangSanPham, sp.MaLoai, 
                    lsp.TenLoai,
                    MIN(bt.GiaTienBienThe) as GiaThapNhat,
                    MAX(bt.GiaTienBienThe) as GiaCaoNhat
-            FROM SanPham sp 
-            LEFT JOIN LoaiSanPham lsp ON sp.MaLoai = lsp.MaLoai
-            LEFT JOIN BienThe bt ON sp.MaSP = bt.MaSP AND bt.TinhTrangHoatDong = 1
+            FROM sanpham sp 
+            LEFT JOIN loaisanpham lsp ON sp.MaLoai = lsp.MaLoai
+            LEFT JOIN bienthe bt ON sp.MaSP = bt.MaSP AND bt.TinhTrangHoatDong = 1
             WHERE sp.MaLoai = ? AND sp.TinhTrangSanPham = 1
-            GROUP BY sp.MaSP
-            ORDER BY sp.MaSP
-        `, [maLoai]);
+        `;
+
+        // Thêm điều kiện lọc giá nếu có
+        if (minPrice || maxPrice) {
+            query += ` AND sp.MaSP IN (
+                SELECT DISTINCT bt2.MaSP 
+                FROM bienthe bt2
+                WHERE bt2.TinhTrangHoatDong = 1`;
+            
+            if (minPrice) {
+                query += ` AND bt2.GiaTienBienThe >= ${parseFloat(minPrice)}`;
+            }
+            if (maxPrice) {
+                query += ` AND bt2.GiaTienBienThe <= ${parseFloat(maxPrice)}`;
+            }
+            
+            query += `)`;
+        }
+
+        query += ` GROUP BY sp.MaSP ORDER BY sp.MaSP`;
+
+        const [rows] = await db.query(query, [maLoai]);
         return rows;
     },
 
     // Lấy sản phẩm chi tiết (Biến thể + Ảnh + Thông số)
     getWithVariants: async (maSP) => {
         const [product] = await db.query(`
-            SELECT * FROM SanPham WHERE MaSP = ? AND TinhTrangSanPham = 1
+            SELECT * FROM sanpham WHERE MaSP = ? AND TinhTrangSanPham = 1
         `, [maSP]);
 
         if (!product.length) return null;
@@ -103,7 +145,7 @@ const SanPham = {
         const [variants] = await db.query(`
             SELECT bt.MaBienThe, bt.TenBienThe, bt.SoLuongTonKho, 
                    bt.GiaTienBienThe, bt.ThuTuHienThi, bt.DuongDanAnhBienThe
-            FROM BienThe bt
+            FROM bienthe bt
             WHERE bt.MaSP = ? AND bt.TinhTrangHoatDong = 1
             ORDER BY bt.ThuTuHienThi
         `, [maSP]);
@@ -111,7 +153,7 @@ const SanPham = {
         // 2. Lấy ảnh (Gallery)
         const [images] = await db.query(`
             SELECT MaAnh, DuongDanLuuAnh, ThuTuHienThi
-            FROM AnhSP 
+            FROM anhsp 
             WHERE MaSP = ? 
             ORDER BY ThuTuHienThi
         `, [maSP]);
@@ -120,8 +162,8 @@ const SanPham = {
         const [specs] = await db.query(`
             SELECT gts.MaThongSoMau, gts.GiaTriHienThi, gts.GiaTriNhap,
                    tsm.TenThongSo, tsm.DonVi, tsm.ThuTuHienThi
-            FROM GiaTriThongSo gts
-            JOIN ThongSoMau tsm ON gts.MaThongSoMau = tsm.MaThongSoMau
+            FROM giatrithongso gts
+            JOIN thongsomau tsm ON gts.MaThongSoMau = tsm.MaThongSoMau
             WHERE gts.MaSP = ? AND tsm.TinhTrangThongSoMau = 1
             ORDER BY tsm.ThuTuHienThi
         `, [maSP]);
@@ -135,10 +177,11 @@ const SanPham = {
                    tsbm.TenThongSoBienThe as tenThongSo, 
                    tsbm.DonVi as donVi,
                    tsbm.ThuTuHienThi as thuTuHienThi
-            FROM BienThe bt
-            LEFT JOIN GiaTriBienThe gtvt ON bt.MaBienThe = gtvt.MaBienThe
-            LEFT JOIN ThongSoBienTheMau tsbm ON gtvt.MaThongSoBienTheMau = tsbm.MaThongSoBienTheMau
-            WHERE bt.MaSP = ? AND bt.TinhTrangHoatDong = 1 AND tsbm.TinhTrangThongSoBienThe = 1
+            FROM bienthe bt
+            LEFT JOIN giatribienthe gtvt ON bt.MaBienThe = gtvt.MaBienThe
+            LEFT JOIN thongsobienthemau tsbm ON gtvt.MaThongSoBienTheMau = tsbm.MaThongSoBienTheMau 
+                AND tsbm.TinhTrangThongSoBienThe = 1
+            WHERE bt.MaSP = ? AND bt.TinhTrangHoatDong = 1
             ORDER BY bt.ThuTuHienThi, tsbm.ThuTuHienThi
         `, [maSP]);
 
@@ -318,16 +361,16 @@ const SanPham = {
 
             for (const attr of attributeRows) {
                 const [valueRows] = await db.query(
-                    `SELECT DISTINCT
-                        gtb.GiaTriHienThi as giaTriHienThi,
+                    `SELECT 
                         gtb.GiaTriNhap as giaTriNhap,
+                        MIN(gtb.GiaTriHienThi) as giaTriHienThi,
                         MIN(gtb.ThuTuHienThi) as thuTuHienThi
                       FROM BienThe bt
                       JOIN GiaTriBienThe gtb ON bt.MaBienThe = gtb.MaBienThe
                       WHERE bt.MaSP = ?
                         AND gtb.MaThongSoBienTheMau = ?
                         AND bt.TinhTrangHoatDong = 1
-                      GROUP BY gtb.GiaTriHienThi, gtb.GiaTriNhap
+                      GROUP BY gtb.GiaTriNhap
                       ORDER BY MIN(gtb.ThuTuHienThi)`,
                     [maSP, attr.maThongSo]
                 );
@@ -344,6 +387,85 @@ const SanPham = {
             return attributes;
         } catch (error) {
             console.error('Error in getVariantAttributes:', error);
+            throw error;
+        }
+    },
+
+    // Lấy top 5 sản phẩm bán chạy nhất (dựa trên doanh số)
+    getTopSelling: async (limit = 5) => {
+        try {
+            const [rows] = await db.query(`
+                SELECT 
+                    sp.MaSP,
+                    sp.Ten,
+                    sp.MoTa,
+                    sp.TinhTrangSanPham,
+                    sp.MaLoai,
+                    lsp.TenLoai,
+                    bt.MaBienThe,
+                    bt.TenBienThe,
+                    bt.GiaTienBienThe,
+                    bt.DuongDanAnhBienThe,
+                    bt.ThuTuHienThi,
+                    SUM(dhct.SoLuongSanPham * dhct.GiaTienCuaSanPham) AS TongDoanhThu,
+                    SUM(dhct.SoLuongSanPham) AS TongSoLuongBan
+                FROM SanPham sp
+                INNER JOIN LoaiSanPham lsp ON sp.MaLoai = lsp.MaLoai
+                INNER JOIN BienThe bt ON sp.MaSP = bt.MaSP AND bt.TinhTrangHoatDong = 1
+                INNER JOIN DonHangChiTiet dhct ON bt.MaBienThe = dhct.MaBienThe
+                INNER JOIN DonHang dh ON dhct.MaDonHang = dh.MaDonHang 
+                    AND dh.TinhTrangDonHang IN (0, 1, 2, 3) -- Chỉ tính đơn hàng không bị hủy (0:Đang xử lý, 1:Đã xác nhận, 2:Đang giao, 3:Đã giao)
+                WHERE sp.TinhTrangSanPham = 1
+                GROUP BY sp.MaSP, sp.Ten, sp.MoTa, sp.TinhTrangSanPham, sp.MaLoai, 
+                         lsp.TenLoai, bt.MaBienThe, bt.TenBienThe, bt.GiaTienBienThe, 
+                         bt.DuongDanAnhBienThe, bt.ThuTuHienThi
+                ORDER BY TongDoanhThu DESC
+            `);
+
+            // Gom nhóm sản phẩm với variants
+            const productsMap = new Map();
+            const productOrder = []; // Để giữ thứ tự doanh thu
+
+            rows.forEach(row => {
+                if (!productsMap.has(row.MaSP)) {
+                    productsMap.set(row.MaSP, {
+                        MaSP: row.MaSP,
+                        Ten: row.Ten,
+                        MoTa: row.MoTa,
+                        TinhTrangSanPham: row.TinhTrangSanPham,
+                        MaLoai: row.MaLoai,
+                        TenLoai: row.TenLoai,
+                        TongDoanhThu: 0,
+                        TongSoLuongBan: 0,
+                        variants: []
+                    });
+                    productOrder.push(row.MaSP);
+                }
+
+                const product = productsMap.get(row.MaSP);
+                product.TongDoanhThu += parseFloat(row.TongDoanhThu || 0);
+                product.TongSoLuongBan += parseInt(row.TongSoLuongBan || 0);
+
+                if (row.MaBienThe) {
+                    product.variants.push({
+                        MaBienThe: row.MaBienThe,
+                        TenBienThe: row.TenBienThe,
+                        GiaTienBienThe: row.GiaTienBienThe,
+                        DuongDanAnhBienThe: row.DuongDanAnhBienThe,
+                        ThuTuHienThi: row.ThuTuHienThi
+                    });
+                }
+            });
+
+            // Sắp xếp theo doanh thu và lấy top
+            const topProducts = productOrder
+                .map(maSP => productsMap.get(maSP))
+                .sort((a, b) => b.TongDoanhThu - a.TongDoanhThu)
+                .slice(0, limit);
+
+            return topProducts;
+        } catch (error) {
+            console.error('Error in getTopSelling:', error);
             throw error;
         }
     },

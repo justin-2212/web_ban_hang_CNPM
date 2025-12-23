@@ -58,41 +58,27 @@ const Hero = () => {
     const fetchHeroProducts = async () => {
       try {
         setLoading(true);
-        const res = await sanPhamAPI.getAll(); 
-        const allProducts = res.data || [];
         
-        console.log("Dữ liệu API trả về:", allProducts); // Kiem tra xem co variants khong
+        // Lấy top 5 sản phẩm bán chạy
+        const res = await sanPhamAPI.getTopSelling(5); 
+        const topProducts = res.data || [];
+        
+        console.log("Top 5 sản phẩm bán chạy:", topProducts);
 
-        // Danh sách từ khóa để lọc sản phẩm hot
-        const keywords = ["iPhone", "iPad", "MacBook", "AirPods"];
-        const heroData = [];
+        const heroData = topProducts.map((product) => {
+          const displayPrice = getDisplayPrice(product);
 
-        keywords.forEach((key) => {
-          // Lọc các sản phẩm có TÊN chứa từ khóa (vd: "iPhone 14 Pro")
-          const productsInCat = allProducts.filter((p) => 
-            p.Ten?.toLowerCase().includes(key.toLowerCase())
-          );
-
-          if (productsInCat.length > 0) {
-            // Sắp xếp giảm dần theo giá cao nhất (để lấy dòng Flagship, vd Pro Max)
-            productsInCat.sort((a, b) => getDisplayPrice(b) - getDisplayPrice(a));
-
-            // Lấy sản phẩm đầu tiên (Flagship)
-            const topProduct = productsInCat[0];
-            const displayPrice = getDisplayPrice(topProduct);
-
-            heroData.push({
-              id: topProduct.MaSP,
-              title: topProduct.Ten,
-              // Xử lý mô tả: Bỏ tag HTML và cắt ngắn
-              desc: topProduct.MoTa 
-                ? topProduct.MoTa.replace(/<[^>]*>?/gm, '').substring(0, 150) + "..." 
-                : `Trải nghiệm ${topProduct.Ten} với công nghệ đỉnh cao.`,
-              img: getHeroImage(topProduct),
-              price: displayPrice,
-              tag: `Hot ${key}`,
-            });
-          }
+          return {
+            id: product.MaSP,
+            title: product.Ten,
+            desc: product.MoTa 
+              ? product.MoTa.replace(/<[^>]*>?/gm, '').substring(0, 150) + "..." 
+              : `Trải nghiệm ${product.Ten} với công nghệ đỉnh cao.`,
+            img: getHeroImage(product),
+            price: displayPrice,
+            tag: `Hot ${product.TenLoai || 'Deal'}`,
+            revenue: product.TongDoanhThu || 0,
+          };
         });
 
         console.log("Dữ liệu Hero sau khi xử lý:", heroData);
@@ -193,6 +179,7 @@ const Hero = () => {
                       {slide.title}
                     </h2>
                     
+                    {/* Hiển thị giá */}
                     <p
                       data-aos="fade-up"
                       data-aos-delay="200"

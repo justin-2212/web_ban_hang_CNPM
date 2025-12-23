@@ -134,6 +134,35 @@ const ConfigDrawer = ({ isOpen, onClose, category }) => {
     }
   };
 
+  // === [MỚI] XỬ LÝ XÓA CỨNG ===
+  const handleHardDelete = async (id, ten) => {
+    if (
+      !window.confirm(
+        `CẢNH BÁO: Bạn muốn XÓA VĨNH VIỄN "${ten}"?\nHành động này không thể hoàn tác!`
+      )
+    )
+      return;
+
+    setLoading(true);
+    try {
+      if (activeTab === "tech") {
+        await thongSoServiceAdmin.hardDeleteSpec(id);
+      } else {
+        await thongSoServiceAdmin.hardDeleteVariant(id);
+      }
+      await fetchData(); // Load lại dữ liệu
+      alert(`Đã xóa vĩnh viễn "${ten}" thành công!`);
+    } catch (error) {
+      // Thông báo lỗi từ Backend (ví dụ: đang có dữ liệu phụ thuộc)
+      const errorMessage =
+        error.response?.data?.message || error.message || "Có lỗi xảy ra";
+      alert(`Không thể xóa: ${errorMessage}`);
+      console.error("Error hard deleting:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -212,6 +241,7 @@ const ConfigDrawer = ({ isOpen, onClose, category }) => {
                 onAdd={handleAdd}
                 onDelete={handleDelete}
                 onRestore={handleRestore}
+                onHardDelete={handleHardDelete}
                 onUpdate={handleUpdate}
                 loading={loading}
               />

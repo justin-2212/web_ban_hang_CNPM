@@ -127,15 +127,15 @@ const BienTheAdmin = {
   },
 
   /**
-   * Xóa biến thể (soft delete)
+   * Xóa biến thể (hard delete)
    */
   delete: async (maBienThe) => {
+    // Xóa các giá trị biến thể trước (foreign key)
+    await db.query('DELETE FROM GiaTriBienThe WHERE MaBienThe = ?', [maBienThe]);
+    
+    // Xóa biến thể
     const [result] = await db.query(
-      `
-      UPDATE BienThe
-      SET TinhTrangHoatDong = 0
-      WHERE MaBienThe = ?
-      `,
+      'DELETE FROM BienThe WHERE MaBienThe = ?',
       [maBienThe]
     );
 

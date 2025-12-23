@@ -62,7 +62,7 @@ const ProductsManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Bạn có chắc muốn xóa sản phẩm này?')) return;
+    if (!confirm('⚠️ Bạn có chắc muốn XÓA VĨNH VIỄN sản phẩm này? Hành động này KHÔNG THỂ KHÔI PHỤC!')) return;
 
     try {
       const response = await sanPhamAdminAPI.delete(id);
