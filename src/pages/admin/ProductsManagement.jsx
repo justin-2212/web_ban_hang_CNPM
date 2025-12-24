@@ -1,9 +1,9 @@
 // src/pages/admin/ProductsManagement.jsx
 
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { sanPhamAdminAPI } from '../../services/adminAPI';
-import { loaiSanPhamAPI } from '../../services/api';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { sanPhamAdminAPI } from "../../services/adminAPI";
+import { loaiSanPhamAPI } from "../../services/api";
 import {
   Plus,
   Edit,
@@ -12,8 +12,10 @@ import {
   EyeOff,
   Search,
   Filter,
-  X
-} from 'lucide-react';
+  X,
+} from "lucide-react";
+
+import CreateProductModal from "../../components/admin/CreateProductModal";
 
 const ProductsManagement = () => {
   const navigate = useNavigate();
@@ -21,10 +23,11 @@ const ProductsManagement = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    search: '',
-    maLoai: '',
-    tinhTrang: ''
+    search: "",
+    maLoai: "",
+    tinhTrang: "",
   });
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // <--- State bật/tắt modal
 
   useEffect(() => {
     fetchData();
@@ -35,50 +38,55 @@ const ProductsManagement = () => {
       setLoading(true);
       const [productsRes, categoriesRes] = await Promise.all([
         sanPhamAdminAPI.getAll(filters),
-        loaiSanPhamAPI.getAll()
+        loaiSanPhamAPI.getAll(),
       ]);
 
       if (productsRes.success) setProducts(productsRes.data);
       if (categoriesRes.success) setCategories(categoriesRes.data);
     } catch (err) {
-      console.error('Error fetching data:', err);
+      console.error("Error fetching data:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleToggleStatus = async (id) => {
-    if (!confirm('Bạn có chắc muốn thay đổi trạng thái sản phẩm này?')) return;
+    if (!confirm("Bạn có chắc muốn thay đổi trạng thái sản phẩm này?")) return;
 
     try {
       const response = await sanPhamAdminAPI.toggleStatus(id);
       if (response.success) {
-        alert('Cập nhật trạng thái thành công');
+        alert("Cập nhật trạng thái thành công");
         fetchData();
       }
     } catch (err) {
-      alert('Lỗi: ' + err.message);
+      alert("Lỗi: " + err.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('⚠️ Bạn có chắc muốn XÓA VĨNH VIỄN sản phẩm này? Hành động này KHÔNG THỂ KHÔI PHỤC!')) return;
+    if (
+      !confirm(
+        "⚠️ Bạn có chắc muốn XÓA VĨNH VIỄN sản phẩm này? Hành động này KHÔNG THỂ KHÔI PHỤC!"
+      )
+    )
+      return;
 
     try {
       const response = await sanPhamAdminAPI.delete(id);
       if (response.success) {
-        alert('Xóa sản phẩm thành công');
+        alert("Xóa sản phẩm thành công");
         fetchData();
       }
     } catch (err) {
-      alert('Lỗi: ' + err.message);
+      alert("Lỗi: " + err.message);
     }
   };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(value || 0);
   };
 
@@ -92,7 +100,7 @@ const ProductsManagement = () => {
         </div>
         <button
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          onClick={() => navigate('/admin/products/new')}
+          onClick={() => setIsCreateModalOpen(true)}
         >
           <Plus className="w-5 h-5" />
           Thêm sản phẩm
@@ -110,7 +118,9 @@ const ProductsManagement = () => {
               placeholder="Tìm kiếm sản phẩm..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, search: e.target.value })
+              }
             />
           </div>
 
@@ -132,7 +142,9 @@ const ProductsManagement = () => {
           <select
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             value={filters.tinhTrang}
-            onChange={(e) => setFilters({ ...filters, tinhTrang: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, tinhTrang: e.target.value })
+            }
           >
             <option value="">Tất cả trạng thái</option>
             <option value="1">Đang hoạt động</option>
@@ -142,7 +154,9 @@ const ProductsManagement = () => {
           {/* Reset Button */}
           <button
             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-            onClick={() => setFilters({ search: '', maLoai: '', tinhTrang: '' })}
+            onClick={() =>
+              setFilters({ search: "", maLoai: "", tinhTrang: "" })
+            }
           >
             Đặt lại
           </button>
@@ -212,18 +226,19 @@ const ProductsManagement = () => {
                       <div className="text-gray-900 font-medium">
                         {formatCurrency(product.GiaThapNhat)}
                       </div>
-                      {product.GiaCaoNhat && product.GiaCaoNhat !== product.GiaThapNhat && (
-                        <div className="text-gray-500 text-xs">
-                          - {formatCurrency(product.GiaCaoNhat)}
-                        </div>
-                      )}
+                      {product.GiaCaoNhat &&
+                        product.GiaCaoNhat !== product.GiaThapNhat && (
+                          <div className="text-gray-500 text-xs">
+                            - {formatCurrency(product.GiaCaoNhat)}
+                          </div>
+                        )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
                       <span
                         className={`font-medium ${
                           product.TongTonKho <= 10
-                            ? 'text-red-600'
-                            : 'text-green-600'
+                            ? "text-red-600"
+                            : "text-green-600"
                         }`}
                       >
                         {product.TongTonKho || 0}
@@ -233,17 +248,19 @@ const ProductsManagement = () => {
                       <span
                         className={`px-2 py-1 text-xs font-semibold rounded-full ${
                           product.TinhTrangSanPham === 1
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {product.TinhTrangSanPham === 1 ? 'Hoạt động' : 'Ngừng'}
+                        {product.TinhTrangSanPham === 1 ? "Hoạt động" : "Ngừng"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
                       <div className="flex items-center justify-center gap-2">
                         <button
-                          onClick={() => navigate(`/admin/products/${product.MaSP}`)}
+                          onClick={() =>
+                            navigate(`/admin/products/${product.MaSP}`)
+                          }
                           className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                           title="Chỉnh sửa chi tiết"
                         >
@@ -253,13 +270,13 @@ const ProductsManagement = () => {
                           onClick={() => handleToggleStatus(product.MaSP)}
                           className={`p-1 rounded ${
                             product.TinhTrangSanPham === 1
-                              ? 'text-orange-600 hover:bg-orange-50'
-                              : 'text-green-600 hover:bg-green-50'
+                              ? "text-orange-600 hover:bg-orange-50"
+                              : "text-green-600 hover:bg-green-50"
                           }`}
                           title={
                             product.TinhTrangSanPham === 1
-                              ? 'Vô hiệu hóa'
-                              : 'Kích hoạt'
+                              ? "Vô hiệu hóa"
+                              : "Kích hoạt"
                           }
                         >
                           {product.TinhTrangSanPham === 1 ? (
@@ -290,6 +307,10 @@ const ProductsManagement = () => {
           </div>
         )}
       </div>
+      <CreateProductModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </div>
   );
 };
