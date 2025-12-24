@@ -155,9 +155,13 @@ class ThanhToanController {
             maGiaoDich: transId,
           }, conn);
 
-          // 3.6. Trừ kho
-          for (const item of cartItems) {
-            await BienThe.decreaseStock(item.maBienThe, item.soLuong, conn);
+          // 3.6. Trừ kho (LẤY CHI TIẾT TỪ DB THAY VÌ TỪ orderInfo)
+          const [orderDetails] = await conn.query(
+            `SELECT MaBienThe, SoLuongSanPham FROM DonHangChiTiet WHERE MaDonHang = ?`,
+            [maDonHang]
+          );
+          for (const item of orderDetails) {
+            await BienThe.decreaseStock(item.MaBienThe, item.SoLuongSanPham, conn);
           }
 
           // 3.7. Xóa giỏ hàng

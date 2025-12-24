@@ -108,8 +108,8 @@ export const updatePaymentStatus = async (req, res, next) => {
       });
     }
 
-    // Validate trạng thái thanh toán (0: Chưa thanh toán, 1: Đã thanh toán)
-    if (![0, 1].includes(parseInt(tinhTrangThanhToan))) {
+    // Validate trạng thái thanh toán (0: Chưa thanh toán, 1: Thanh toán bị lỗi, 2: Đã thanh toán)
+    if (![0, 1, 2].includes(parseInt(tinhTrangThanhToan))) {
       return res.status(400).json({
         success: false,
         message: 'Trạng thái thanh toán không hợp lệ'
@@ -200,6 +200,7 @@ export const getTopSellingProducts = async (req, res, next) => {
  * Hủy đơn hàng (Admin có thể hủy mọi đơn)
  */
 export const cancelOrder = async (req, res, next) => {
+  let conn = null;
   try {
     const { id } = req.params;
     const { reason } = req.body;
@@ -221,17 +222,37 @@ export const cancelOrder = async (req, res, next) => {
       });
     }
 
-    // Cập nhật trạng thái thành "Hủy" (3)
-    await DonHang.updateOrderStatus(id, 3);
+    conn = await db.getConnection();
+    await conn.beginTransaction();
 
-    // Ghi log lý do hủy (nếu cần thiết, có thể thêm trường LyDoHuy vào DB)
-    console.log(`Admin hủy đơn hàng ${id}. Lý do: ${reason || 'Không có'}`);
+    try {
+      // Cập nhật trạng thái thành "Hủy" (3)
+      await DonHang.updateOrderStatus(id, 3);
 
-    res.json({
-      success: true,
-      message: 'Hủy đơn hàng thành công'
-    });
+      // ✅ Trả lại tồn kho (cho COD hoặc bất kỳ đơn nào bị hủy)
+      if (order.chiTiet && order.chiTiet.length > 0) {
+        const BienThe = (await import('../models/bienThe.model.js')).default;
+        for (const item of order.chiTiet) {
+          await BienThe.increaseStock(item.MaBienThe, item.SoLuongSanPham, conn);
+        }
+      }
+
+      await conn.commit();
+
+      // Ghi log lý do hủy (nếu cần thiết, có thể thêm trường LyDoHuy vào DB)
+      console.log(`Admin hủy đơn hàng ${id}. Lý do: ${reason || 'Không có'}`);
+
+      res.json({
+        success: true,
+        message: 'Hủy đơn hàng thành công'
+      });
+    } catch (dbError) {
+      if (conn) await conn.rollback();
+      throw dbError;
+    }
   } catch (error) {
     next(error);
+  } finally {
+    if (conn) conn.release();
   }
 };

@@ -1,4 +1,5 @@
 import DonHang from '../models/donHang.model.js';
+import BienThe from '../models/bienThe.model.js';
 import db from '../config/db.js';
 import {
   sendOrderConfirmationCOD,
@@ -105,6 +106,7 @@ class DonHangController {
    * ✅ NEW: Hủy đơn hàng
    */
   async cancelOrder(req, res, next) {
+    let conn = null;
     try {
       const { maDonHang } = req.params;
 
@@ -117,42 +119,65 @@ class DonHangController {
         });
       }
 
-      // Lấy thông tin đơn hàng trước khi hủy
-      const order = await DonHang.getById(maDonHang);
-      if (!order) {
-        return res.status(404).json({
-          success: false,
-          message: 'Không tìm thấy đơn hàng',
-        });
-      }
+      conn = await db.getConnection();
+      await conn.beginTransaction();
 
-      // Cập nhật trạng thái thành "Hủy" (3)
-      await DonHang.updateOrderStatus(maDonHang, 3);
-
-      // ✅ FIX: Gửi email thông báo hủy đơn hàng
       try {
-        const [taiKhoan] = await db.query(
-          'SELECT Gmail, TenDayDu FROM TaiKhoan WHERE MaTaiKhoan = ?',
-          [order.MaTaiKhoan]
-        );
-
-        if (taiKhoan.length > 0) {
-          const customerEmail = taiKhoan[0].Gmail;
-          const customerName = taiKhoan[0].TenDayDu;
-          await sendOrderCancellationEmail(customerEmail, customerName, order);
+        // Lấy thông tin đơn hàng trước khi hủy
+        const order = await DonHang.getById(maDonHang);
+        if (!order) {
+          await conn.rollback();
+          return res.status(404).json({
+            success: false,
+            message: 'Không tìm thấy đơn hàng',
+          });
         }
-      } catch (emailError) {
-        console.error('Lỗi gửi email hủy đơn hàng:', emailError);
-        // Không throw error, chỉ log
-      }
 
-      return res.json({
-        success: true,
-        message: 'Đơn hàng đã được hủy thành công',
-        data: { maDonHang },
-      });
+        // Cập nhật trạng thái thành "Hủy" (3)
+        await DonHang.updateOrderStatus(maDonHang, 3, conn);
+
+        // ✅ Trả lại tồn kho cho COD orders
+        if (order.PhuongThucThanhToan === 'COD' && order.chiTiet && order.chiTiet.length > 0) {
+          console.log(`[CANCEL ORDER] Phục hồi tồn kho cho ${order.chiTiet.length} sản phẩm`);
+          for (const item of order.chiTiet) {
+            console.log(`  - MaBienThe: ${item.MaBienThe}, SoLuong: ${item.SoLuongSanPham}`);
+            await BienThe.increaseStock(item.MaBienThe, item.SoLuongSanPham, conn);
+          }
+          console.log(`[CANCEL ORDER] ✅ Đã phục hồi tồn kho thành công`);
+        }
+
+        await conn.commit();
+
+        // ✅ FIX: Gửi email thông báo hủy đơn hàng
+        try {
+          const [taiKhoan] = await db.query(
+            'SELECT Gmail, TenDayDu FROM TaiKhoan WHERE MaTaiKhoan = ?',
+            [order.MaTaiKhoan]
+          );
+
+          if (taiKhoan.length > 0) {
+            const customerEmail = taiKhoan[0].Gmail;
+            const customerName = taiKhoan[0].TenDayDu;
+            await sendOrderCancellationEmail(customerEmail, customerName, order);
+          }
+        } catch (emailError) {
+          console.error('Lỗi gửi email hủy đơn hàng:', emailError);
+          // Không throw error, chỉ log
+        }
+
+        return res.json({
+          success: true,
+          message: 'Đơn hàng đã được hủy thành công',
+          data: { maDonHang },
+        });
+      } catch (dbError) {
+        if (conn) await conn.rollback();
+        throw dbError;
+      }
     } catch (error) {
       next(error);
+    } finally {
+      if (conn) conn.release();
     }
   }
 }

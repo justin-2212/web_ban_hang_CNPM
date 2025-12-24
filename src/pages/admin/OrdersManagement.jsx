@@ -384,7 +384,8 @@ const OrdersManagement = () => {
                       onChange={(e) => handleUpdatePaymentStatus(selectedOrder.MaDonHang, parseInt(e.target.value))}
                     >
                       <option value={0}>Chưa thanh toán</option>
-                      <option value={1}>Đã thanh toán</option>
+                      <option value={1}>Thanh toán bị lỗi</option>
+                      <option value={2}>Đã thanh toán</option>
                     </select>
                   </div>
                 )}
