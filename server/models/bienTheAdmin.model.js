@@ -1,6 +1,6 @@
 // server/models/bienTheAdmin.model.js
 
-import db from '../config/db.js';
+import db from "../config/db.js";
 
 const BienTheAdmin = {
   /**
@@ -48,7 +48,7 @@ const BienTheAdmin = {
       duongDanAnhBienThe,
       soLuongTonKho = 0,
       thuTuHienThi = 0,
-      tinhTrangHoatDong = 1
+      tinhTrangHoatDong = 1,
     } = data;
 
     const [result] = await db.query(
@@ -57,7 +57,15 @@ const BienTheAdmin = {
         (MaSP, TenBienThe, GiaTienBienThe, DuongDanAnhBienThe, SoLuongTonKho, ThuTuHienThi, TinhTrangHoatDong)
       VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
-      [maSP, tenBienThe, giaTienBienThe, duongDanAnhBienThe, soLuongTonKho, thuTuHienThi, tinhTrangHoatDong]
+      [
+        maSP,
+        tenBienThe,
+        giaTienBienThe,
+        duongDanAnhBienThe,
+        soLuongTonKho,
+        thuTuHienThi,
+        tinhTrangHoatDong,
+      ]
     );
 
     return result.insertId;
@@ -73,7 +81,7 @@ const BienTheAdmin = {
       duongDanAnhBienThe,
       soLuongTonKho,
       thuTuHienThi,
-      tinhTrangHoatDong
+      tinhTrangHoatDong,
     } = data;
 
     const [result] = await db.query(
@@ -88,7 +96,15 @@ const BienTheAdmin = {
         TinhTrangHoatDong = ?
       WHERE MaBienThe = ?
       `,
-      [tenBienThe, giaTienBienThe, duongDanAnhBienThe, soLuongTonKho, thuTuHienThi, tinhTrangHoatDong, maBienThe]
+      [
+        tenBienThe,
+        giaTienBienThe,
+        duongDanAnhBienThe,
+        soLuongTonKho,
+        thuTuHienThi,
+        tinhTrangHoatDong,
+        maBienThe,
+      ]
     );
 
     return result.affectedRows;
@@ -126,18 +142,39 @@ const BienTheAdmin = {
     return result.affectedRows;
   },
 
+  // Hàm kiểm tra ràng buộc dữ liệu (xem có đơn hàng nào chứa biến thể này không)
+  checkDependencies: async (maBienThe) => {
+    try {
+      // Giả sử bảng chi tiết đơn hàng tên là 'ChiTietDonHang'
+      // Nếu tên bảng của bạn khác (ví dụ: OrderDetails), hãy đổi lại cho đúng
+      const [rows] = await db.query(
+        "SELECT COUNT(*) as count FROM DonHangChiTiet WHERE MaBienThe = ?",
+        [maBienThe]
+      );
+
+      return {
+        orderCount: rows[0].count, // Trả về số lượng đơn hàng chứa biến thể này
+      };
+    } catch (error) {
+      // Nếu bảng ChiTietDonHang chưa tồn tại hoặc lỗi khác, log ra và giả định là 0 để không chặn xóa
+      console.error("Lỗi checkDependencies:", error.message);
+      return { orderCount: 0 };
+    }
+  },
+
   /**
    * Xóa biến thể (hard delete)
    */
   delete: async (maBienThe) => {
     // Xóa các giá trị biến thể trước (foreign key)
-    await db.query('DELETE FROM GiaTriBienThe WHERE MaBienThe = ?', [maBienThe]);
-    
+    await db.query("DELETE FROM GiaTriBienThe WHERE MaBienThe = ?", [
+      maBienThe,
+    ]);
+
     // Xóa biến thể
-    const [result] = await db.query(
-      'DELETE FROM BienThe WHERE MaBienThe = ?',
-      [maBienThe]
-    );
+    const [result] = await db.query("DELETE FROM BienThe WHERE MaBienThe = ?", [
+      maBienThe,
+    ]);
 
     return result.affectedRows;
   },
@@ -146,10 +183,9 @@ const BienTheAdmin = {
    * Xóa vĩnh viễn biến thể
    */
   deleteHard: async (maBienThe) => {
-    const [result] = await db.query(
-      'DELETE FROM BienThe WHERE MaBienThe = ?',
-      [maBienThe]
-    );
+    const [result] = await db.query("DELETE FROM BienThe WHERE MaBienThe = ?", [
+      maBienThe,
+    ]);
 
     return result.affectedRows;
   },
@@ -186,7 +222,7 @@ const BienTheAdmin = {
     );
 
     return rows;
-  }
+  },
 };
 
 export default BienTheAdmin;

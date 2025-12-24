@@ -75,6 +75,30 @@ const VariantModal = ({
     }
   };
 
+  // --- CÁC HÀM XỬ LÝ INPUT VÀ VALIDATION ---
+
+  //  Logic tính toán lỗi (để hiển thị chữ đỏ)
+  // Chỉ báo lỗi nếu ô đó rỗng và vi phạm điều kiện số học
+  const isPriceInvalid =
+    formData.GiaTienBienThe !== "" && Number(formData.GiaTienBienThe) <= 0;
+
+  const isStockInvalid =
+    formData.SoLuongTonKho !== "" && Number(formData.SoLuongTonKho) < 0;
+
+  //  Xử lý Focus: Tự động xóa số 0 khi click vào
+  const handleFocus = (field) => {
+    if (Number(formData[field]) === 0) {
+      setFormData({ ...formData, [field]: "" });
+    }
+  };
+
+  //  Xử lý Change: Cho phép nhập chuỗi rỗng (để xóa hết số)
+  const handleChangeNumber = (e, field) => {
+    const val = e.target.value;
+    // Lưu nguyên giá trị nhập (kể cả chuỗi rỗng) để không bị ép về 0
+    setFormData({ ...formData, [field]: val });
+  };
+
   const handleUploadImage = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -103,8 +127,34 @@ const VariantModal = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.TenBienThe || !formData.GiaTienBienThe) {
-      alert("Vui lòng nhập tên và giá tiền");
+    // --- VALIDATION CHECK KHI SUBMIT ---
+
+    // Check Tên biến thể (Rỗng)
+    if (!formData.TenBienThe || formData.TenBienThe.trim() === "") {
+      alert("Vui lòng nhập tên biến thể");
+      return;
+    }
+
+    //  Check Giá tiền (Rỗng hoặc Null) -> Alert
+    if (formData.GiaTienBienThe === "" || formData.GiaTienBienThe === null) {
+      alert("Vui lòng nhập giá tiền");
+      return;
+    }
+
+    //  Check Tồn kho (Rỗng hoặc Null) -> Alert
+    if (formData.SoLuongTonKho === "" || formData.SoLuongTonKho === null) {
+      alert("Vui lòng nhập số lượng tồn kho");
+      return;
+    }
+
+    //  Check Logic sai số (Dựa vào biến invalid đã tính ở trên) -> Alert chặn submit
+    // Mặc dù đã hiện chữ đỏ, nhưng nếu người dùng vẫn cố bấm Lưu thì phải chặn
+    if (isPriceInvalid) {
+      alert("Giá tiền phải > 0");
+      return;
+    }
+    if (isStockInvalid) {
+      alert("Số lượng tồn kho phải >= 0");
       return;
     }
 
@@ -208,16 +258,20 @@ const VariantModal = ({
                 </label>
                 <input
                   type="number"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${
+                    isPriceInvalid
+                      ? "border-red-500 focus:ring-red-200"
+                      : "border-gray-300"
+                  }`}
                   value={formData.GiaTienBienThe}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      GiaTienBienThe: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  required
+                  onFocus={() => handleFocus("GiaTienBienThe")}
+                  onChange={(e) => handleChangeNumber(e, "GiaTienBienThe")}
                 />
+                {isPriceInvalid && (
+                  <p className="text-red-500 text-xs mt-1 italic">
+                    Giá tiền phải &gt; 0
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -225,15 +279,20 @@ const VariantModal = ({
                 </label>
                 <input
                   type="number"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${
+                    isStockInvalid
+                      ? "border-red-500 focus:ring-red-200"
+                      : "border-gray-300"
+                  }`}
                   value={formData.SoLuongTonKho}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      SoLuongTonKho: parseInt(e.target.value) || 0,
-                    })
-                  }
+                  onFocus={() => handleFocus("SoLuongTonKho")}
+                  onChange={(e) => handleChangeNumber(e, "SoLuongTonKho")}
                 />
+                {isStockInvalid && (
+                  <p className="text-red-500 text-xs mt-1 italic">
+                    Số lượng tồn kho phải &gt;= 0
+                  </p>
+                )}
               </div>
             </div>
 

@@ -1,6 +1,6 @@
 // server/controllers/bienTheAdmin.controller.js
 
-import BienTheAdmin from '../models/bienTheAdmin.model.js';
+import BienTheAdmin from "../models/bienTheAdmin.model.js";
 
 /**
  * Lấy tất cả biến thể của sản phẩm
@@ -12,7 +12,7 @@ export const getBienTheByProduct = async (req, res, next) => {
 
     res.json({
       success: true,
-      data: variants
+      data: variants,
     });
   } catch (error) {
     next(error);
@@ -30,13 +30,13 @@ export const getBienTheById = async (req, res, next) => {
     if (!variant) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy biến thể'
+        message: "Không tìm thấy biến thể",
       });
     }
 
     res.json({
       success: true,
-      data: variant
+      data: variant,
     });
   } catch (error) {
     next(error);
@@ -55,28 +55,28 @@ export const createBienThe = async (req, res, next) => {
       duongDanAnhBienThe,
       soLuongTonKho,
       thuTuHienThi,
-      tinhTrangHoatDong
+      tinhTrangHoatDong,
     } = req.body;
 
     // Validation
     if (!maSP) {
       return res.status(400).json({
         success: false,
-        message: 'Mã sản phẩm không được để trống'
+        message: "Mã sản phẩm không được để trống",
       });
     }
 
     if (!tenBienThe || !tenBienThe.trim()) {
       return res.status(400).json({
         success: false,
-        message: 'Tên biến thể không được để trống'
+        message: "Tên biến thể không được để trống",
       });
     }
 
     if (!giaTienBienThe || giaTienBienThe <= 0) {
       return res.status(400).json({
         success: false,
-        message: 'Giá tiền phải lớn hơn 0'
+        message: "Giá tiền phải lớn hơn 0",
       });
     }
 
@@ -84,16 +84,17 @@ export const createBienThe = async (req, res, next) => {
       maSP,
       tenBienThe: tenBienThe.trim(),
       giaTienBienThe,
-      duongDanAnhBienThe: duongDanAnhBienThe || '',
+      duongDanAnhBienThe: duongDanAnhBienThe || "",
       soLuongTonKho: soLuongTonKho || 0,
       thuTuHienThi: thuTuHienThi || 0,
-      tinhTrangHoatDong: tinhTrangHoatDong !== undefined ? tinhTrangHoatDong : 1
+      tinhTrangHoatDong:
+        tinhTrangHoatDong !== undefined ? tinhTrangHoatDong : 1,
     });
 
     res.status(201).json({
       success: true,
-      message: 'Thêm biến thể thành công',
-      data: { maBienThe }
+      message: "Thêm biến thể thành công",
+      data: { maBienThe },
     });
   } catch (error) {
     next(error);
@@ -112,43 +113,44 @@ export const updateBienThe = async (req, res, next) => {
       duongDanAnhBienThe,
       soLuongTonKho,
       thuTuHienThi,
-      tinhTrangHoatDong
+      tinhTrangHoatDong,
     } = req.body;
 
     // Validation
     if (!tenBienThe || !tenBienThe.trim()) {
       return res.status(400).json({
         success: false,
-        message: 'Tên biến thể không được để trống'
+        message: "Tên biến thể không được để trống",
       });
     }
 
     if (!giaTienBienThe || giaTienBienThe <= 0) {
       return res.status(400).json({
         success: false,
-        message: 'Giá tiền phải lớn hơn 0'
+        message: "Giá tiền phải lớn hơn 0",
       });
     }
 
     const affectedRows = await BienTheAdmin.update(id, {
       tenBienThe: tenBienThe.trim(),
       giaTienBienThe,
-      duongDanAnhBienThe: duongDanAnhBienThe || '',
+      duongDanAnhBienThe: duongDanAnhBienThe || "",
       soLuongTonKho: soLuongTonKho || 0,
       thuTuHienThi: thuTuHienThi || 0,
-      tinhTrangHoatDong: tinhTrangHoatDong !== undefined ? tinhTrangHoatDong : 1
+      tinhTrangHoatDong:
+        tinhTrangHoatDong !== undefined ? tinhTrangHoatDong : 1,
     });
 
     if (affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy biến thể'
+        message: "Không tìm thấy biến thể",
       });
     }
 
     res.json({
       success: true,
-      message: 'Cập nhật biến thể thành công'
+      message: "Cập nhật biến thể thành công",
     });
   } catch (error) {
     next(error);
@@ -166,7 +168,7 @@ export const updateStockBienThe = async (req, res, next) => {
     if (soLuong === undefined || soLuong < 0) {
       return res.status(400).json({
         success: false,
-        message: 'Số lượng tồn kho không hợp lệ'
+        message: "Số lượng tồn kho không hợp lệ",
       });
     }
 
@@ -175,13 +177,13 @@ export const updateStockBienThe = async (req, res, next) => {
     if (affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy biến thể'
+        message: "Không tìm thấy biến thể",
       });
     }
 
     res.json({
       success: true,
-      message: 'Cập nhật tồn kho thành công'
+      message: "Cập nhật tồn kho thành công",
     });
   } catch (error) {
     next(error);
@@ -199,7 +201,7 @@ export const adjustStockBienThe = async (req, res, next) => {
     if (delta === undefined) {
       return res.status(400).json({
         success: false,
-        message: 'Giá trị điều chỉnh không được để trống'
+        message: "Giá trị điều chỉnh không được để trống",
       });
     }
 
@@ -208,13 +210,13 @@ export const adjustStockBienThe = async (req, res, next) => {
     if (affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy biến thể'
+        message: "Không tìm thấy biến thể",
       });
     }
 
     res.json({
       success: true,
-      message: 'Điều chỉnh tồn kho thành công'
+      message: "Điều chỉnh tồn kho thành công",
     });
   } catch (error) {
     next(error);
@@ -228,20 +230,39 @@ export const deleteBienThe = async (req, res, next) => {
   try {
     const { id } = req.params;
 
+    // [UPDATE] Bước 1: Kiểm tra ràng buộc dữ liệu trước
+    const deps = await BienTheAdmin.checkDependencies(id);
+
+    // [UPDATE] Nếu biến thể đã có trong đơn hàng -> Chặn xóa và báo lỗi
+    if (deps.orderCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể xóa! Biến thể này đang tồn tại trong ${deps.orderCount} đơn hàng chi tiết khác. Vui lòng chỉ 'Ngừng kinh doanh' thay vì xóa, hoặc xóa đơn hàng chi tiết liên quan đến biến thể này.`,
+      });
+    }
+
+    // Bước 2: Nếu không có ràng buộc thì tiến hành xóa
     const affectedRows = await BienTheAdmin.delete(id);
 
     if (affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy biến thể'
+        message: "Không tìm thấy biến thể",
       });
     }
 
     res.json({
       success: true,
-      message: 'Xóa biến thể thành công'
+      message: "Xóa biến thể thành công",
     });
   } catch (error) {
+    // [UPDATE] Bắt lỗi ràng buộc database chung (phòng trường hợp khác)
+    if (error.code === "ER_ROW_IS_REFERENCED_2") {
+      return res.status(400).json({
+        success: false,
+        message: "Không thể xóa do dữ liệu này đang được sử dụng ở bảng khác.",
+      });
+    }
     next(error);
   }
 };
@@ -258,13 +279,13 @@ export const hardDeleteBienThe = async (req, res, next) => {
     if (affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy biến thể'
+        message: "Không tìm thấy biến thể",
       });
     }
 
     res.json({
       success: true,
-      message: 'Xóa vĩnh viễn biến thể thành công'
+      message: "Xóa vĩnh viễn biến thể thành công",
     });
   } catch (error) {
     next(error);
@@ -283,13 +304,13 @@ export const toggleStatusBienThe = async (req, res, next) => {
     if (affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy biến thể'
+        message: "Không tìm thấy biến thể",
       });
     }
 
     res.json({
       success: true,
-      message: 'Cập nhật trạng thái biến thể thành công'
+      message: "Cập nhật trạng thái biến thể thành công",
     });
   } catch (error) {
     next(error);
@@ -306,7 +327,7 @@ export const getLowStockBienThe = async (req, res, next) => {
 
     res.json({
       success: true,
-      data: variants
+      data: variants,
     });
   } catch (error) {
     next(error);

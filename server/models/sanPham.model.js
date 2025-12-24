@@ -168,7 +168,7 @@ const SanPham = {
             ORDER BY tsm.ThuTuHienThi
         `, [maSP]);
 
-        // 4. ✅ FIX: Lấy thông số chi tiết của biến thể với đầy đủ thông tin
+        // 4.  Lấy thông số chi tiết của biến thể với đầy đủ thông tin
         const [variantSpecs] = await db.query(`
             SELECT bt.MaBienThe,
                    gtvt.MaThongSoBienTheMau as maThongSo, 
@@ -328,7 +328,7 @@ const SanPham = {
         return rows[0] || null;
     },
 
-    // ✅ LẤY THÔNG SỐ BIẾN THỂ THEO SẢN PHẨM (COMPLETELY REWRITTEN)
+    //LẤY THÔNG SỐ BIẾN THỂ THEO SẢN PHẨM (COMPLETELY REWRITTEN)
     getVariantAttributes: async (maSP) => {
         try {
             // Bước 1: Lấy MaLoai của sản phẩm
@@ -375,7 +375,7 @@ const SanPham = {
                     [maSP, attr.maThongSo]
                 );
 
-                // ✅ CHỈ thêm attribute nếu có options
+                //  CHỈ thêm attribute nếu có options
                 if (valueRows.length > 0) {
                     attributes.push({
                       ...attr,

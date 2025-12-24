@@ -1,6 +1,6 @@
 // server/models/sanPhamAdmin.model.js
 
-import db from '../config/db.js';
+import db from "../config/db.js";
 
 const SanPhamAdmin = {
   /**
@@ -25,24 +25,24 @@ const SanPhamAdmin = {
 
     // Lọc theo loại sản phẩm
     if (filters.maLoai) {
-      conditions.push('sp.MaLoai = ?');
+      conditions.push("sp.MaLoai = ?");
       params.push(filters.maLoai);
     }
 
     // Lọc theo tình trạng
-    if (filters.tinhTrang !== undefined && filters.tinhTrang !== '') {
-      conditions.push('sp.TinhTrangSanPham = ?');
+    if (filters.tinhTrang !== undefined && filters.tinhTrang !== "") {
+      conditions.push("sp.TinhTrangSanPham = ?");
       params.push(filters.tinhTrang);
     }
 
     // Tìm kiếm theo tên
     if (filters.search) {
-      conditions.push('sp.Ten LIKE ?');
+      conditions.push("sp.Ten LIKE ?");
       params.push(`%${filters.search}%`);
     }
 
     if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
+      query += " WHERE " + conditions.join(" AND ");
     }
 
     query += `
@@ -84,7 +84,7 @@ const SanPhamAdmin = {
 
     return {
       ...product[0],
-      variants: variants || []
+      variants: variants || [],
     };
   },
 
@@ -123,32 +123,51 @@ const SanPhamAdmin = {
     return result.affectedRows;
   },
 
+  // hàm kiểm tra ràng buộc dữ liệu trước khi xóa cứng
+  checkDependencies: async (maSP) => {
+    // kiểm tra xem có Biến thể nào không
+    const [variants] = await db.query(
+      `
+      SELECT COUNT(*) as count FROM BienThe WHERE MaSP = ?
+    `,
+      [maSP]
+    );
+
+    return {
+      variantCount: variants[0].count, // Chỉ trả về số lượng biến thể
+    };
+  },
+
   /**
    * Xóa sản phẩm (hard delete - xóa vĩnh viễn)
    */
   delete: async (maSP) => {
     // 1. Lấy danh sách biến thể
-    const [variants] = await db.query('SELECT MaBienThe FROM BienThe WHERE MaSP = ?', [maSP]);
-    
-    // 2. Xóa GiaTriBienThe của từng biến thể
-    for (const variant of variants) {
-      await db.query('DELETE FROM GiaTriBienThe WHERE MaBienThe = ?', [variant.MaBienThe]);
-    }
-    
-    // 3. Xóa các biến thể
-    await db.query('DELETE FROM BienThe WHERE MaSP = ?', [maSP]);
-    
-    // 4. Xóa thông số sản phẩm
-    await db.query('DELETE FROM GiaTriThongSo WHERE MaSP = ?', [maSP]);
-    
-    // 5. Xóa ảnh sản phẩm
-    await db.query('DELETE FROM AnhSP WHERE MaSP = ?', [maSP]);
-    
-    // 6. Xóa sản phẩm
-    const [result] = await db.query(
-      'DELETE FROM SanPham WHERE MaSP = ?',
+    const [variants] = await db.query(
+      "SELECT MaBienThe FROM BienThe WHERE MaSP = ?",
       [maSP]
     );
+
+    // 2. Xóa GiaTriBienThe của từng biến thể
+    for (const variant of variants) {
+      await db.query("DELETE FROM GiaTriBienThe WHERE MaBienThe = ?", [
+        variant.MaBienThe,
+      ]);
+    }
+
+    // 3. Xóa các biến thể
+    await db.query("DELETE FROM BienThe WHERE MaSP = ?", [maSP]);
+
+    // 4. Xóa thông số sản phẩm (GiaTriThongSo)
+    await db.query("DELETE FROM GiaTriThongSo WHERE MaSP = ?", [maSP]);
+
+    // 5. Xóa ảnh sản phẩm
+    await db.query("DELETE FROM AnhSP WHERE MaSP = ?", [maSP]);
+
+    // 6. Cuối cùng: Xóa sản phẩm
+    const [result] = await db.query("DELETE FROM SanPham WHERE MaSP = ?", [
+      maSP,
+    ]);
 
     return result.affectedRows;
   },
@@ -158,13 +177,12 @@ const SanPhamAdmin = {
    */
   deleteHard: async (maSP) => {
     // Xóa các biến thể trước
-    await db.query('DELETE FROM BienThe WHERE MaSP = ?', [maSP]);
-    
+    await db.query("DELETE FROM BienThe WHERE MaSP = ?", [maSP]);
+
     // Xóa sản phẩm
-    const [result] = await db.query(
-      'DELETE FROM SanPham WHERE MaSP = ?',
-      [maSP]
-    );
+    const [result] = await db.query("DELETE FROM SanPham WHERE MaSP = ?", [
+      maSP,
+    ]);
 
     return result.affectedRows;
   },
@@ -183,7 +201,7 @@ const SanPhamAdmin = {
     );
 
     return result.affectedRows;
-  }
+  },
 };
 
 export default SanPhamAdmin;

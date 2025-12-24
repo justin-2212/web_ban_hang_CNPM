@@ -79,7 +79,7 @@ const ProductsManagement = () => {
         fetchData();
       }
     } catch (err) {
-      alert("Lỗi: " + err.message);
+      alert("Không thể xóa: " + err.message);
     }
   };
 
@@ -147,8 +147,8 @@ const ProductsManagement = () => {
             }
           >
             <option value="">Tất cả trạng thái</option>
-            <option value="1">Đang hoạt động</option>
-            <option value="0">Ngừng hoạt động</option>
+            <option value="1">Đang kinh doanh</option>
+            <option value="0">Ngừng kinh doanh</option>
           </select>
 
           {/* Reset Button */}
@@ -170,60 +170,74 @@ const ProductsManagement = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full text-left border-collapse table-auto">
+              <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Mã SP
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Tên sản phẩm
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Loại
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                    Biến thể
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                    Giá
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                    Tồn kho
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                    Trạng thái
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                    Thao tác
-                  </th>
+                  {/* Mã SP: Rất nhỏ */}
+                  <th className="px-3 py-3 w-12 text-center">Mã</th>
+
+                  {/* Tên SP: Chiếm phần lớn khoảng trống */}
+                  <th className="px-3 py-3">Tên sản phẩm</th>
+
+                  {/* Loại: Giới hạn độ rộng */}
+                  <th className="px-3 py-3 w-28">Loại</th>
+
+                  {/*  Biến thể: Thu gọn text header */}
+                  <th className="px-2 py-3 w-20 text-center">Biến thể</th>
+
+                  {/*  Giá: Căn phải */}
+                  <th className="px-3 py-3 w-32 text-center">Giá</th>
+
+                  {/* Tồn kho */}
+                  <th className="px-2 py-3 w-20 text-center">Tồn kho</th>
+
+                  {/*  Trạng thái */}
+                  <th className="px-2 py-3 w-32 text-center">Trạng thái</th>
+
+                  {/*  Thao tác */}
+                  <th className="px-2 py-3 w-24 text-center">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200">
                 {products.map((product) => (
-                  <tr key={product.MaSP} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {product.MaSP}
+                  <tr key={product.MaSP} className="hover:bg-gray-50 text-sm">
+                    {/* Mã SP */}
+                    <td className="px-3 py-3 text-center font-medium text-gray-900">
+                      #{product.MaSP}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      <div className="max-w-xs">
-                        <p className="font-medium">{product.Ten}</p>
-                        {product.MoTa && (
-                          <p className="text-gray-500 text-xs truncate mt-1">
-                            {product.MoTa}
-                          </p>
-                        )}
+
+                    {/* Tên SP */}
+                    <td className="px-3 py-3">
+                      <div className="max-w-[180px] lg:max-w-xs">
+                        <p
+                          className="font-medium text-gray-900 line-clamp-1"
+                          title={product.Ten}
+                        >
+                          {product.Ten}
+                        </p>
+                        <p className="text-gray-500 text-xs truncate max-w-[180px]">
+                          {product.MoTa}
+                        </p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+
+                    {/* Loại */}
+                    <td
+                      className="px-3 py-3 text-gray-600 truncate max-w-[100px]"
+                      title={product.TenLoai}
+                    >
                       {product.TenLoai}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+
+                    {/* Số lượng biến thể */}
+                    <td className="px-2 py-3 text-center text-gray-900">
                       {product.SoLuongBienThe || 0}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <div className="text-gray-900 font-medium">
+
+                    {/* Giá */}
+                    <td className="px-3 py-3 text-right">
+                      <div className="font-medium text-gray-900">
                         {formatCurrency(product.GiaThapNhat)}
                       </div>
                       {product.GiaCaoNhat &&
@@ -233,9 +247,11 @@ const ProductsManagement = () => {
                           </div>
                         )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
+
+                    {/* Tồn kho */}
+                    <td className="px-2 py-3 text-center">
                       <span
-                        className={`font-medium ${
+                        className={`font-bold ${
                           product.TongTonKho <= 10
                             ? "text-red-600"
                             : "text-green-600"
@@ -244,40 +260,42 @@ const ProductsManagement = () => {
                         {product.TongTonKho || 0}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+
+                    {/* Trạng thái - Dùng Badge nhỏ gọn hơn */}
+                    <td className="px-2 py-3 text-center">
                       <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        className={`px-2 py-1 text-[10px] font-bold rounded-full border ${
                           product.TinhTrangSanPham === 1
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            ? "bg-green-50 text-green-700 border-green-200"
+                            : "bg-red-50 text-red-700 border-red-200"
                         }`}
                       >
-                        {product.TinhTrangSanPham === 1 ? "Hoạt động" : "Ngừng"}
+                        {product.TinhTrangSanPham === 1
+                          ? "Đang kinh doanh"
+                          : "Ngừng kinh doanh"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
-                      <div className="flex items-center justify-center gap-2">
+
+                    {/* Thao tác - Group chặt hơn */}
+                    <td className="px-2 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() =>
                             navigate(`/admin/products/${product.MaSP}`)
                           }
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                          title="Chỉnh sửa chi tiết"
+                          className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition"
+                          title="Sửa"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleToggleStatus(product.MaSP)}
-                          className={`p-1 rounded ${
+                          className={`p-1.5 rounded-md transition ${
                             product.TinhTrangSanPham === 1
-                              ? "text-orange-600 hover:bg-orange-50"
-                              : "text-green-600 hover:bg-green-50"
+                              ? "text-orange-600 hover:bg-orange-100"
+                              : "text-green-600 hover:bg-green-100"
                           }`}
-                          title={
-                            product.TinhTrangSanPham === 1
-                              ? "Vô hiệu hóa"
-                              : "Kích hoạt"
-                          }
+                          title="Đổi trạng thái"
                         >
                           {product.TinhTrangSanPham === 1 ? (
                             <EyeOff className="w-4 h-4" />
@@ -287,7 +305,7 @@ const ProductsManagement = () => {
                         </button>
                         <button
                           onClick={() => handleDelete(product.MaSP)}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded"
+                          className="p-1.5 text-red-600 hover:bg-red-100 rounded-md transition"
                           title="Xóa"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -299,9 +317,11 @@ const ProductsManagement = () => {
               </tbody>
             </table>
 
-            {products.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-gray-500">Không tìm thấy sản phẩm nào</p>
+            {!loading && products.length === 0 && (
+              <div className="text-center py-10">
+                <p className="text-gray-500 text-sm">
+                  Không tìm thấy sản phẩm nào
+                </p>
               </div>
             )}
           </div>

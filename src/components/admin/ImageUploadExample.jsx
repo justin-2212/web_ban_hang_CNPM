@@ -1,5 +1,5 @@
 // src/components/admin/ImageUploadExample.jsx
-// 📚 ĐÂY LÀ FILE EXAMPLE - SỬ DỤNG TRONG ADMIN UPLOAD COMPONENT
+// ĐÂY LÀ FILE EXAMPLE - SỬ DỤNG TRONG ADMIN UPLOAD COMPONENT
 
 import { useState } from 'react';
 import { uploadAPI } from '../../services/api.js';
@@ -41,7 +41,7 @@ export const UploadAnhSanPhamExample = ({ maSP, onUploadSuccess }) => {
       const thuTuHienThi = parseInt(e.target.thuTuHienThi?.value || 0);
       const result = await uploadAPI.uploadAnhSanPham(file, maSP, thuTuHienThi);
 
-      // ✅ Response thành công
+      // Response thành công
       console.log('Upload thành công:', result.data);
       
       // Gọi callback nếu có

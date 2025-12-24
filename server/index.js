@@ -32,6 +32,7 @@ import thongSoBienTheMauRoutes from "./routes/thongSoBienTheMau.routes.js";
 import giaTriBienTheRoutes from "./routes/giaTriBienThe.routes.js";
 import thongSoMauRoutes from "./routes/thongSoMau.routes.js";
 import giaTriThongSoRoutes from "./routes/giaTriThongSo.routes.js";
+import anhSpAdminRoutes from "./routes/anhSpAdmin.routes.js";
 
 // === MIDDLEWARE ===
 import {
@@ -105,6 +106,7 @@ app.use("/api/admin/bien-the", bienTheAdminRoutes);
 app.use("/api/admin/don-hang", donHangAdminRoutes);
 app.use("/api/admin/tai-khoan", taiKhoanAdminRoutes);
 app.use("/api/admin/thong-ke", thongKeAdminRoutes);
+app.use("/api/admin/anh-sp", anhSpAdminRoutes);
 app.use("/api/anh-sp", anhSPRoutes);
 app.use("/api/thong-so-bien-the-mau", thongSoBienTheMauRoutes);
 app.use("/api/gia-tri-bien-the", giaTriBienTheRoutes);
