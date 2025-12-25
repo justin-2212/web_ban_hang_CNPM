@@ -68,12 +68,26 @@ const OrderHistory = () => {
   // =========================
   const getOrderStatusDisplay = (status) => {
     const statusMap = {
-      0: { text: "🕐 Đang xử lý", color: "bg-blue-50 text-blue-700 border-blue-200" },
-      1: { text: "🚚 Đang giao", color: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-      2: { text: "✅ Đã giao", color: "bg-green-50 text-green-700 border-green-200" },
+      0: {
+        text: "🕐 Đang xử lý",
+        color: "bg-blue-50 text-blue-700 border-blue-200",
+      },
+      1: {
+        text: "🚚 Đang giao",
+        color: "bg-yellow-50 text-yellow-700 border-yellow-200",
+      },
+      2: {
+        text: "✅ Giao hàng thành công",
+        color: "bg-green-50 text-green-700 border-green-200",
+      },
       3: { text: "❌ Đã hủy", color: "bg-red-50 text-red-700 border-red-200" },
     };
-    return statusMap[status] || { text: "❓ Không xác định", color: "bg-gray-50 text-gray-700 border-gray-200" };
+    return (
+      statusMap[status] || {
+        text: "❓ Không xác định",
+        color: "bg-gray-50 text-gray-700 border-gray-200",
+      }
+    );
   };
 
   // =========================
@@ -85,7 +99,12 @@ const OrderHistory = () => {
       1: { text: "❌ Thanh toán lỗi", color: "text-red-600" },
       2: { text: "✅ Đã thanh toán", color: "text-green-600" },
     };
-    return paymentMap[status] || { text: "❓ Không xác định", color: "text-gray-600" };
+    return (
+      paymentMap[status] || {
+        text: "❓ Không xác định",
+        color: "text-gray-600",
+      }
+    );
   };
 
   // =========================
@@ -104,7 +123,9 @@ const OrderHistory = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 pt-20">
         <div className="bg-white p-8 rounded-xl shadow text-center max-w-md">
           <ShoppingBag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="mb-4 text-gray-600">Bạn cần đăng nhập để xem lịch sử đơn hàng</p>
+          <p className="mb-4 text-gray-600">
+            Bạn cần đăng nhập để xem lịch sử đơn hàng
+          </p>
           <button
             onClick={() => navigate("/login")}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -133,8 +154,12 @@ const OrderHistory = () => {
 
           <div className="bg-white rounded-xl shadow-sm p-12 text-center">
             <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Chưa có đơn hàng</h2>
-            <p className="text-gray-600 mb-6">Bạn chưa đặt hàng nào. Hãy bắt đầu mua sắm ngay!</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Chưa có đơn hàng
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Bạn chưa đặt hàng nào. Hãy bắt đầu mua sắm ngay!
+            </p>
             <button
               onClick={() => navigate("/products")}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -190,8 +215,12 @@ const OrderHistory = () => {
         {/* Danh sách đơn hàng */}
         <div className="space-y-4">
           {orders.map((order) => {
-            const orderStatusDisplay = getOrderStatusDisplay(order.TinhTrangDonHang);
-            const paymentStatusDisplay = getPaymentStatusDisplay(order.TinhTrangThanhToan);
+            const orderStatusDisplay = getOrderStatusDisplay(
+              order.TinhTrangDonHang
+            );
+            const paymentStatusDisplay = getPaymentStatusDisplay(
+              order.TinhTrangThanhToan
+            );
 
             return (
               <div
@@ -236,7 +265,9 @@ const OrderHistory = () => {
                   {/* Thanh toán */}
                   <div>
                     <p className="text-sm text-gray-500">Thanh toán</p>
-                    <p className={`text-sm font-semibold ${paymentStatusDisplay.color}`}>
+                    <p
+                      className={`text-sm font-semibold ${paymentStatusDisplay.color}`}
+                    >
                       {paymentStatusDisplay.text}
                     </p>
                   </div>
@@ -263,7 +294,9 @@ const OrderHistory = () => {
             <div className="text-center">
               <TrendingUp className="w-6 h-6 text-blue-600 mx-auto mb-2" />
               <p className="text-sm text-gray-500">Tổng đơn hàng</p>
-              <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {orders.length}
+              </p>
             </div>
 
             <div className="text-center">

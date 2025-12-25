@@ -10,7 +10,7 @@ const OrderDetail = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  // ✅ NEW: State cho hủy đơn hàng
+  //  NEW: State cho hủy đơn hàng
   const [cancelling, setCancelling] = useState(false);
   const [canCancelTime, setCanCancelTime] = useState(null);
 
@@ -57,7 +57,7 @@ const OrderDetail = () => {
           setOrder(res.data);
           setError("");
 
-          // ✅ NEW: Tính thời gian còn lại để hủy (5 phút)
+          // Tính thời gian còn lại để hủy (5 phút)
           const createdTime = new Date(res.data.NgayDat).getTime();
           const currentTime = new Date().getTime();
           const diffSeconds = Math.floor((currentTime - createdTime) / 1000);
@@ -78,7 +78,7 @@ const OrderDetail = () => {
     fetchOrderDetail();
   }, [maDonHang]);
 
-  // ✅ NEW: Countdown timer cho hủy đơn
+  // Countdown timer cho hủy đơn
   useEffect(() => {
     if (canCancelTime === null || canCancelTime <= 0) return;
 
@@ -102,7 +102,7 @@ const OrderDetail = () => {
     const statusMap = {
       0: { text: "🕐 Đang xử lý", color: "bg-blue-50 text-blue-700 border-blue-200" },
       1: { text: "🚚 Đang giao", color: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-      2: { text: "✅ Đã giao", color: "bg-green-50 text-green-700 border-green-200" },
+      2: { text: "✅ Giao hàng thành công", color: "bg-green-50 text-green-700 border-green-200" },
       3: { text: "❌ Đã hủy", color: "bg-red-50 text-red-700 border-red-200" },
     };
     return statusMap[status] || { text: "❓ Không xác định", color: "bg-gray-50 text-gray-700 border-gray-200" };

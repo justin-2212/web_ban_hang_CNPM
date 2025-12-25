@@ -205,15 +205,15 @@ const VariantModal = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* 1. Backdrop */}
+      {/*. Backdrop */}
       <div
         className="absolute inset-0 bg-transparent transition-opacity"
         onClick={onClose}
       ></div>
 
-      {/* 2. Container chính định vị bên phải */}
+      {/* Container chính định vị bên phải */}
       <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex">
-        {/* 3. Panel Drawer - Tăng max-w lên 3xl cho variant vì nhiều field */}
+        {/*  Panel Drawer - Tăng max-w lên 3xl cho variant vì nhiều field */}
         <div className="w-screen max-w-3xl transform transition ease-in-out duration-500 translate-x-0 bg-white shadow-2xl flex flex-col h-full border-l border-gray-200">
           {/* Header */}
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
