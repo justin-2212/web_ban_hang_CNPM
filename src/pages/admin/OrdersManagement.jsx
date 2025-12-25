@@ -1,20 +1,21 @@
 // src/pages/admin/OrdersManagement.jsx
 
-import { useEffect, useState } from 'react';
-import { donHangAdminAPI } from '../../services/adminAPI';
-import { Search, Eye, X } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { donHangServiceAdmin } from "../../services/donHangServiceAdmin";
+import { Search, Eye, X } from "lucide-react";
+import OrderDetailDrawer from "../../components/admin/OrderDetailDrawer";
 
 const ORDER_STATUS = {
-  0: { label: 'Đang xử lý', color: 'bg-yellow-100 text-yellow-800' },
-  1: { label: 'Đang giao', color: 'bg-blue-100 text-blue-800' },
-  2: { label: 'Đã giao', color: 'bg-green-100 text-green-800' },
-  3: { label: 'Đã hủy', color: 'bg-red-100 text-red-800' }
+  0: { label: "Đang xử lý", color: "bg-yellow-100 text-yellow-800" },
+  1: { label: "Đang giao", color: "bg-blue-100 text-blue-800" },
+  2: { label: "Giao hàng thành công", color: "bg-green-100 text-green-800" },
+  3: { label: "Đã hủy", color: "bg-red-100 text-red-800" },
 };
 
 const PAYMENT_STATUS = {
-  0: { label: 'Chưa thanh toán', color: 'bg-gray-100 text-gray-800' },
-  1: { label: 'Thanh toán bị lỗi', color: 'bg-red-100 text-red-800' },
-  2: { label: 'Đã thanh toán', color: 'bg-green-100 text-green-800' }
+  0: { label: "Chưa thanh toán", color: "bg-gray-100 text-gray-800" },
+  1: { label: "Thanh toán bị lỗi", color: "bg-red-100 text-red-800" },
+  2: { label: "Đã thanh toán", color: "bg-green-100 text-green-800" },
 };
 
 const OrdersManagement = () => {
@@ -23,10 +24,10 @@ const OrdersManagement = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [filters, setFilters] = useState({
-    search: '',
-    tinhTrangDonHang: '',
-    tinhTrangThanhToan: '',
-    phuongThucThanhToan: ''
+    search: "",
+    tinhTrangDonHang: "",
+    tinhTrangThanhToan: "",
+    phuongThucThanhToan: "",
   });
 
   useEffect(() => {
@@ -36,12 +37,12 @@ const OrdersManagement = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await donHangAdminAPI.getAll(filters);
+      const response = await donHangServiceAdmin.getAll(filters);
       if (response.success) {
         setOrders(response.data);
       }
     } catch (err) {
-      console.error('Error fetching orders:', err);
+      console.error("Error fetching orders:", err);
     } finally {
       setLoading(false);
     }
@@ -49,76 +50,98 @@ const OrdersManagement = () => {
 
   const handleViewDetail = async (orderId) => {
     try {
-      const response = await donHangAdminAPI.getById(orderId);
+      const response = await donHangServiceAdmin.getById(orderId);
       if (response.success) {
         setSelectedOrder(response.data);
         setShowDetail(true);
       }
     } catch (err) {
-      alert('Lỗi: ' + err.message);
+      alert("Lỗi: " + err.message);
     }
   };
 
   const handleUpdateStatus = async (orderId, newStatus) => {
-    if (!confirm('Bạn có chắc muốn cập nhật trạng thái đơn hàng?')) return;
+    const confirmMsg =
+      newStatus === 2
+        ? "Xác nhận GIAO HÀNG THÀNH CÔNG?\n\nLưu ý: Hệ thống sẽ tự động cập nhật 'Đã thanh toán'. Bạn sẽ KHÔNG thể thay đổi trạng thái đơn hàng này nữa!"
+        : "Bạn có chắc muốn cập nhật trạng thái đơn hàng?";
+    if (!confirm(confirmMsg)) return;
 
     try {
-      const response = await donHangAdminAPI.updateStatus(orderId, newStatus);
+      const response = await donHangServiceAdmin.updateStatus(
+        orderId,
+        newStatus
+      );
       if (response.success) {
-        alert('Cập nhật trạng thái thành công');
-        fetchOrders();
-        if (selectedOrder && selectedOrder.MaDonHang === orderId) {
-          setShowDetail(false);
-        }
-      }
-    } catch (err) {
-      alert('Lỗi: ' + err.message);
-    }
-  };
-
-  const handleUpdatePaymentStatus = async (orderId, newStatus) => {
-    if (!confirm('Bạn có chắc muốn cập nhật trạng thái thanh toán?')) return;
-
-    try {
-      const response = await donHangAdminAPI.updatePaymentStatus(orderId, newStatus);
-      if (response.success) {
-        alert('Cập nhật trạng thái thanh toán thành công');
-        fetchOrders();
-        if (selectedOrder && selectedOrder.MaDonHang === orderId) {
-          setShowDetail(false);
-        }
-      }
-    } catch (err) {
-      alert('Lỗi: ' + err.message);
-    }
-  };
-
-  const handleCancelOrder = async (orderId) => {
-    const reason = prompt('Nhập lý do hủy đơn hàng:');
-    if (!reason) return;
-
-    try {
-      const response = await donHangAdminAPI.cancel(orderId, reason);
-      if (response.success) {
-        alert('Hủy đơn hàng thành công');
+        alert("Cập nhật trạng thái thành công");
         fetchOrders();
         setShowDetail(false);
       }
     } catch (err) {
-      alert('Lỗi: ' + err.message);
+      alert("Lỗi: " + err.message);
+    }
+  };
+
+  const handleUpdatePaymentStatus = async (orderId, newStatus) => {
+    if (!confirm("Bạn có chắc muốn cập nhật trạng thái thanh toán?")) return;
+
+    try {
+      const response = await donHangServiceAdmin.updatePaymentStatus(
+        orderId,
+        newStatus
+      );
+      if (response.success) {
+        alert("Cập nhật trạng thái thanh toán thành công");
+        fetchOrders();
+        if (selectedOrder && selectedOrder.MaDonHang === orderId) {
+          setShowDetail(false);
+        }
+      }
+    } catch (err) {
+      alert("Lỗi: " + err.message);
+    }
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    // 1. Hiển thị cảnh báo xác nhận (Giống style Giao hàng thành công)
+    if (
+      !confirm(
+        "Xác nhận HỦY ĐƠN HÀNG?\n\nLưu ý: Hành động này không thể hoàn tác. Đơn hàng sẽ chuyển sang trạng thái 'Đã hủy' và số lượng tồn kho sẽ được hoàn lại."
+      )
+    )
+      return;
+
+    try {
+      // 2. Gọi API hủy
+      const response = await donHangServiceAdmin.cancel(
+        orderId,
+        "Admin hủy trực tiếp"
+      );
+
+      if (response.success) {
+        alert("Hủy đơn hàng thành công");
+        fetchOrders();
+        setShowDetail(false); // Đóng modal
+      }
+    } catch (err) {
+      alert("Lỗi: " + err.message);
     }
   };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(value || 0);
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('vi-VN');
+    return new Date(dateString).toLocaleString("vi-VN");
   };
+
+  // Biến kiểm tra xem đơn hàng đã "chốt sổ" chưa (Thành công hoặc Hủy)
+  const isOrderFinalized =
+    selectedOrder && [2, 3].includes(selectedOrder.TinhTrangDonHang);
 
   return (
     <div className="p-6 space-y-6">
@@ -138,26 +161,32 @@ const OrdersManagement = () => {
               placeholder="Tìm kiếm..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, search: e.target.value })
+              }
             />
           </div>
 
           <select
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             value={filters.tinhTrangDonHang}
-            onChange={(e) => setFilters({ ...filters, tinhTrangDonHang: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, tinhTrangDonHang: e.target.value })
+            }
           >
             <option value="">Tất cả trạng thái</option>
             <option value="0">Đang xử lý</option>
             <option value="1">Đang giao</option>
-            <option value="2">Đã giao</option>
+            <option value="2">Giao hàng thành công</option>
             <option value="3">Đã hủy</option>
           </select>
 
           <select
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             value={filters.tinhTrangThanhToan}
-            onChange={(e) => setFilters({ ...filters, tinhTrangThanhToan: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, tinhTrangThanhToan: e.target.value })
+            }
           >
             <option value="">Tất cả thanh toán</option>
             <option value="0">Chưa thanh toán</option>
@@ -168,7 +197,9 @@ const OrdersManagement = () => {
           <select
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             value={filters.phuongThucThanhToan}
-            onChange={(e) => setFilters({ ...filters, phuongThucThanhToan: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, phuongThucThanhToan: e.target.value })
+            }
           >
             <option value="">Tất cả phương thức</option>
             <option value="COD">COD</option>
@@ -179,10 +210,10 @@ const OrdersManagement = () => {
             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             onClick={() =>
               setFilters({
-                search: '',
-                tinhTrangDonHang: '',
-                tinhTrangThanhToan: '',
-                phuongThucThanhToan: ''
+                search: "",
+                tinhTrangDonHang: "",
+                tinhTrangThanhToan: "",
+                phuongThucThanhToan: "",
               })
             }
           >
@@ -236,7 +267,9 @@ const OrdersManagement = () => {
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <div>
-                        <p className="font-medium text-gray-900">{order.TenDayDu}</p>
+                        <p className="font-medium text-gray-900">
+                          {order.TenDayDu}
+                        </p>
                         <p className="text-gray-500 text-xs">{order.Gmail}</p>
                       </div>
                     </td>
@@ -293,117 +326,15 @@ const OrdersManagement = () => {
       </div>
 
       {/* Order Detail Modal */}
-      {showDetail && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900">
-                Chi tiết đơn hàng #{selectedOrder.MaDonHang}
-              </h2>
-              <button
-                onClick={() => setShowDetail(false)}
-                className="p-2 hover:bg-gray-100 rounded-full"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Customer Info */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Thông tin khách hàng</h3>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                  <p className="text-sm"><span className="font-medium">Tên:</span> {selectedOrder.TenDayDu}</p>
-                  <p className="text-sm"><span className="font-medium">Email:</span> {selectedOrder.Gmail}</p>
-                  <p className="text-sm"><span className="font-medium">SĐT:</span> {selectedOrder.SoDienThoai || 'Chưa có'}</p>
-                  <p className="text-sm"><span className="font-medium">Địa chỉ:</span> {selectedOrder.DiaChi || 'Chưa có'}</p>
-                </div>
-              </div>
-
-              {/* Order Items */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Sản phẩm</h3>
-                <div className="space-y-2">
-                  {selectedOrder.chiTiet?.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        {item.DuongDanAnhBienThe && (
-                          <img
-                            src={item.DuongDanAnhBienThe}
-                            alt={item.TenBienThe}
-                            className="w-12 h-12 object-cover rounded"
-                          />
-                        )}
-                        <div>
-                          <p className="font-medium text-sm">{item.TenBienThe}</p>
-                          <p className="text-xs text-gray-500">Số lượng: {item.SoLuongSanPham}</p>
-                        </div>
-                      </div>
-                      <p className="font-semibold">{formatCurrency(item.GiaTienCuaSanPham)}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Total */}
-              <div className="border-t pt-4">
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Tổng cộng:</span>
-                  <span className="text-green-600">{formatCurrency(selectedOrder.TongTien)}</span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="space-y-3">
-                {/* Status Changer - Admin có thể chuyển sang bất kỳ trạng thái nào */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Thay đổi trạng thái đơn hàng
-                  </label>
-                  <select
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    value={selectedOrder.TinhTrangDonHang}
-                    onChange={(e) => handleUpdateStatus(selectedOrder.MaDonHang, parseInt(e.target.value))}
-                  >
-                    <option value={0}>Đang xử lý</option>
-                    <option value={1}>Đang giao</option>
-                    <option value={2}>Đã giao</option>
-                    <option value={3}>Đã hủy</option>
-                  </select>
-                </div>
-
-                {/* Payment Status Changer - Chỉ cho COD */}
-                {selectedOrder.PhuongThucThanhToan === 'COD' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Thay đổi trạng thái thanh toán
-                    </label>
-                    <select
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      value={selectedOrder.TinhTrangThanhToan}
-                      onChange={(e) => handleUpdatePaymentStatus(selectedOrder.MaDonHang, parseInt(e.target.value))}
-                    >
-                      <option value={0}>Chưa thanh toán</option>
-                      <option value={1}>Thanh toán bị lỗi</option>
-                      <option value={2}>Đã thanh toán</option>
-                    </select>
-                  </div>
-                )}
-
-                {/* Cancel Order Button */}
-                {[0, 1].includes(selectedOrder.TinhTrangDonHang) && (
-                  <button
-                    onClick={() => handleCancelOrder(selectedOrder.MaDonHang)}
-                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                  >
-                    Hủy đơn hàng
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* [NEW] Thay thế Modal cũ bằng Drawer Component */}
+      <OrderDetailDrawer
+        isOpen={showDetail}
+        onClose={() => setShowDetail(false)}
+        order={selectedOrder}
+        onUpdateStatus={handleUpdateStatus}
+        onUpdatePayment={handleUpdatePaymentStatus}
+        onCancel={handleCancelOrder}
+      />
     </div>
   );
 };

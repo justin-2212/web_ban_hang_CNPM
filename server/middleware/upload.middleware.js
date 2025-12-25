@@ -3,10 +3,10 @@
 import multer from 'multer';
 import { uploadToCloudinary } from '../config/cloudinary.js';
 
-// ✅ Cấu hình storage memory (không lưu file vào disk, upload trực tiếp lên Cloudinary)
+//  Cấu hình storage memory (không lưu file vào disk, upload trực tiếp lên Cloudinary)
 const storage = multer.memoryStorage();
 
-// ✅ Filter file (chỉ nhận ảnh)
+//  Filter file (chỉ nhận ảnh)
 const fileFilter = (req, file, cb) => {
   const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
   

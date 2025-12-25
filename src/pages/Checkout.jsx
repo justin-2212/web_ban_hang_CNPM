@@ -16,7 +16,7 @@ const Checkout = () => {
   const [error, setError] = useState("");
   const [phuongThucThanhToan, setPhuongThucThanhToan] = useState("COD");
 
-  // ✅ NEW: State cho confirmation modal
+  // State cho confirmation modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -41,7 +41,7 @@ const Checkout = () => {
       const items = res.data?.items || [];
       setCartItems(items);
 
-      // ✅ NEW: Lấy danh sách sản phẩm được chọn từ query param hoặc chọn tất cả
+      //  Lấy danh sách sản phẩm được chọn từ query param hoặc chọn tất cả
       const selectedParam = searchParams.get("selected");
       if (selectedParam) {
         try {
@@ -155,7 +155,7 @@ const Checkout = () => {
     }
   };
 
-  // ✅ NEW: Nút xác nhận thanh toán (mở modal thay vì xử lý trực tiếp)
+  // : Nút xác nhận thanh toán (mở modal thay vì xử lý trực tiếp)
   const handleCheckoutClick = () => {
     if (selectedItems.length === 0) {
       alert("Vui lòng chọn ít nhất 1 sản phẩm");
@@ -196,7 +196,7 @@ const Checkout = () => {
   // =========================
   return (
     <div className="bg-gray-50 min-h-screen pt-24 pb-20">
-      {/* ✅ NEW: Confirmation Modal */}
+      {/*  Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
@@ -243,7 +243,7 @@ const Checkout = () => {
             {/* Warning Message */}
             <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800">
-                ⚠️ Vui lòng kiểm tra lại thông tin trước khi xác nhận
+                 Vui lòng kiểm tra lại thông tin trước khi xác nhận
               </p>
             </div>
 
@@ -416,7 +416,7 @@ const Checkout = () => {
               </label>
             </div>
 
-            {/* ✅ NEW: Nút xác nhận (mở modal thay vì xử lý trực tiếp) */}
+            {/* Nút xác nhận (mở modal thay vì xử lý trực tiếp) */}
             <button
               onClick={handleCheckoutClick}
               disabled={selectedItems.length === 0}

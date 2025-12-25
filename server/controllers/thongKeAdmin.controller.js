@@ -1,9 +1,9 @@
 // server/controllers/thongKeAdmin.controller.js
 
-import DonHang from '../models/donHang.model.js';
-import TaiKhoanAdmin from '../models/taiKhoanAdmin.model.js';
-import BienTheAdmin from '../models/bienTheAdmin.model.js';
-import db from '../config/db.js';
+import DonHangAdmin from "../models/donHangAdmin.model.js";
+import TaiKhoanAdmin from "../models/taiKhoanAdmin.model.js";
+import BienTheAdmin from "../models/bienTheAdmin.model.js";
+import db from "../config/db.js";
 
 /**
  * Dashboard tổng quan
@@ -11,19 +11,18 @@ import db from '../config/db.js';
 export const getDashboardStats = async (req, res, next) => {
   try {
     // Lấy thống kê đơn hàng
-    const orderStats = await DonHang.getOrderStats();
-
+    const orderStats = await DonHangAdmin.getOrderStats();
     // Lấy thống kê người dùng
     const userStats = await TaiKhoanAdmin.getUserStats();
 
     // Lấy biến thể tồn kho thấp
-    const lowStock = await BienTheAdmin.getLowStock(10);
+    const lowStock = await BienTheAdmin.getLowStock(5);
 
     // Lấy top sản phẩm bán chạy
-    const topProducts = await DonHang.getTopSellingProducts(5);
+    const topProducts = await DonHangAdmin.getTopSellingProducts(5);
 
     // Thống kê hôm nay
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     const [todayStats] = await db.query(
       `
       SELECT 
@@ -57,6 +56,17 @@ export const getDashboardStats = async (req, res, next) => {
       `
     );
 
+    //  Thêm thống kê NĂM NAY
+    const [yearStats] = await db.query(
+      `
+      SELECT 
+        COUNT(*) as DonHangNamNay,
+        SUM(TongTien) as DoanhThuNamNay
+      FROM DonHang
+      WHERE YEAR(NgayDat) = YEAR(CURDATE())
+      `
+    );
+
     res.json({
       success: true,
       data: {
@@ -66,8 +76,9 @@ export const getDashboardStats = async (req, res, next) => {
         topSanPham: topProducts,
         homNay: todayStats[0],
         tuanNay: weekStats[0],
-        thangNay: monthStats[0]
-      }
+        thangNay: monthStats[0],
+        namNay: yearStats[0],
+      },
     });
   } catch (error) {
     next(error);
@@ -79,26 +90,26 @@ export const getDashboardStats = async (req, res, next) => {
  */
 export const getRevenueByPeriod = async (req, res, next) => {
   try {
-    const { fromDate, toDate, groupBy = 'day' } = req.query;
+    const { fromDate, toDate, groupBy = "day" } = req.query;
 
     if (!fromDate || !toDate) {
       return res.status(400).json({
         success: false,
-        message: 'Vui lòng cung cấp fromDate và toDate'
+        message: "Vui lòng cung cấp fromDate và toDate",
       });
     }
 
     let dateFormat;
     switch (groupBy) {
-      case 'month':
-        dateFormat = '%Y-%m';
+      case "month":
+        dateFormat = "%Y-%m";
         break;
-      case 'year':
-        dateFormat = '%Y';
+      case "year":
+        dateFormat = "%Y";
         break;
-      case 'day':
+      case "day":
       default:
-        dateFormat = '%Y-%m-%d';
+        dateFormat = "%Y-%m-%d";
     }
 
     const [rows] = await db.query(
@@ -120,7 +131,7 @@ export const getRevenueByPeriod = async (req, res, next) => {
 
     res.json({
       success: true,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     next(error);
@@ -161,8 +172,8 @@ export const getProductStats = async (req, res, next) => {
       success: true,
       data: {
         tongQuan: productCount[0],
-        theoLoai: categoryStats
-      }
+        theoLoai: categoryStats,
+      },
     });
   } catch (error) {
     next(error);
@@ -201,8 +212,8 @@ export const getCustomerStats = async (req, res, next) => {
       success: true,
       data: {
         topKhachHang: topCustomers,
-        khachHangMoi30Ngay: newCustomers[0].SoLuong
-      }
+        khachHangMoi30Ngay: newCustomers[0].SoLuong,
+      },
     });
   } catch (error) {
     next(error);
@@ -214,23 +225,24 @@ export const getCustomerStats = async (req, res, next) => {
  */
 export const compareRevenue = async (req, res, next) => {
   try {
-    const { period = 'month' } = req.query; // month, quarter, year
+    const { period = "month" } = req.query; // month, quarter, year
 
     let currentPeriod, previousPeriod;
 
     switch (period) {
-      case 'quarter':
-        currentPeriod = 'QUARTER(CURDATE())';
-        previousPeriod = 'QUARTER(DATE_SUB(CURDATE(), INTERVAL 3 MONTH))';
+      case "quarter":
+        currentPeriod = "QUARTER(CURDATE())";
+        previousPeriod = "QUARTER(DATE_SUB(CURDATE(), INTERVAL 3 MONTH))";
         break;
-      case 'year':
-        currentPeriod = 'YEAR(CURDATE())';
-        previousPeriod = 'YEAR(DATE_SUB(CURDATE(), INTERVAL 1 YEAR))';
+      case "year":
+        currentPeriod = "YEAR(CURDATE())";
+        previousPeriod = "YEAR(DATE_SUB(CURDATE(), INTERVAL 1 YEAR))";
         break;
-      case 'month':
+      case "month":
       default:
-        currentPeriod = 'YEAR(CURDATE()) * 100 + MONTH(CURDATE())';
-        previousPeriod = 'YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) * 100 + MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))';
+        currentPeriod = "YEAR(CURDATE()) * 100 + MONTH(CURDATE())";
+        previousPeriod =
+          "YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) * 100 + MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))";
     }
 
     const [comparison] = await db.query(`
@@ -245,14 +257,15 @@ export const compareRevenue = async (req, res, next) => {
 
     const current = comparison[0].KyHienTai || 0;
     const previous = comparison[0].KyTruoc || 0;
-    const growth = previous > 0 ? ((current - previous) / previous * 100).toFixed(2) : 0;
+    const growth =
+      previous > 0 ? (((current - previous) / previous) * 100).toFixed(2) : 0;
 
     res.json({
       success: true,
       data: {
         ...comparison[0],
-        TyLeThayDoi: growth
-      }
+        TyLeThayDoi: growth,
+      },
     });
   } catch (error) {
     next(error);
