@@ -55,6 +55,11 @@ const Profile = () => {
   };
   // --- HÀM THOÁT (QUAY VỀ TRANG CHỦ) ---
   const handleExit = () => {
+    // Kiểm tra xem khách hàng đã nhập đầy đủ số điện thoại và địa chỉ chưa
+    if (!formData.soDienThoai || !formData.diaChi) {
+      alert("Vui lòng cập nhật đầy đủ thông tin số điện thoại và địa chỉ trước khi tiếp tục.");
+      return; // Không cho quay lại
+    }
     // Thêm state: { fromAdmin: true } để AuthRedirect biết là bạn chủ động muốn ra trang bán hàng
     // Nếu không có dòng này, Admin bấm vào sẽ bị đá ngược lại trang AdminDashboard
     navigate("/");

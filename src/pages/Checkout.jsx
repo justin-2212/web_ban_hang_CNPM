@@ -90,6 +90,17 @@ const Checkout = () => {
       return;
     }
 
+    // KIỂM TRA: Khách hàng phải nhập đầy đủ thông tin giao hàng
+    if (!dbUser.SoDienThoai || !dbUser.DiaChi) {
+      setError("Vui lòng cập nhật đầy đủ thông tin số điện thoại và địa chỉ trong hồ sơ trước khi thanh toán.");
+      setShowConfirmModal(false);
+      // Điều hướng người dùng về trang Profile
+      setTimeout(() => {
+        navigate("/profile");
+      }, 1500);
+      return;
+    }
+
     if (selectedItems.length === 0) {
       alert("Vui lòng chọn ít nhất 1 sản phẩm");
       return;
