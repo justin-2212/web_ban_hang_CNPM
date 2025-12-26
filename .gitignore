@@ -26,6 +26,3 @@ dist-ssr
 # .env
 .env
 .env.local
-
-# databases
-db/11_tao_database.sql
