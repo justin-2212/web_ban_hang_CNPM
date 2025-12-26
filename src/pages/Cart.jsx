@@ -69,6 +69,12 @@ const Cart = () => {
     const item = cart.find((i) => i.MaBienThe === maBienThe);
     if (!item) return;
 
+    // ✅ Kiểm tra không vượt quá tồn kho
+    if (item.SoLuong >= item.SoLuongTonKho) {
+      alert(`Chỉ còn ${item.SoLuongTonKho} sản phẩm trong kho`);
+      return;
+    }
+
     try {
       await gioHangAPI.updateQuantity(
         dbUser.MaTaiKhoan,
@@ -76,8 +82,8 @@ const Cart = () => {
         item.SoLuong + 1
       );
       await refreshCart();
-    } catch {
-      alert("Không thể cập nhật số lượng");
+    } catch (err) {
+      alert(err.message || "Không thể cập nhật số lượng");
     }
   };
 

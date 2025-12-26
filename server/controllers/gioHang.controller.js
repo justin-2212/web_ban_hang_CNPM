@@ -53,7 +53,14 @@ class GioHangController {
 
       console.log('📦 Adding to cart:', { maTaiKhoan, maBienThe, soLuong });
 
-      // Kiểm tra tồn kho
+      // ✅ Kiểm tra số lượng phải > 0
+      if (!soLuong || soLuong <= 0) {
+        return res
+          .status(400)
+          .json({ success: false, message: 'Số lượng phải lớn hơn 0' });
+      }
+
+      // Kiểm tra tồn kho của biến thể
       const [variants] = await db.query(
         'SELECT SoLuongTonKho FROM BienThe WHERE MaBienThe = ?',
         [maBienThe]
@@ -65,30 +72,44 @@ class GioHangController {
           .json({ success: false, message: 'Sản phẩm không tồn tại' });
       }
 
-      if (variants[0].SoLuongTonKho < soLuong) {
-        return res
-          .status(400)
-          .json({ success: false, message: 'Không đủ hàng trong kho' });
-      }
+      const tonKho = variants[0].SoLuongTonKho;
 
       // Kiểm tra đã có trong giỏ chưa
       const [existing] = await db.query(
-        'SELECT * FROM GioHangChiTiet WHERE MaTaiKhoan = ? AND MaBienThe = ?',
+        'SELECT SoLuong FROM GioHangChiTiet WHERE MaTaiKhoan = ? AND MaBienThe = ?',
         [maTaiKhoan, maBienThe]
       );
 
       if (existing.length > 0) {
+        // ✅ Nếu đã tồn tại → kiểm tra tổng số lượng có vượt quá tồn kho
+        const newQuantity = existing[0].SoLuong + soLuong;
+
+        if (newQuantity > tonKho) {
+          return res.status(400).json({
+            success: false,
+            message: `Chỉ còn ${tonKho} sản phẩm trong kho (hiện đang có ${existing[0].SoLuong} trong giỏ)`,
+          });
+        }
+
         await db.query(
           'UPDATE GioHangChiTiet SET SoLuong = SoLuong + ? WHERE MaTaiKhoan = ? AND MaBienThe = ?',
           [soLuong, maTaiKhoan, maBienThe]
         );
-        // console.log('✅ Updated quantity');
+        console.log('✅ Updated quantity in cart');
       } else {
+        // ✅ Nếu chưa tồn tại → kiểm tra số lượng có vượt quá tồn kho
+        if (soLuong > tonKho) {
+          return res.status(400).json({
+            success: false,
+            message: `Chỉ còn ${tonKho} sản phẩm trong kho`,
+          });
+        }
+
         await db.query(
-          'INSERT INTO GioHangChiTiet (MaTaiKhoan, MaBienThe, SoLuong) VALUES (?, ?, ?)',
+          'INSERT INTO GioHangChiTiet (MaTaiKhoan, MaBienThe, SoLuong, ThoiGianThem) VALUES (?, ?, ?, NOW())',
           [maTaiKhoan, maBienThe, soLuong]
         );
-        // console.log('✅ Added new item');
+        console.log('✅ Added new item to cart');
       }
 
       res.json({ success: true, message: 'Đã thêm vào giỏ hàng' });
@@ -104,16 +125,42 @@ class GioHangController {
     try {
       const { maTaiKhoan, maBienThe, soLuong } = req.body;
 
+      // ✅ Kiểm tra số lượng > 0
       if (soLuong <= 0) {
         return res
           .status(400)
           .json({ success: false, message: 'Số lượng phải lớn hơn 0' });
       }
 
-      await db.query(
+      // ✅ Kiểm tra tồn kho trước khi cập nhật
+      const [variants] = await db.query(
+        'SELECT SoLuongTonKho FROM BienThe WHERE MaBienThe = ?',
+        [maBienThe]
+      );
+
+      if (variants.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: 'Sản phẩm không tồn tại' });
+      }
+
+      if (soLuong > variants[0].SoLuongTonKho) {
+        return res.status(400).json({
+          success: false,
+          message: `Chỉ còn ${variants[0].SoLuongTonKho} sản phẩm trong kho`,
+        });
+      }
+
+      const [result] = await db.query(
         'UPDATE GioHangChiTiet SET SoLuong = ? WHERE MaTaiKhoan = ? AND MaBienThe = ?',
         [soLuong, maTaiKhoan, maBienThe]
       );
+
+      if (result.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: 'Không tìm thấy sản phẩm trong giỏ' });
+      }
 
       res.json({ success: true, message: 'Đã cập nhật số lượng' });
     } catch (error) {
