@@ -78,7 +78,6 @@ npm run dev:fullstack
 - Không commit file `.env` lên git
 - Đổi secret key, access key khi deploy thật
 - Đảm bảo backend bật CORS cho frontend
-- Đọc kỹ các file hướng dẫn: `MIGRATION_GUIDE.md`
 
 ## 📚 Tài liệu tham khảo
 
