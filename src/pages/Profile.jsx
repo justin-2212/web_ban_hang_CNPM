@@ -69,13 +69,18 @@ const Profile = () => {
 
     // Validate cả 2 trường
     const phoneValidation = validatePhoneNumber(formData.soDienThoai);
+    // Regex kiểm tra địa chỉ: bắt đầu bằng số, tên đường, phường/xã, và kết thúc bằng tên tỉnh/thành phố bất kỳ
+    const addressRegex = /^\d+\s+.+(phường|xã|thị trấn)\s+.+[A-Za-zÀ-ỹ\s]+$/i;
     const addressValidation = validateAddress(formData.diaChi);
 
     const newErrors = {};
     if (!phoneValidation.isValid) {
       newErrors.soDienThoai = phoneValidation.message;
     }
-    if (!addressValidation.isValid) {
+    // Kiểm tra định dạng địa chỉ
+    if (!formData.diaChi || !addressRegex.test(formData.diaChi.trim())) {
+      newErrors.diaChi = "Địa chỉ phải theo mẫu: 55 Tây Lân, phường Bình Tân, Tên tỉnh/thành phố";
+    } else if (!addressValidation.isValid) {
       newErrors.diaChi = addressValidation.message;
     }
 
@@ -176,7 +181,7 @@ const Profile = () => {
             {/* Input Địa chỉ */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Địa chỉ nhận hàng <span className="text-red-500">*</span>
+                Địa chỉ nhận hàng (vd: 55 Tây Lân, phường Bình Tân, TPHCM)<span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
