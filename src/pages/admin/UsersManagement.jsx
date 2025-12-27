@@ -11,6 +11,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import UserDetailDrawer from "../../components/admin/UserDetailDrawer";
 
 const ROLES = {
   0: { label: "Admin", color: "bg-red-100 text-red-800" },
@@ -87,7 +88,7 @@ const UsersManagement = () => {
         const successMessage =
           newRole === 0
             ? "Đã thăng cấp Admin thành công!"
-            : "Đã hạ quyền thành người dùng thành công!"; 
+            : "Đã hạ quyền thành người dùng thành công!";
 
         alert(successMessage);
 
@@ -134,7 +135,7 @@ const UsersManagement = () => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Quản lý Người dùng</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Quản lý Tài khoản</h1>
         <p className="text-gray-600 mt-1">
           Quản lý tài khoản và quyền truy cập
         </p>
@@ -331,134 +332,13 @@ const UsersManagement = () => {
       </div>
 
       {/* User Detail Modal */}
-      {showDetail && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900">
-                Chi tiết người dùng #{selectedUser.MaTaiKhoan}
-              </h2>
-              <button
-                onClick={() => setShowDetail(false)}
-                className="p-2 hover:bg-gray-100 rounded-full"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* User Info */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">
-                  Thông tin cá nhân
-                </h3>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                  <p className="text-sm">
-                    <span className="font-medium">Tên:</span>{" "}
-                    {selectedUser.TenDayDu || "N/A"}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-medium">Email:</span>{" "}
-                    {selectedUser.Gmail}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-medium">SĐT:</span>{" "}
-                    {selectedUser.SoDienThoai || "Chưa có"}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-medium">Địa chỉ:</span>{" "}
-                    {selectedUser.DiaChi || "Chưa có"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Orders History */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">
-                  Lịch sử đơn hàng ({selectedUser.orders?.length || 0})
-                </h3>
-                {selectedUser.orders && selectedUser.orders.length > 0 ? (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {selectedUser.orders.map((order) => (
-                      <div
-                        key={order.MaDonHang}
-                        className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div>
-                          <p className="text-sm font-medium">
-                            Đơn #{order.MaDonHang}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {formatDate(order.NgayDat)}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-semibold text-green-600">
-                            {formatCurrency(order.TongTien)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {order.PhuongThucThanhToan}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    Chưa có đơn hàng
-                  </p>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-3">
-                {selectedUser.Quyen === 1 ? (
-                  // TRƯỜNG HỢP 1: Đang là USER -> Hiện nút "LÊN ADMIN" (Màu xanh)
-                  <button
-                    onClick={() => handleUpdateRole(selectedUser.MaTaiKhoan, 0)} // Truyền 0 để lên Admin
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
-                  >
-                    <ShieldCheck className="w-4 h-4" />
-                    Thăng cấp Admin
-                  </button>
-                ) : (
-                  // TRƯỜNG HỢP 2: Đang là ADMIN -> Hiện nút "HẠ QUYỀN" (Màu cam/đỏ)
-                  <button
-                    onClick={() => handleUpdateRole(selectedUser.MaTaiKhoan, 1)} // Truyền 1 để xuống User
-                    className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center justify-center gap-2"
-                  >
-                    <ShieldOff className="w-4 h-4" />{" "}
-                    {/* Nhớ import ShieldOff từ lucide-react */}
-                    Hạ xuống User
-                  </button>
-                )}
-
-                {/* Nút Khóa/Mở khóa giữ nguyên */}
-                <button
-                  onClick={() => handleToggleStatus(selectedUser.MaTaiKhoan)}
-                  className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                    selectedUser.TinhTrangTaiKhoan === 1
-                      ? "bg-red-600 hover:bg-red-700 text-white"
-                      : "bg-green-600 hover:bg-green-700 text-white"
-                  }`}
-                >
-                  {selectedUser.TinhTrangTaiKhoan === 1 ? (
-                    <>
-                      <Ban className="w-4 h-4" />
-                      Khóa tài khoản
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4" />
-                      Mở khóa
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <UserDetailDrawer
+        isOpen={showDetail}
+        onClose={() => setShowDetail(false)}
+        user={selectedUser}
+        onUpdateRole={handleUpdateRole}
+        onToggleStatus={handleToggleStatus}
+      />
     </div>
   );
 };

@@ -22,10 +22,10 @@ const Sidebar = () => {
       label: "Dashboard",
       end: true,
     },
-    { 
-      path: "/admin/products", 
-      icon: <Package size={20} />, 
-      label: "Sản phẩm" 
+    {
+      path: "/admin/products",
+      icon: <Package size={20} />,
+      label: "Sản phẩm",
     },
     {
       path: "/admin/categories",
@@ -37,10 +37,10 @@ const Sidebar = () => {
       icon: <ShoppingBag size={20} />,
       label: "Đơn hàng",
     },
-    { 
-      path: "/admin/users", 
-      icon: <Users size={20} />, 
-      label: "Người dùng" 
+    {
+      path: "/admin/users",
+      icon: <Users size={20} />,
+      label: "Tài khoản",
     },
   ];
 
@@ -87,12 +87,6 @@ const Sidebar = () => {
       </nav>
 
       {/* --- FOOTER SIDEBAR --- */}
-      <div className="p-4 border-t border-gray-100">
-        <div className="flex items-center gap-3 px-4 py-2 text-sm text-gray-500">
-          <Settings size={16} />
-          <span>Phiên bản 1.0.0</span>
-        </div>
-      </div>
     </aside>
   );
 };
