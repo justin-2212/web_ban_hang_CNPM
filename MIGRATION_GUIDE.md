@@ -1,365 +1,293 @@
-# 🚀 MIGRATION GUIDE - Migrate Ảnh Cũ Lên Cloudinary
+```md
+# HƯỚNG DẪN MIGRATE ẢNH CŨ LÊN CLOUDINARY
 
-## 📋 Overview
+## 1. Mục đích
 
-Script này giúp migrate **100% ảnh cũ** từ `/public/assets/products/` lên Cloudinary và update database tự động.
+Tài liệu này dùng để hướng dẫn migrate **toàn bộ ảnh đang lưu local** trong thư mục:
+
+```
+
+/public/assets/products/
+
+````
+
+lên **Cloudinary**, đồng thời **cập nhật lại đường dẫn ảnh trong database** một cách tự động thông qua script `migrateImagesToCloudinary.js`.
+
+Tài liệu được viết để người khác trong team có thể làm theo mà không cần biết chi tiết code bên trong.
 
 ---
 
-## 🎯 Cách Hoạt Động
+## 2. Nguyên lý hoạt động
 
-### Luồng Migration
-```
-1. Đọc tất cả ảnh từ database (AnhSP & BienThe)
-2. Kiểm tra từng file có tồn tại không
-3. Upload lên Cloudinary (folder: apple-store/)
-4. Update database với URL mới
-5. Report kết quả (success/failed)
-```
+Script migration hoạt động theo luồng sau:
 
-### Các Bảng Migrate
-- **AnhSP** - Cột `DuongDanLuuAnh`
-- **BienThe** - Cột `DuongDanAnhBienThe`
+1. Lấy danh sách ảnh từ database
+   - Bảng `AnhSP`
+   - Bảng `BienThe`
+2. Với từng record:
+   - Kiểm tra file ảnh có tồn tại trong thư mục local không
+   - Nếu đường dẫn đã là Cloudinary → bỏ qua
+   - Nếu là ảnh local → upload lên Cloudinary (folder `apple-store/`)
+3. Sau khi upload thành công:
+   - Update lại cột đường dẫn ảnh trong database
+4. Kết thúc:
+   - In ra báo cáo tổng hợp (success / failed)
 
 ---
 
-## 🔧 Các Mode Chạy
+## 3. Các bảng được migrate
 
-### 1️⃣ **Dry Run** (Preview)
+| Bảng | Cột ảnh |
+|------|--------|
+| `AnhSP` | `DuongDanLuuAnh` |
+| `BienThe` | `DuongDanAnhBienThe` |
+
+---
+
+## 4. Các chế độ chạy script
+
+### 4.1 Dry Run (chạy thử – bắt buộc trước khi migrate thật)
+
 ```bash
 node migrateImagesToCloudinary.js --dry-run
-```
-✅ Chỉ preview, không thay đổi gì  
-✅ Xem sẽ migrate bao nhiêu ảnh  
-✅ Kiểm tra có lỗi nào không
+````
 
-### 2️⃣ **Migrate AnhSP Chỉ**
+* Không upload ảnh
+* Không update database
+* Dùng để:
+
+  * Xem số lượng ảnh sẽ migrate
+  * Phát hiện lỗi path, file không tồn tại
+
+---
+
+### 4.2 Chỉ migrate ảnh sản phẩm (`AnhSP`)
+
 ```bash
 node migrateImagesToCloudinary.js --table=anhsp
 ```
 
-### 3️⃣ **Migrate BienThe Chỉ**
+---
+
+### 4.3 Chỉ migrate ảnh biến thể (`BienThe`)
+
 ```bash
 node migrateImagesToCloudinary.js --table=bienthe
 ```
 
-### 4️⃣ **Migrate Cả 2**
+---
+
+### 4.4 Migrate toàn bộ (mặc định)
+
 ```bash
 node migrateImagesToCloudinary.js
 ```
-Hoặc:
+
+hoặc
+
 ```bash
 node migrateImagesToCloudinary.js --table=all
 ```
 
 ---
 
-## 📖 Hướng Dẫn Step-by-Step
+## 5. Hướng dẫn chạy từng bước
 
-### Step 1: Backup Database
+### Bước 1: Backup database (bắt buộc)
+
 ```bash
-# Backup MySQL trước migration
 mysqldump -u root -pnucep2025 apple_store > backup_$(date +%Y%m%d_%H%M%S).sql
 ```
 
-### Step 2: Dry Run (Preview)
+> Không chạy migration khi chưa backup database.
+
+---
+
+### Bước 2: Chạy dry-run để kiểm tra
+
 ```bash
 node migrateImagesToCloudinary.js --dry-run
 ```
 
-Output sẽ như sau:
+Ví dụ output:
+
 ```
-🖼️  MIGRATING ANHSP IMAGES
-ℹ️  Tìm thấy 15 ảnh AnhSP
-[DRY RUN] [1/15] MaAnh 1: iphone/image1.jpg → Cloudinary
-[DRY RUN] [2/15] MaAnh 2: iphone/image2.jpg → Cloudinary
-...
+MIGRATING ANHSP IMAGES
+Tìm thấy 15 ảnh
 
-📊 MIGRATION SUMMARY
-AnhSP:
-  Total:   15
-  Success: 15
-  Failed:  0
-
-💡 This was a DRY RUN. Run without --dry-run to actually migrate.
+[DRY RUN] [1/15] MaAnh 1: iphone/image1.jpg
+[DRY RUN] [2/15] MaAnh 2: iphone/image2.jpg
 ```
 
-### Step 3: Thực Tế Migration
+Nếu không có lỗi nghiêm trọng → có thể chạy migrate thật.
+
+---
+
+### Bước 3: Chạy migrate thật
+
 ```bash
-# Migrate tất cả (AnhSP + BienThe)
 node migrateImagesToCloudinary.js
 ```
 
-Output:
+Ví dụ output:
+
 ```
-🖼️  MIGRATING ANHSP IMAGES
-ℹ️  Tìm thấy 15 ảnh AnhSP
-✅ [1/15] MaAnh 1: Upload thành công
-✅ [2/15] MaAnh 2: Upload thành công
-...
+MIGRATING ANHSP IMAGES
+[1/15] MaAnh 1: Upload thành công
 
-🎨 MIGRATING BIENTHE IMAGES
-ℹ️  Tìm thấy 45 ảnh BienThe
-✅ [1/45] MaBienThe 1: Upload thành công
-...
-
-📊 MIGRATION SUMMARY
-AnhSP:
-  Total:   15
-  Success: 15
-  Failed:  0
-
-BienThe:
-  Total:   45
-  Success: 45
-  Failed:  0
-
-🎉 Migration completed successfully!
+MIGRATING BIENTHE IMAGES
+[1/45] MaBienThe 1: Upload thành công
 ```
 
-### Step 4: Verify Migration
+---
+
+### Bước 4: Kiểm tra lại database
+
 ```sql
--- Kiểm tra AnhSP
-SELECT COUNT(*) as total, 
-       SUM(CASE WHEN DuongDanLuuAnh LIKE '%cloudinary%' THEN 1 ELSE 0 END) as cloudinary_count
+-- Kiểm tra bảng AnhSP
+SELECT COUNT(*) AS total,
+       SUM(DuongDanLuuAnh LIKE '%cloudinary%') AS cloudinary_count
 FROM AnhSP;
 
--- Kỳ vọng: total = cloudinary_count (tất cả đã migrate)
+-- Kiểm tra bảng BienThe
+SELECT COUNT(*) AS total,
+       SUM(DuongDanAnhBienThe LIKE '%cloudinary%') AS cloudinary_count
+FROM BienThe
+WHERE DuongDanAnhBienThe IS NOT NULL;
+```
 
--- Kiểm tra BienThe
-SELECT COUNT(*) as total,
-       SUM(CASE WHEN DuongDanAnhBienThe LIKE '%cloudinary%' THEN 1 ELSE 0 END) as cloudinary_count
-FROM BienThe WHERE DuongDanAnhBienThe IS NOT NULL;
+Kết quả mong đợi:
+
+```
+total = cloudinary_count
 ```
 
 ---
 
-## ⚡ Quick Start
+## 6. Giải thích log & trạng thái
 
-```bash
-# 1. Preview
-node migrateImagesToCloudinary.js --dry-run
+| Ký hiệu | Ý nghĩa                          |
+| ------- | -------------------------------- |
+| ✅       | Upload thành công & DB đã update |
+| ❌       | Lỗi upload hoặc update DB        |
+| ⚠️      | Ảnh đã là Cloudinary URL, bỏ qua |
+| ℹ️      | Thông tin                        |
 
-# 2. Migrate AnhSP
-node migrateImagesToCloudinary.js --table=anhsp
+Ví dụ:
 
-# 3. Migrate BienThe
-node migrateImagesToCloudinary.js --table=bienthe
-
-# 4. Verify
-mysql -u root -pnucep2025 apple_store -e "SELECT COUNT(*) FROM AnhSP WHERE DuongDanLuuAnh LIKE '%cloudinary%';"
 ```
-
----
-
-## 🔍 Understanding Output
-
-### Status Icons
-- ✅ **Success** - Upload thành công, DB updated
-- ❌ **Error** - Upload failed hoặc DB update failed
-- ⚠️ **Warning** - File đã là Cloudinary URL, bỏ qua
-- ℹ️ **Info** - General information
-- 📊 **Summary** - Final report
-
-### Output Example
-```
-[1/45] MaBienThe 123: Upload thành công
-  ↑     ↑             ↑
-  Position in queue    Status
-
 [45/45] MaBienThe 456: Upload failed - File not found
-  ↑     ↑             ↑ Upload failed
-  Last item in queue    Error detail
 ```
 
 ---
 
-## 🐛 Troubleshooting
+## 7. Các lỗi thường gặp
 
-### Error: "Database connection failed"
-```
-Solution: 
-- Check MySQL server running
-- Check .env credentials correct
-- Check database 'apple_store' exists
-```
+### Không kết nối được database
 
-### Error: "File not found"
-```
-Example: File không tìm thấy (/path/to/file.jpg)
+* Kiểm tra MySQL đang chạy
+* Kiểm tra thông tin trong file `.env`
+* Kiểm tra database `apple_store` tồn tại
 
-Solutions:
-- Move file to correct location
-- Or update database path manually
-- Or delete row if file no longer needed
-```
+---
 
-### Error: "Cloudinary upload failed"
-```
-Check:
-- Network connection
-- Cloudinary credentials in .env
-- File size < 5MB
-- File format (JPEG, PNG, WebP, GIF)
-```
+### File ảnh không tồn tại
 
-### Error: "DB update failed"
-```
-Solutions:
-- Check MySQL connection
-- Check MaAnh / MaBienThe exists
-- Check column names correct (DuongDanLuuAnh, DuongDanAnhBienThe)
+* Kiểm tra lại thư mục `/public/assets/products/`
+* Hoặc chỉnh lại path trong database
+* Hoặc xoá record nếu ảnh không còn dùng
+
+---
+
+### Upload Cloudinary thất bại
+
+* Kiểm tra:
+
+  * Internet
+  * CLOUDINARY_API_KEY / CLOUDINARY_SECRET
+  * Dung lượng và định dạng ảnh
+
+---
+
+## 8. Migrate số lượng lớn – lưu ý
+
+* Không chạy nhiều instance script cùng lúc
+* Có thể chia nhỏ:
+
+  ```bash
+  node migrateImagesToCloudinary.js --table=anhsp
+  node migrateImagesToCloudinary.js --table=bienthe
+  ```
+* Nên lưu log:
+
+  ```bash
+  node migrateImagesToCloudinary.js > migration.log 2>&1
+  ```
+
+---
+
+## 9. Sau khi migrate xong
+
+### 9.1 Kiểm tra hiển thị ảnh trên frontend
+
+Frontend **phải lấy URL từ database**, không hardcode path local.
+
+```jsx
+<img src={product.duongDanLuuAnh} />
 ```
 
 ---
 
-## 📊 Performance Tips
+### 9.2 Xoá ảnh local (tuỳ chọn)
 
-### Large Migrations
-Nếu có hàng ngàn ảnh, migration có thể mất lâu. Tips:
+Chỉ xoá khi chắc chắn migrate thành công 100%:
 
 ```bash
-# 1. Migrate từng loại riêng
-node migrateImagesToCloudinary.js --table=anhsp  # Chạy lần 1
-# ... chờ hoàn thành ...
-node migrateImagesToCloudinary.js --table=bienthe # Chạy lần 2
-
-# 2. Kiểm tra Cloudinary Dashboard
-# https://cloudinary.com/console/media_library
-# Xem upload stats, bandwidth, v.v.
-
-# 3. Monitor logs
-# Lưu output vào file
-node migrateImagesToCloudinary.js --table=anhsp > migration_anhsp.log 2>&1
+rm -rf public/assets/products/*
 ```
 
 ---
 
-## 🔐 Safety
+### 9.3 Kiểm tra Cloudinary Dashboard
 
-### Trước Migration
-- ✅ Backup database
-- ✅ Run dry-run first
-- ✅ Test Cloudinary credentials
-- ✅ Verify file paths
-
-### Trong Migration
-- ✅ Không tắt script khi chạy
-- ✅ Giữ kết nối internet ổn định
-- ✅ Không chạy multiple instances cùng lúc
-
-### Sau Migration
-- ✅ Verify tất cả ảnh migrate thành công
-- ✅ Test hiển thị ảnh trên website
-- ✅ Kiểm tra Cloudinary dashboard
-- ✅ Có thể xóa ảnh cũ (optional)
+* Storage
+* Bandwidth
+* Upload logs
 
 ---
 
-## 🔄 Rollback Plan
+## 10. Rollback khi có sự cố
 
-Nếu có lỗi và cần rollback:
+### Restore database từ backup
 
-### Option 1: Restore Backup
 ```bash
 mysql -u root -pnucep2025 apple_store < backup_20251221_120000.sql
 ```
 
-### Option 2: Revert Manual
-```sql
--- Nếu partial migration failed, có thể revert selected rows
-UPDATE AnhSP 
-SET DuongDanLuuAnh = REPLACE(DuongDanLuuAnh, 'https://res.cloudinary.com/...', 'old/path')
-WHERE MaAnh IN (123, 456, ...);
-```
+---
+
+## 11. Checklist
+
+* [ ] Backup database
+* [ ] Chạy dry-run
+* [ ] Kiểm tra Cloudinary credentials
+* [ ] Chạy migrate thật
+* [ ] Verify database
+* [ ] Test hiển thị ảnh
+* [ ] (Tuỳ chọn) Xoá ảnh local
 
 ---
 
-## 📈 Post-Migration
+## 12. Kết luận
 
-### 1. Delete Old Images (Optional)
+Script migration đã được chuẩn bị sẵn, chỉ cần làm đúng thứ tự.
+Luôn **chạy `--dry-run` trước khi migrate thật** để tránh lỗi không mong muốn.
+
+Bắt đầu bằng:
+
 ```bash
-# Nếu chắc chắn tất cả đã migrate thành công
-rm -rf public/assets/products/*
+node migrateImagesToCloudinary.js --dry-run
 ```
 
-### 2. Update Frontend URLs
-Nếu frontend hardcode ảnh path, cần update:
-
-```javascript
-// OLD
-<img src="/assets/products/iphone/image.jpg" />
-
-// NEW - Lấy từ database
-<img src={product.duongDanLuuAnh} />
 ```
-
-### 3. Monitor Cloudinary Usage
 ```
-https://cloudinary.com/console
-- Check storage used
-- Check monthly transformations
-- Monitor bandwidth
-```
-
----
-
-## 📚 Related Documentation
-
-- [CLOUDINARY_GUIDE.md](../CLOUDINARY_GUIDE.md) - Full Cloudinary guide
-- [TEST_UPLOAD_API.md](../TEST_UPLOAD_API.md) - Upload API testing
-- [CLOUDINARY_ARCHITECTURE.md](../CLOUDINARY_ARCHITECTURE.md) - System design
-
----
-
-## ⚙️ Script Details
-
-### Input Validation
-- ✅ Check file exists before upload
-- ✅ Check MaAnh/MaBienThe exists in DB
-- ✅ Check Cloudinary credentials
-- ✅ Check file format
-
-### Data Integrity
-- ✅ Transaction-like behavior (upload → DB update)
-- ✅ Error reporting with full details
-- ✅ Skip already-migrated URLs (contain 'cloudinary.com')
-- ✅ Preserve file metadata (size, width, height)
-
-### Progress Tracking
-- ✅ Show [Current/Total] for each image
-- ✅ Real-time status updates
-- ✅ Final summary report
-- ✅ Success/failure counts
-
----
-
-## 🎯 Migration Checklist
-
-- [ ] Backup database (`mysqldump`)
-- [ ] Run dry-run (`--dry-run`)
-- [ ] Review output
-- [ ] Check Cloudinary credentials in `.env`
-- [ ] Run actual migration (`node migrate...js`)
-- [ ] Verify database (SQL query)
-- [ ] Test website (hiển thị ảnh)
-- [ ] Check Cloudinary dashboard
-- [ ] Delete old images (optional)
-- [ ] Update frontend if needed
-
----
-
-## 📞 Support
-
-Nếu gặp lỗi:
-
-1. Check error message trong output
-2. Xem Troubleshooting section ở trên
-3. Run `--dry-run` again để diagnostic
-4. Restore backup nếu cần
-
----
-
-**Migration Script Ready!** 🚀
-
-Chạy `node migrateImagesToCloudinary.js --dry-run` để bắt đầu.

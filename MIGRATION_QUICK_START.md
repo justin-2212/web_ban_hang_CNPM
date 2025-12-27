@@ -1,127 +1,152 @@
-# 🚀 MIGRATION QUICK START - 3 Commands
+````md
+# MIGRATION QUICK START – HƯỚNG DẪN CHẠY NHANH
 
-## 📋 Tóm Tắt
+## 1. Mục đích
 
-Bạn có **425 ảnh cũ** (137 AnhSP + 288 BienThe) sẽ migrate lên Cloudinary tự động.
+File này dùng để **hướng dẫn nhanh cách migrate ảnh cũ lên Cloudinary** bằng script đã chuẩn bị sẵn.  
+Phù hợp cho người mới tiếp cận dự án hoặc cần chạy migration mà không đọc toàn bộ tài liệu chi tiết.
+
+Chỉ cần thực hiện **3 bước** theo đúng thứ tự.
 
 ---
 
-## ⚡ 3 Bước Duy Nhất
+## 2. Quy trình tổng quát
 
-### 1️⃣ **Preview (Không thay đổi)**
+Quá trình migration sẽ:
+- Upload các ảnh đang lưu local lên Cloudinary
+- Cập nhật lại đường dẫn ảnh trong database
+- Giữ nguyên cấu trúc dữ liệu, không làm ảnh hưởng logic hệ thống
+
+---
+
+## 3. 3 Bước Thực Hiện
+
+### Bước 1: Chạy thử (Preview – không thay đổi dữ liệu)
+
 ```bash
 node migrateImagesToCloudinary.js --dry-run
-```
-✅ Xem sẽ migrate 425 ảnh  
-✅ Kiểm tra có lỗi không  
-✅ Không thay đổi database  
+````
 
-### 2️⃣ **Migrate Thực Tế**
+Bước này dùng để:
+
+* Xem script sẽ migrate những ảnh nào
+* Phát hiện sớm lỗi (file không tồn tại, đường dẫn sai…)
+* **Không upload ảnh**
+* **Không cập nhật database**
+
+Khuyến nghị **luôn chạy bước này trước** khi migrate thật.
+
+---
+
+### Bước 2: Chạy migrate thật
+
 ```bash
 node migrateImagesToCloudinary.js
 ```
-✅ Upload tất cả 425 ảnh lên Cloudinary  
-✅ Update database tự động  
-✅ Mất ~5-10 phút (tùy network)  
 
-### 3️⃣ **Verify (Kiểm Tra)**
+Khi chạy lệnh này:
+
+* Ảnh local sẽ được upload lên Cloudinary
+* Database được update tự động sang URL mới
+* Script hiển thị tiến trình xử lý từng ảnh
+
+> Lưu ý: Không tắt terminal hoặc ngắt mạng trong quá trình chạy.
+
+---
+
+### Bước 3: Kiểm tra lại dữ liệu
+
+Sau khi script chạy xong, cần kiểm tra lại database để đảm bảo:
+
+* Đường dẫn ảnh đã được cập nhật
+* Không còn ảnh trỏ về thư mục local
+
+Ví dụ:
+
 ```sql
--- Kiểm tra AnhSP
-SELECT COUNT(*) as total, 
-       SUM(CASE WHEN DuongDanLuuAnh LIKE '%cloudinary%' THEN 1 ELSE 0 END) as cloudinary_count
+-- Kiểm tra ảnh sản phẩm
+SELECT COUNT(*) AS total,
+       SUM(DuongDanLuuAnh LIKE '%cloudinary%') AS cloudinary_count
 FROM AnhSP;
--- Kỳ vọng: total = 137, cloudinary_count = 137
 
--- Kiểm tra BienThe  
-SELECT COUNT(*) as total,
-       SUM(CASE WHEN DuongDanAnhBienThe LIKE '%cloudinary%' THEN 1 ELSE 0 END) as cloudinary_count
-FROM BienThe WHERE DuongDanAnhBienThe IS NOT NULL;
--- Kỳ vọng: total = 288, cloudinary_count = 288
+-- Kiểm tra ảnh biến thể
+SELECT COUNT(*) AS total,
+       SUM(DuongDanAnhBienThe LIKE '%cloudinary%') AS cloudinary_count
+FROM BienThe
+WHERE DuongDanAnhBienThe IS NOT NULL;
+```
+
+Nếu `total = cloudinary_count` → migration hoàn tất.
+
+---
+
+## 4. Migration sẽ thay đổi gì?
+
+### Trước migration
+
+* Ảnh được load từ thư mục local
+* Database lưu đường dẫn local
+
+### Sau migration
+
+* Ảnh được load trực tiếp từ Cloudinary
+* Database lưu URL Cloudinary
+* Frontend không cần thay đổi logic hiển thị
+
+---
+
+## 5. Script hỗ trợ sẵn
+
+* Tự động upload ảnh
+* Tự động cập nhật database
+* Hiển thị tiến trình xử lý
+* Báo lỗi chi tiết nếu có
+* Hỗ trợ chế độ chạy thử (`--dry-run`)
+* Có thể rollback bằng database backup
+
+---
+
+## 6. Một số lỗi thường gặp
+
+### File ảnh không tồn tại
+
+* File đã bị xóa hoặc path trong database không đúng
+* Cần kiểm tra lại thư mục ảnh local
+
+### Upload Cloudinary thất bại
+
+* Kiểm tra kết nối mạng
+* Kiểm tra thông tin Cloudinary trong `.env`
+* Kiểm tra dung lượng và định dạng ảnh
+
+### Không update được database
+
+* Kiểm tra MySQL đang chạy
+* Kiểm tra đúng tên cột và bảng
+
+---
+
+## 7. Tài liệu liên quan
+
+Để biết chi tiết hơn (backup, rollback, troubleshooting…), xem:
+
+```
+MIGRATION_GUIDE.md
 ```
 
 ---
 
-## 📊 What Will Happen
+## 8. Bắt đầu
 
-```
-Before (Local):
-  /public/assets/products/iphone/image.jpg → database
-  /public/assets/products/ipad/image.jpg → database
+Thứ tự khuyến nghị:
 
-After (Cloudinary):
-  https://res.cloudinary.com/dwdh18bhk/image/upload/v1234/apple-store/iphone/image.jpg → database
-  https://res.cloudinary.com/dwdh18bhk/image/upload/v1234/apple-store/ipad/image.jpg → database
+```bash
+node migrateImagesToCloudinary.js --dry-run
 ```
 
----
-
-## ✨ Features
-
-✅ Auto upload lên Cloudinary  
-✅ Auto update database URLs  
-✅ Progress tracking (show 1/425, 2/425, ...)  
-✅ Error reporting chi tiết  
-✅ Dry-run mode để preview  
-✅ Rollback nếu cần  
+Sau khi kiểm tra ổn định, chạy migrate thật.
 
 ---
-
-## 📈 Expected Result
 
 ```
-✅ [1/425] AnhSP 1: Upload thành công
-✅ [2/425] BienThe 1: Upload thành công
-...
-✅ [425/425] BienThe 288: Upload thành công
-
-📊 MIGRATION SUMMARY
-
-AnhSP:
-  Total:   137
-  Success: 137 ✅
-  Failed:  0
-
-BienThe:
-  Total:   288
-  Success: 288 ✅
-  Failed:  0
-
-Total:
-  All:     425
-  Success: 425 ✅
-  Failed:  0
-
-🎉 Migration completed successfully!
 ```
-
----
-
-## 🆘 Nếu Có Lỗi
-
-### Error: File not found
-→ File ảnh đã bị xóa hoặc path sai  
-→ Kiểm tra `/public/assets/products/` còn file không  
-
-### Error: Cloudinary upload failed
-→ Check network  
-→ Check .env credentials  
-→ Check file size < 5MB  
-
-### Error: DB update failed
-→ Check MySQL running  
-→ Check database columns exist  
-
----
-
-## 📚 Full Guide
-
-Xem [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) để:
-- Detailed steps
-- Troubleshooting
-- Database backup
-- Rollback plan
-- Performance tips
-
----
-
-**Ready? Start with**: `node migrateImagesToCloudinary.js --dry-run` 🚀

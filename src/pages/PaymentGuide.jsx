@@ -1,10 +1,13 @@
 import React from "react";
 import { Smartphone, Banknote } from "lucide-react";
+import momoLogo from "../assets/momo-logo.png";
 
 export default function PaymentGuide() {
   const paymentMethods = [
     {
-      icon: <Smartphone className="w-8 h-8" />,
+      icon: (
+        <img src={momoLogo} alt="Momo logo" className="w-12 h-12 rounded bg-white border border-gray-200 object-contain" />
+      ),
       title: "Ví điện tử Momo",
       desc: "Thanh toán an toàn qua ứng dụng Momo",
       process: [

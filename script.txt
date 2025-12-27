@@ -1,4 +1,4 @@
-Script Tạo bảng 
+Lưu tạm Script tạo bảng
 CREATE TABLE TaiKhoan (
     MaTaiKhoan INT AUTO_INCREMENT PRIMARY KEY,
     Gmail VARCHAR(100) NOT NULL,
