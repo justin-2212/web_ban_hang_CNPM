@@ -72,7 +72,7 @@ export default function OptionSelector({ attribute, selectedValue, onSelect }) {
     return COLOR_MAP[displayValue] || COLOR_MAP[inputValue] || null;
   };
 
-  // ✅ Helper: Format display value với đơn vị
+  // Helper: Format display value với đơn vị
   const formatDisplayValue = (option) => {
     const baseValue = option.giaTriHienThi || option.giaTriNhap || '';
     
@@ -81,7 +81,7 @@ export default function OptionSelector({ attribute, selectedValue, onSelect }) {
       return baseValue;
     }
     
-    // ✅ FIX: Kiểm tra xem giaTriHienThi đã có đơn vị chưa
+    // FIX: Kiểm tra xem giaTriHienThi đã có đơn vị chưa
     const hasUnit = baseValue.toLowerCase().includes(attribute.donVi.toLowerCase());
     
     if (hasUnit) {
@@ -138,7 +138,7 @@ export default function OptionSelector({ attribute, selectedValue, onSelect }) {
                   : "rgb(243 244 246)",
               }}
             >
-              {/* ✅ Hiển thị Color Swatch cho màu sắc */}
+              {/*  Hiển thị Color Swatch cho màu sắc */}
               {isColorAttribute && colorCode && (
                 <div 
                   className="w-10 h-10 rounded-full border-2 border-gray-300"
@@ -146,7 +146,7 @@ export default function OptionSelector({ attribute, selectedValue, onSelect }) {
                 />
               )}
 
-              {/* ✅ FIX: Hiển thị text với đơn vị chính xác */}
+              {/* FIX: Hiển thị text với đơn vị chính xác */}
               <span className={`block ${isColorAttribute ? 'text-xs text-center' : ''}`}>
                 {formatDisplayValue(option)}
               </span>
