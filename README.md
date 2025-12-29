@@ -380,47 +380,10 @@ web-app/
 
 *Xem chi tiết tại các file routes trong `server/routes/`*
 
-## 🚀 Deploy
-
-### Deploy Frontend (Vercel)
-
-```bash
-npm run build
-# Deploy folder 'dist' lên Vercel
-```
-
-### Deploy Backend (Railway, Render, Heroku)
-
-```bash
-# Set environment variables trên platform
-# Push code, nó sẽ auto-deploy
-```
-
-### Deploy Database (Planetscale, AWS RDS)
-
-Sử dụng managed MySQL hoặc tự host
-
-## 👥 Đóng góp
-
-Để đóng góp:
-
-1. Fork project này
-2. Tạo branch: `git checkout -b feature/AmazingFeature`
-3. Commit: `git commit -m 'Add some AmazingFeature'`
-4. Push: `git push origin feature/AmazingFeature`
-5. Mở Pull Request
 
 ## 📝 License
-
 Project này không có license cụ thể. Vui lòng liên hệ chủ sở hữu.
 
-## 📧 Liên hệ
-
-- **Email**: support@applestore.local
-- **Issue**: [GitHub Issues](https://github.com/...)
-- **Slack**: [Team Workspace](https://slack.com/...)
-
----
 
 **Cảm ơn bạn đã sử dụng Apple Store E-Commerce Platform! 🎉**
 
