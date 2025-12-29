@@ -197,7 +197,7 @@ npm run server    # Backend: http://localhost:5000
 | `server/routes/`      | Định tuyến API backend                   |
 | `db/`                 | File SQL khởi tạo & seed dữ liệu         |
 
-## � Cấu hình quan trọng
+## Cấu hình quan trọng
 
 ### Clerk Authentication
 
@@ -424,4 +424,3 @@ Project này không có license cụ thể. Vui lòng liên hệ chủ sở hữ
 
 **Cảm ơn bạn đã sử dụng Apple Store E-Commerce Platform! 🎉**
 
-*Cập nhật lần cuối: 29/12/2025*
