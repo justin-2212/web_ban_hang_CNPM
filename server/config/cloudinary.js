@@ -5,14 +5,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// ✅ Cấu hình Cloudinary
+//  Cấu hình Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// ✅ Hàm upload lên Cloudinary
+// Hàm upload lên Cloudinary
 export const uploadToCloudinary = async (fileBuffer, fileName, folder = 'apple-store') => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -31,7 +31,7 @@ export const uploadToCloudinary = async (fileBuffer, fileName, folder = 'apple-s
   });
 };
 
-// ✅ Hàm xóa ảnh từ Cloudinary
+//  Hàm xóa ảnh từ Cloudinary
 export const deleteFromCloudinary = async (publicId) => {
   try {
     const result = await cloudinary.uploader.destroy(publicId);

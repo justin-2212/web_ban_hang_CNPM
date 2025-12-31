@@ -1,6 +1,6 @@
 // server/controllers/donHangAdmin.controller.js
 
-// [UPDATE] Import từ model mới donHangAdmin.model.js
+//  Import từ model mới donHangAdmin.model.js
 import DonHangAdmin from "../models/donHangAdmin.model.js";
 import db from "../config/db.js";
 

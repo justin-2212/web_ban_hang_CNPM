@@ -45,17 +45,22 @@ const CategoryPage = () => {
 
   // ============ FILTER LOGIC ============
   const filteredCategories = categories.filter((cat) => {
-    const matchSearch = cat.TenLoai.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStatus = filterStatus === "" || cat.TinhTrangLoaiSanPham.toString() === filterStatus;
+    const matchSearch = cat.TenLoai.toLowerCase().includes(
+      searchQuery.toLowerCase()
+    );
+    const matchStatus =
+      filterStatus === "" ||
+      cat.TinhTrangLoaiSanPham.toString() === filterStatus;
     return matchSearch && matchStatus;
   });
 
   // ============ HANDLERS ============
-  
+
   // 1. XỬ LÝ XÓA MỀM (Ngừng kinh doanh - EyeOff)
   const handleSoftDelete = async (id) => {
     const category = categories.find((c) => c.MaLoai === id);
-    if (!confirm(`Bạn muốn NGỪNG KINH DOANH loại "${category?.TenLoai}"?`)) return;
+    if (!confirm(`Bạn muốn NGỪNG KINH DOANH loại "${category?.TenLoai}"?`))
+      return;
 
     try {
       // Cập nhật tinhTrang = 0
@@ -91,7 +96,12 @@ const CategoryPage = () => {
 
   // 3. XỬ LÝ XÓA CỨNG (Xóa vĩnh viễn - Trash)
   const handleHardDelete = async (id, tenLoai) => {
-    if (!confirm(`CẢNH BÁO: Bạn muốn XÓA VĨNH VIỄN loại "${tenLoai}"?\nHành động này không thể hoàn tác!`)) return;
+    if (
+      !confirm(
+        `CẢNH BÁO: Bạn muốn XÓA VĨNH VIỄN loại "${tenLoai}"?\nHành động này không thể hoàn tác!`
+      )
+    )
+      return;
 
     try {
       // Gọi API Delete (Backend controller đã check điều kiện rỗng)
@@ -130,8 +140,12 @@ const CategoryPage = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Quản lý Loại Sản Phẩm</h1>
-          <p className="text-gray-600 text-sm mt-1">Quản lý danh mục sản phẩm và cấu hình thông số</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Quản lý Loại Sản Phẩm
+          </h1>
+          <p className="text-gray-600 text-sm mt-1">
+            Quản lý danh mục sản phẩm và cấu hình thông số
+          </p>
         </div>
         <button
           onClick={handleOpenCreate}
@@ -143,23 +157,33 @@ const CategoryPage = () => {
       </div>
 
       {/* Error */}
-      {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative md:col-span-2">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+          {/*  Ô TÌM KIẾM */}
+          {/*  Giữ h-10 cho thẻ cha để làm mốc căn giữa cho icon */}
+          <div className="relative md:col-span-2 h-10">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
             <input
               type="text"
               placeholder="Tìm kiếm loại sản phẩm..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              /* Giữ h-10 để chiều cao bằng 40px */
+              className="w-full h-10 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+
+          {/*  SELECT TRẠNG THÁI  */}
           <select
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            /* Giữ h-10 */
+            className="w-full h-10 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -167,11 +191,11 @@ const CategoryPage = () => {
             <option value="1">Đang kinh doanh</option>
             <option value="0">Ngừng kinh doanh</option>
           </select>
-        </div>
-        <div className="mt-4 flex justify-end">
+
+          {/* NÚT ĐẶT LẠI  */}
           <button
             onClick={handleResetFilters}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 flex items-center gap-2"
+            className="w-full h-10 px-4 bg-gray-200 text-gray-700 border border-transparent rounded-lg hover:bg-gray-300 flex items-center justify-center gap-2 transition-colors"
           >
             <RotateCcw className="w-4 h-4" />
             Đặt lại
@@ -203,7 +227,10 @@ const CategoryPage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         initialData={editingCategory}
-        onSuccess={() => { setIsModalOpen(false); fetchCategories(); }}
+        onSuccess={() => {
+          setIsModalOpen(false);
+          fetchCategories();
+        }}
         existingCategories={categories}
       />
 

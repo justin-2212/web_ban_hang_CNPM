@@ -6,7 +6,7 @@ import MomoPaymentService from '../services/momoPayment.service.js';
 
 class ThanhToanController {
   
-  // ✅ THÊM: Tạo link MOMO (KHÔNG tạo đơn hàng)
+  //  THÊM: Tạo link MOMO (KHÔNG tạo đơn hàng)
   async createMomoPayment(req, res) {
     try {
       const { maTaiKhoan, cartItems, tongTien } = req.body;
@@ -29,7 +29,7 @@ class ThanhToanController {
         tongTien,
       });
 
-      // ✅ QUAN TRỌNG: redirectUrl phải trỏ về BACKEND để xử lý callback
+      //  QUAN TRỌNG: redirectUrl phải trỏ về BACKEND để xử lý callback
       // Vì MoMo không thể gọi IPN đến localhost
       const backendUrl = process.env.APP_URL || "http://localhost:5000";
       const returnUrl = `${backendUrl}/api/thanh-toan/momo/callback`;
@@ -58,7 +58,7 @@ class ThanhToanController {
     }
   }
 
-  // ✅ SỬA: Callback handler
+  //  SỬA: Callback handler
   async handleMomoCallback(req, res) {
     const data = req.method === 'GET' ? req.query : req.body;
     const { orderInfo, resultCode, transId, message } = data;
@@ -73,7 +73,7 @@ class ThanhToanController {
     const frontendUrl = process.env.VITE_APP_URL || 'http://localhost:5173';
 
     try {
-      // ⚠️ SANDBOX: Bỏ qua verify signature vì sandbox có thể khác format
+      //  SANDBOX: Bỏ qua verify signature vì sandbox có thể khác format
       // Production nên bật lại
       // const secretKey = process.env.MOMO_SECRET_KEY || 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
       // const isValidSignature = MomoPaymentService.verifySignature(signature, data, secretKey);
@@ -102,10 +102,10 @@ class ThanhToanController {
       await conn.beginTransaction();
 
       try {
-        // ⚠️ resultCode có thể là string hoặc number
+        //  resultCode có thể là string hoặc number
         if (String(resultCode) === '0') {
-          // ✅ THANH TOÁN THÀNH CÔNG → TẠO ĐƠN HÀNG
-          console.log(`[MOMO CALLBACK] ✅ Payment SUCCESS. Creating order...`);
+          //  THANH TOÁN THÀNH CÔNG → TẠO ĐƠN HÀNG
+          console.log(`[MOMO CALLBACK] Payment SUCCESS. Creating order...`);
 
           // 3.1. Kiểm tra tồn kho
           for (const item of cartItems) {
@@ -168,7 +168,7 @@ class ThanhToanController {
           await GioHang.clearCart(maTaiKhoan, conn);
 
           await conn.commit();
-          console.log(`[MOMO CALLBACK] ✅ Order #${maDonHang} created successfully`);
+          console.log(`[MOMO CALLBACK]  Order #${maDonHang} created successfully`);
 
           // Redirect to success page
           return res.redirect(
@@ -176,8 +176,8 @@ class ThanhToanController {
           );
 
         } else {
-          // ❌ THANH TOÁN THẤT BẠI → KHÔNG TẠO ĐƠN HÀNG
-          console.log(`[MOMO CALLBACK] ❌ Payment FAILED. Code: ${resultCode}`);
+          //  THANH TOÁN THẤT BẠI → KHÔNG TẠO ĐƠN HÀNG
+          console.log(`[MOMO CALLBACK]  Payment FAILED. Code: ${resultCode}`);
 
           await conn.commit(); // Commit empty transaction
 

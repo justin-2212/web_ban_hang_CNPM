@@ -3,25 +3,38 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { UserButton } from "@clerk/clerk-react";
-import { Bell, Search, X, Package, ShoppingCart, User, TrendingUp } from "lucide-react";
+import {
+  Bell,
+  Search,
+  X,
+  Package,
+  ShoppingCart,
+  User,
+  TrendingUp,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { sanPhamAdminAPI, donHangAdminAPI, taiKhoanAdminAPI, bienTheAdminAPI } from "../../services/adminAPI";
+import {
+  sanPhamAdminAPI,
+  donHangAdminAPI,
+  taiKhoanAdminAPI,
+  bienTheAdminAPI,
+} from "../../services/adminAPI";
 
 const AdminHeader = () => {
   const { dbUser } = useAuth();
   const navigate = useNavigate();
-  
+
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState({
     products: [],
     orders: [],
-    users: []
+    users: [],
   });
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const searchRef = useRef(null);
-  
+
   // Notification state
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -35,7 +48,10 @@ const AdminHeader = () => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSearchResults(false);
       }
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
         setShowNotifications(false);
       }
     };
@@ -64,17 +80,17 @@ const AdminHeader = () => {
       const [productsRes, ordersRes, usersRes] = await Promise.all([
         sanPhamAdminAPI.getAll({ search: searchQuery }),
         donHangAdminAPI.getAll({ search: searchQuery }),
-        taiKhoanAdminAPI.getAll({ search: searchQuery })
+        taiKhoanAdminAPI.getAll({ search: searchQuery }),
       ]);
 
       setSearchResults({
         products: productsRes.success ? productsRes.data.slice(0, 5) : [],
         orders: ordersRes.success ? ordersRes.data.slice(0, 5) : [],
-        users: usersRes.success ? usersRes.data.slice(0, 5) : []
+        users: usersRes.success ? usersRes.data.slice(0, 5) : [],
       });
       setShowSearchResults(true);
     } catch (err) {
-      console.error('Search error:', err);
+      console.error("Search error:", err);
     } finally {
       setSearchLoading(false);
     }
@@ -83,12 +99,12 @@ const AdminHeader = () => {
   // Load notifications
   const loadNotifications = async () => {
     if (notifications.length > 0) return; // Already loaded
-    
+
     setNotificationLoading(true);
     try {
       const [ordersRes, lowStockRes] = await Promise.all([
         donHangAdminAPI.getAll({ tinhTrangDonHang: 0 }), // Đơn hàng đang xử lý
-        bienTheAdminAPI.getLowStock(10) // Sản phẩm tồn kho thấp
+        bienTheAdminAPI.getLowStock(10), // Sản phẩm tồn kho thấp
       ]);
 
       const notifs = [];
@@ -96,35 +112,35 @@ const AdminHeader = () => {
       // Đơn hàng mới
       if (ordersRes.success && ordersRes.data.length > 0) {
         notifs.push({
-          id: 'new-orders',
-          type: 'order',
+          id: "new-orders",
+          type: "order",
           title: `${ordersRes.data.length} đơn hàng mới`,
-          message: 'Cần xử lý',
-          time: 'Mới',
+          message: "Cần xử lý",
+          time: "Mới",
           icon: ShoppingCart,
-          color: 'text-blue-600 bg-blue-50',
-          action: () => navigate('/admin/orders?status=0')
+          color: "text-blue-600 bg-blue-50",
+          action: () => navigate("/admin/orders?status=0"),
         });
       }
 
       // Tồn kho thấp
       if (lowStockRes.success && lowStockRes.data.length > 0) {
         notifs.push({
-          id: 'low-stock',
-          type: 'warning',
+          id: "low-stock",
+          type: "warning",
           title: `${lowStockRes.data.length} sản phẩm sắp hết hàng`,
-          message: 'Cần nhập thêm',
-          time: 'Hôm nay',
+          message: "Cần nhập thêm",
+          time: "Hôm nay",
           icon: Package,
-          color: 'text-orange-600 bg-orange-50',
-          action: () => navigate('/admin/products')
+          color: "text-orange-600 bg-orange-50",
+          action: () => navigate("/admin/products"),
         });
       }
 
       setNotifications(notifs);
       setUnreadCount(notifs.length);
     } catch (err) {
-      console.error('Load notifications error:', err);
+      console.error("Load notifications error:", err);
     } finally {
       setNotificationLoading(false);
     }
@@ -138,9 +154,9 @@ const AdminHeader = () => {
   };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(value || 0);
   };
 
@@ -150,12 +166,12 @@ const AdminHeader = () => {
       <div className="flex ml-auto items-center gap-6">
         {/* Nút thông báo */}
         <div ref={notificationRef} className="relative">
-          <button 
+          <button
             onClick={handleNotificationClick}
             className="admin-notification-btn relative p-2 text-black hover:bg-gray-100 rounded-full transition-colors bg-transparent border-none"
-            style={{ 
-              background: showNotifications ? '#F3F4F6' : 'transparent',
-              marginTop: 0
+            style={{
+              background: showNotifications ? "#F3F4F6" : "transparent",
+              marginTop: 0,
             }}
           >
             <Bell size={20} />
@@ -199,9 +215,15 @@ const AdminHeader = () => {
                           <Icon size={16} />
                         </div>
                         <div className="flex-1">
-                          <div className="font-medium text-sm text-gray-900">{notif.title}</div>
-                          <div className="text-xs text-gray-500 mt-1">{notif.message}</div>
-                          <div className="text-xs text-gray-400 mt-1">{notif.time}</div>
+                          <div className="font-medium text-sm text-gray-900">
+                            {notif.title}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {notif.message}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {notif.time}
+                          </div>
                         </div>
                       </button>
                     );
@@ -216,7 +238,7 @@ const AdminHeader = () => {
 
               {notifications.length > 0 && (
                 <div className="px-4 py-3 border-t border-gray-200">
-                  <button 
+                  <button
                     onClick={() => {
                       setUnreadCount(0);
                       setShowNotifications(false);

@@ -153,13 +153,17 @@ const OrdersManagement = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-6">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        {/*Thêm 'items-center' */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+          {/* Search */}
+          {/*  Thêm 'h-10' */}
+          <div className="relative h-10">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
             <input
               type="text"
               placeholder="Tìm kiếm..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              /*Thêm 'h-10' */
+              className="w-full h-10 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               value={filters.search}
               onChange={(e) =>
                 setFilters({ ...filters, search: e.target.value })
@@ -168,7 +172,8 @@ const OrdersManagement = () => {
           </div>
 
           <select
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            /*  Thêm 'h-10' */
+            className="w-full h-10 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             value={filters.tinhTrangDonHang}
             onChange={(e) =>
               setFilters({ ...filters, tinhTrangDonHang: e.target.value })
@@ -182,7 +187,8 @@ const OrdersManagement = () => {
           </select>
 
           <select
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            /* Thêm 'h-10' */
+            className="w-full h-10 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             value={filters.tinhTrangThanhToan}
             onChange={(e) =>
               setFilters({ ...filters, tinhTrangThanhToan: e.target.value })
@@ -195,7 +201,8 @@ const OrdersManagement = () => {
           </select>
 
           <select
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            /*  Thêm 'h-10' */
+            className="w-full h-10 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             value={filters.phuongThucThanhToan}
             onChange={(e) =>
               setFilters({ ...filters, phuongThucThanhToan: e.target.value })
@@ -207,7 +214,8 @@ const OrdersManagement = () => {
           </select>
 
           <button
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+            /* Thêm 'h-10' và 'border border-transparent' */
+            className="w-full h-10 px-4 bg-gray-200 text-gray-700 border border-transparent rounded-lg hover:bg-gray-300 flex items-center justify-center"
             onClick={() =>
               setFilters({
                 search: "",

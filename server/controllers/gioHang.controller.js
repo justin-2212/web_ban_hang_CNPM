@@ -53,7 +53,7 @@ class GioHangController {
 
       console.log('📦 Adding to cart:', { maTaiKhoan, maBienThe, soLuong });
 
-      // ✅ Kiểm tra số lượng phải > 0
+      //  Kiểm tra số lượng phải > 0
       if (!soLuong || soLuong <= 0) {
         return res
           .status(400)
