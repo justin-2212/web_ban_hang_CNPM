@@ -1,14 +1,17 @@
 //src/services/api.js
 
+import axios from 'axios';
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-// Helper function với auth headers
-const handleResponse = async (response) => {
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Có lỗi xảy ra");
-  return data;
-};
+// Tạo axios instance với base URL
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
 // Helper để lấy auth headers từ localStorage hoặc Clerk
 const getAuthHeaders = () => {
@@ -36,223 +39,165 @@ const getAuthHeaders = () => {
 // ============ SẢN PHẨM ============
 export const sanPhamAPI = {
   // Lấy tất cả sản phẩm với filter & sort
-  getAll: (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return fetch(
-      `${API_BASE_URL}/san-pham${queryString ? "?" + queryString : ""}`
-    ).then(handleResponse);
-  },
+  getAll: (params = {}) =>
+    apiClient.get("/san-pham", { params }).then(res => res.data),
 
-  getById: (id) => fetch(`${API_BASE_URL}/san-pham/${id}`).then(handleResponse),
+  getById: (id) => apiClient.get(`/san-pham/${id}`).then(res => res.data),
 
   // Lấy theo loại với filter
-  getByCategory: (maLoai, params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return fetch(
-      `${API_BASE_URL}/san-pham/loai/${maLoai}${
-        queryString ? "?" + queryString : ""
-      }`
-    ).then(handleResponse);
-  },
+  getByCategory: (maLoai, params = {}) =>
+    apiClient.get(`/san-pham/loai/${maLoai}`, { params }).then(res => res.data),
 
   // Chi tiết đầy đủ (kèm variants, images, specs)
   getDetail: (id) =>
-    fetch(`${API_BASE_URL}/san-pham/chi-tiet/${id}`).then(handleResponse),
+    apiClient.get(`/san-pham/chi-tiet/${id}`).then(res => res.data),
 
   // Tìm kiếm sản phẩm
   search: (keyword) =>
-    fetch(`${API_BASE_URL}/san-pham/search?q=${encodeURIComponent(keyword)}`).then(
-      handleResponse
-    ),
+    apiClient.get("/san-pham/search", { params: { q: keyword } }).then(res => res.data),
 
   // Lấy top sản phẩm bán chạy
   getTopSelling: (limit = 5) =>
-    fetch(`${API_BASE_URL}/san-pham/top-selling?limit=${limit}`).then(handleResponse),
+    apiClient.get("/san-pham/top-selling", { params: { limit } }).then(res => res.data),
 
   create: (data) =>
-    fetch(`${API_BASE_URL}/san-pham`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    }).then(handleResponse),
+    apiClient.post("/san-pham", data).then(res => res.data),
 
   update: (id, data) =>
-    fetch(`${API_BASE_URL}/san-pham/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    }).then(handleResponse),
+    apiClient.put(`/san-pham/${id}`, data).then(res => res.data),
 
   delete: (id) =>
-    fetch(`${API_BASE_URL}/san-pham/${id}`, { method: "DELETE" }).then(
-      handleResponse
-    ),
+    apiClient.delete(`/san-pham/${id}`).then(res => res.data),
 
-  getVariantAttributes: async (maSP) => {
-    const response = await fetch(
-      `${API_BASE_URL}/san-pham/variant-attributes/${maSP}`
-    );
-    return handleResponse(response);
-  },
+  getVariantAttributes: (maSP) =>
+    apiClient.get(`/san-pham/variant-attributes/${maSP}`).then(res => res.data),
 };
 
 // ============ LOẠI SẢN PHẨM ============
 export const loaiSanPhamAPI = {
-  getAll: () => fetch(`${API_BASE_URL}/loai-san-pham`).then(handleResponse),
+  getAll: () => apiClient.get("/loai-san-pham").then(res => res.data),
   getAllWithImages: () =>
-    fetch(`${API_BASE_URL}/loai-san-pham/with-images`).then(handleResponse),
+    apiClient.get("/loai-san-pham/with-images").then(res => res.data),
   getById: (id) =>
-    fetch(`${API_BASE_URL}/loai-san-pham/${id}`).then(handleResponse),
+    apiClient.get(`/loai-san-pham/${id}`).then(res => res.data),
 };
 
 // ============ GIỎ HÀNG ============
 export const gioHangAPI = {
-  // ✅ GET: Lấy giỏ hàng của user
+  // GET: Lấy giỏ hàng của user
   get: (maTaiKhoan) =>
-    fetch(`${API_BASE_URL}/gio-hang/${maTaiKhoan}`, {
+    apiClient.get(`/gio-hang/${maTaiKhoan}`, {
       headers: getAuthHeaders(),
-    }).then(handleResponse),
+    }).then(res => res.data),
 
-  // ✅ POST: Thêm item hoặc tăng số lượng
+  // POST: Thêm item hoặc tăng số lượng
   addItem: (maTaiKhoan, maBienThe, soLuong) =>
-    fetch(`${API_BASE_URL}/gio-hang`, {
-      method: "POST",
+    apiClient.post("/gio-hang", { maTaiKhoan, maBienThe, soLuong }, {
       headers: getAuthHeaders(),
-      body: JSON.stringify({ maTaiKhoan, maBienThe, soLuong }),
-    }).then(handleResponse),
+    }).then(res => res.data),
 
-  // ✅ PUT: Cập nhật số lượng item
+  // PUT: Cập nhật số lượng item
   updateQuantity: (maTaiKhoan, maBienThe, soLuong) =>
-    fetch(`${API_BASE_URL}/gio-hang`, {
-      method: "PUT",
+    apiClient.put("/gio-hang", { maTaiKhoan, maBienThe, soLuong }, {
       headers: getAuthHeaders(),
-      body: JSON.stringify({ maTaiKhoan, maBienThe, soLuong }),
-    }).then(handleResponse),
+    }).then(res => res.data),
 
-  // ✅ DELETE: Xóa 1 item khỏi giỏ
+  // DELETE: Xóa 1 item khỏi giỏ
   removeItem: (maTaiKhoan, maBienThe) =>
-    fetch(`${API_BASE_URL}/gio-hang/${maTaiKhoan}/${maBienThe}`, {
-      method: "DELETE",
+    apiClient.delete(`/gio-hang/${maTaiKhoan}/${maBienThe}`, {
       headers: getAuthHeaders(),
-    }).then(handleResponse),
+    }).then(res => res.data),
 
-  // ✅ DELETE: Xóa toàn bộ giỏ hàng
+  // DELETE: Xóa toàn bộ giỏ hàng
   clearCart: (maTaiKhoan) =>
-    fetch(`${API_BASE_URL}/gio-hang/clear/${maTaiKhoan}`, {
-      method: "DELETE",
+    apiClient.delete(`/gio-hang/clear/${maTaiKhoan}`, {
       headers: getAuthHeaders(),
-    }).then(handleResponse),
+    }).then(res => res.data),
 };
 
 // ============ TÀI KHOẢN ============
 export const taiKhoanAPI = {
   login: (gmail) =>
-    fetch(`${API_BASE_URL}/tai-khoan/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gmail }),
-    }).then(handleResponse),
+    apiClient.post("/tai-khoan/login", { gmail }).then(res => res.data),
 
   register: (data) =>
-    fetch(`${API_BASE_URL}/tai-khoan/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    }).then(handleResponse),
+    apiClient.post("/tai-khoan/register", data).then(res => res.data),
 
   // Lấy thông tin user
-  getProfile: (id) => fetch(`${API_BASE_URL}/tai-khoan/${id}`).then(handleResponse),
+  getProfile: (id) => apiClient.get(`/tai-khoan/${id}`).then(res => res.data),
   syncUser: (data) =>
-    fetch(`${API_BASE_URL}/tai-khoan/sync-user`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    }).then(handleResponse),
+    apiClient.post("/tai-khoan/sync-user", data).then(res => res.data),
 
-  // --- SỬA LẠI ĐOẠN NÀY ---
-  // Backend của bạn là: router.put("/update-info", ...)
-  // Nên ở đây ta phải gọi đúng endpoint đó và gửi data (bao gồm cả maTaiKhoan) vào body
+
   updateProfile: (data) =>
-    fetch(`${API_BASE_URL}/tai-khoan/update-info`, {
-      method: "PUT",
+    apiClient.put("/tai-khoan/update-info", data, {
       headers: getAuthHeaders(),
-      body: JSON.stringify(data),
-      // data lúc này sẽ là { maTaiKhoan: 1, soDienThoai: "...", diaChi: "..." }
-    }).then(handleResponse),
+    }).then(res => res.data),
 
   // Gọi xuống backend để lấy thông tin mới nhất
   getByEmail: (email) =>
-    fetch(`${API_BASE_URL}/tai-khoan/get-by-email/${email}`).then(handleResponse),
+    apiClient.get(`/tai-khoan/get-by-email/${email}`).then(res => res.data),
 };
 
 // ============ ĐƠN HÀNG ============
 export const donHangAPI = {
   create: (data) =>
-    fetch(`${API_BASE_URL}/don-hang`, {
-      method: "POST",
+    apiClient.post("/don-hang", data, {
       headers: getAuthHeaders(),
-      body: JSON.stringify(data),
-    }).then(handleResponse),
+    }).then(res => res.data),
 
   getByUser: (maTaiKhoan) =>
-    fetch(`${API_BASE_URL}/don-hang/user/${maTaiKhoan}`, {
+    apiClient.get(`/don-hang/user/${maTaiKhoan}`, {
       headers: getAuthHeaders(),
-    }).then(handleResponse),
+    }).then(res => res.data),
 
   getById: (id) =>
-    fetch(`${API_BASE_URL}/don-hang/${id}`, {
+    apiClient.get(`/don-hang/${id}`, {
       headers: getAuthHeaders(),
-    }).then(handleResponse),
+    }).then(res => res.data),
 
-  // ✅ NEW: Hủy đơn hàng
+  // Hủy đơn hàng
   cancelOrder: (maDonHang) =>
-    fetch(`${API_BASE_URL}/don-hang/${maDonHang}/cancel`, {
-      method: "POST",
+    apiClient.post(`/don-hang/${maDonHang}/cancel`, {}, {
       headers: getAuthHeaders(),
-    }).then(handleResponse),
+    }).then(res => res.data),
 
   updateStatus: (id, status) =>
-    fetch(`${API_BASE_URL}/don-hang/${id}/status`, {
-      method: "PUT",
+    apiClient.put(`/don-hang/${id}/status`, { status }, {
       headers: getAuthHeaders(),
-      body: JSON.stringify({ status }),
-    }).then(handleResponse),
+    }).then(res => res.data),
 
   // Lấy trạng thái thanh toán online
   getPaymentStatus: (maDonHang) =>
-    fetch(`${API_BASE_URL}/don-hang/${maDonHang}/payment-status`, {
+    apiClient.get(`/don-hang/${maDonHang}/payment-status`, {
       headers: getAuthHeaders(),
-    }).then(handleResponse),
+    }).then(res => res.data),
 };
 
 // ============ CHECKOUT & THANH TOÁN ============
 export const checkoutAPI = {
   checkout: ({ maTaiKhoan, phuongThucThanhToan }) =>
-    fetch(`${API_BASE_URL}/checkout`, {
-      method: "POST",
+    apiClient.post("/checkout", {
+      maTaiKhoan,
+      phuongThucThanhToan, // "COD" | "ONLINE"
+    }, {
       headers: getAuthHeaders(),
-      body: JSON.stringify({
-        maTaiKhoan,
-        phuongThucThanhToan, // "COD" | "ONLINE"
-      }),
-    }).then(handleResponse),
+    }).then(res => res.data),
 };
 
 export const thanhToanAPI = {
   createOnlinePayment: ({ maDonHang, soTien }) =>
-    fetch(`${API_BASE_URL}/thanh-toan/online`, {
-      method: "POST",
+    apiClient.post("/thanh-toan/online", {
+      maDonHang,
+      soTien,
+    }, {
       headers: getAuthHeaders(),
-      body: JSON.stringify({
-        maDonHang,
-        soTien,
-      }),
-    }).then(handleResponse),
+    }).then(res => res.data),
 
   getPaymentStatus: (maDonHang) =>
-    fetch(`${API_BASE_URL}/thanh-toan/status/${maDonHang}`, {
+    apiClient.get(`/thanh-toan/status/${maDonHang}`, {
       headers: getAuthHeaders(),
-    }).then(handleResponse),
+    }).then(res => res.data),
 };
 
 // ============ UPLOAD ẢNH CLOUDINARY ============
@@ -264,10 +209,11 @@ export const uploadAPI = {
     formData.append('maSP', maSP);
     formData.append('thuTuHienThi', thuTuHienThi);
 
-    return fetch(`${API_BASE_URL}/upload/anh-san-pham`, {
-      method: 'POST',
-      body: formData,
-    }).then(handleResponse);
+    return apiClient.post('/upload/anh-san-pham', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
   },
 
   // Upload ảnh biến thể (BienThe)
@@ -276,10 +222,11 @@ export const uploadAPI = {
     formData.append('image', file);
     formData.append('maBienThe', maBienThe);
 
-    return fetch(`${API_BASE_URL}/upload/anh-bien-the`, {
-      method: 'POST',
-      body: formData,
-    }).then(handleResponse);
+    return apiClient.post('/upload/anh-bien-the', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
   },
 
   // Upload nhiều ảnh cùng lúc cho sản phẩm
@@ -290,9 +237,10 @@ export const uploadAPI = {
     });
     formData.append('maSP', maSP);
 
-    return fetch(`${API_BASE_URL}/upload/anh-san-pham/bulk`, {
-      method: 'POST',
-      body: formData,
-    }).then(handleResponse);
+    return apiClient.post('/upload/anh-san-pham/bulk', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
   },
 };

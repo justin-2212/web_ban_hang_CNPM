@@ -160,10 +160,10 @@ export default function ProductsList({ products, priceRange }) {
             to={`/products/${product.MaSP}?category=${product.MaLoai}`}
             data-aos="zoom-in"
             data-aos-delay={index * 50}
-            className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden"
+            className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col h-full"
           >
             {/* Image Container */}
-            <div className="relative w-full h-64 bg-gray-50 flex items-center justify-center p-6 overflow-hidden">
+            <div className="relative w-full h-64 bg-gray-50 flex items-center justify-center p-6 overflow-hidden flex-shrink-0">
               <img 
                 src={mainImage}
                 alt={product.Ten} 
@@ -188,7 +188,7 @@ export default function ProductsList({ products, priceRange }) {
             </div>
 
             {/* Content */}
-            <div className="p-5">
+            <div className="p-5 flex flex-col flex-1">
               {/* Category badge */}
               <div className="text-xs text-blue-600 font-semibold mb-2 uppercase tracking-wide">
                 {product.TenLoai}
@@ -222,8 +222,8 @@ export default function ProductsList({ products, priceRange }) {
                 </div>
               </div>
 
-              {/* Action button */}
-              <div className="mt-4 flex-1 flex flex-col justify-end">
+              {/* Action button - được đẩy xuống dưới cùng */}
+              <div className="mt-auto pt-2">
                 <button
                   onClick={(e) => addToCart(product, e)}
                   className="w-full py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition flex items-center justify-center gap-2"

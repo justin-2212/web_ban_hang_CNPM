@@ -1,7 +1,6 @@
-// src/services/categoryService.js
-import axios from "axios"; // Hoặc import instance axios của bạn nếu có (ví dụ: src/services/api.js)
+import axios from "axios"; 
 
-// Cấu hình đường dẫn gốc (Nếu bạn chưa cấu hình axios global)
+// Cấu hình đường dẫn gốc (Nếu chưa cấu hình axios global)
 const API_URL = "http://localhost:5000/api/admin/loai-san-pham";
 
 // Hàm lấy token từ localStorage (để gửi kèm request)

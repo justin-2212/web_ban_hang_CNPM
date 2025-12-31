@@ -3,7 +3,7 @@ import React from "react";
 const services = [
   { icon: "🚚", title: "Giao hàng miễn phí", desc: "Miễn phí vận chuyển toàn quốc." },
   { icon: "💳", title: "Thanh toán an toàn", desc: "Bảo mật mọi giao dịch của bạn." },
-  { icon: "🔁", title: "Đổi trả 7 ngày", desc: "Hoàn tiền hoặc đổi sản phẩm dễ dàng." },
+  { icon: "🔁", title: "Đổi trả thuận lợi", desc: "Hoàn tiền hoặc đổi sản phẩm dễ dàng." },
   { icon: "🧰", title: "Bảo hành 12 tháng", desc: "Hỗ trợ kỹ thuật nhanh chóng." },
 ];
 
