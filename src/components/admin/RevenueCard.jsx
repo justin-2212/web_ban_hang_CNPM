@@ -142,9 +142,13 @@ const RevenueCard = ({ monthData, weekData, yearData }) => {
         <div className="pt-4 border-t mt-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">{currentData.ordersLabel}</p>
-              <p className="text-xl font-bold text-gray-900">
+              {/* Hiển thị số lượng to và đậm */}
+              <p className="text-xl font-bold text-gray-900 flex items-baseline gap-1">
                 {currentData.orders}
+                {/* Ghép chuỗi text vào sau số lượng */}
+                <span className="text-sm font-normal text-gray-600">
+                  đơn hàng {currentData.periodLabel} giao thành công
+                </span>
               </p>
             </div>
 

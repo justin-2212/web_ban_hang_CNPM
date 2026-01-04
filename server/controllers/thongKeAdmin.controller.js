@@ -16,7 +16,7 @@ export const getDashboardStats = async (req, res, next) => {
     const userStats = await TaiKhoanAdmin.getUserStats();
 
     // Lấy biến thể tồn kho thấp
-    const lowStock = await BienTheAdmin.getLowStock(5);
+    const lowStock = await BienTheAdmin.getLowStock(10);
 
     // Lấy top sản phẩm bán chạy
     const topProducts = await DonHangAdmin.getTopSellingProducts(5);
@@ -26,8 +26,8 @@ export const getDashboardStats = async (req, res, next) => {
     const [todayStats] = await db.query(
       `
       SELECT 
-        COUNT(*) as DonHangHomNay,
-        SUM(TongTien) as DoanhThuHomNay
+        SUM(CASE WHEN TinhTrangDonHang = 2 THEN 1 ELSE 0 END) as DonHangHomNay,
+        SUM(CASE WHEN TinhTrangDonHang = 2 THEN TongTien ELSE 0 END) as DoanhThuHomNay
       FROM DonHang
       WHERE DATE(NgayDat) = ?
       `,
@@ -38,8 +38,8 @@ export const getDashboardStats = async (req, res, next) => {
     const [weekStats] = await db.query(
       `
       SELECT 
-        COUNT(*) as DonHangTuanNay,
-        SUM(TongTien) as DoanhThuTuanNay
+        SUM(CASE WHEN TinhTrangDonHang = 2 THEN 1 ELSE 0 END) as DonHangTuanNay,
+        SUM(CASE WHEN TinhTrangDonHang = 2 THEN TongTien ELSE 0 END) as DoanhThuTuanNay
       FROM DonHang
       WHERE YEARWEEK(NgayDat, 1) = YEARWEEK(CURDATE(), 1)
       `
@@ -49,8 +49,8 @@ export const getDashboardStats = async (req, res, next) => {
     const [monthStats] = await db.query(
       `
       SELECT 
-        COUNT(*) as DonHangThangNay,
-        SUM(TongTien) as DoanhThuThangNay
+        SUM(CASE WHEN TinhTrangDonHang = 2 THEN 1 ELSE 0 END) as DonHangThangNay,
+        SUM(CASE WHEN TinhTrangDonHang = 2 THEN TongTien ELSE 0 END) as DoanhThuThangNay
       FROM DonHang
       WHERE YEAR(NgayDat) = YEAR(CURDATE()) AND MONTH(NgayDat) = MONTH(CURDATE())
       `
@@ -60,8 +60,8 @@ export const getDashboardStats = async (req, res, next) => {
     const [yearStats] = await db.query(
       `
       SELECT 
-        COUNT(*) as DonHangNamNay,
-        SUM(TongTien) as DoanhThuNamNay
+        SUM(CASE WHEN TinhTrangDonHang = 2 THEN 1 ELSE 0 END) as DonHangNamNay,
+        SUM(CASE WHEN TinhTrangDonHang = 2 THEN TongTien ELSE 0 END) as DoanhThuNamNay
       FROM DonHang
       WHERE YEAR(NgayDat) = YEAR(CURDATE())
       `

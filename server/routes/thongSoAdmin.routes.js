@@ -31,7 +31,7 @@ router.get("/variants/:maLoai", getVariants);
 router.post("/variants", createVariant);
 router.delete("/variants/:id", deleteVariant);
 router.delete("/variants/hard-delete/:id", hardDeleteVariant);
-router.put("/variants/restore/:id", restoreVariant);    
+router.put("/variants/restore/:id", restoreVariant);
 router.put("/variants/:id", updateVariant); //
 
 export default router;

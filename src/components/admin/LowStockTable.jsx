@@ -16,7 +16,7 @@ const LowStockTable = ({ data = [] }) => {
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
         <AlertTriangle className="w-5 h-5 text-red-600" />
-        Cảnh báo tồn kho thấp (từ 5 trở xuống)
+        Cảnh báo tồn kho thấp (từ 10 trở xuống)
       </h3>
       <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
         <table className="min-w-full divide-y divide-gray-200">

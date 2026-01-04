@@ -19,36 +19,42 @@ const DonHangAdmin = {
     const params = [];
 
     if (filters.tinhTrangDonHang !== undefined) {
-      conditions.push('dh.TinhTrangDonHang = ?');
+      conditions.push("dh.TinhTrangDonHang = ?");
       params.push(filters.tinhTrangDonHang);
     }
 
     if (filters.tinhTrangThanhToan !== undefined) {
-      conditions.push('dh.TinhTrangThanhToan = ?');
+      conditions.push("dh.TinhTrangThanhToan = ?");
       params.push(filters.tinhTrangThanhToan);
     }
 
     if (filters.phuongThucThanhToan) {
-      conditions.push('dh.PhuongThucThanhToan = ?');
+      conditions.push("dh.PhuongThucThanhToan = ?");
       params.push(filters.phuongThucThanhToan);
     }
 
     if (filters.search) {
-      conditions.push('(dh.MaDonHang LIKE ? OR tk.TenDayDu LIKE ? OR tk.Gmail LIKE ?)');
-      params.push(`%${filters.search}%`, `%${filters.search}%`, `%${filters.search}%`);
+      conditions.push(
+        "(dh.MaDonHang LIKE ? OR tk.TenDayDu LIKE ? OR tk.Gmail LIKE ?)"
+      );
+      params.push(
+        `%${filters.search}%`,
+        `%${filters.search}%`,
+        `%${filters.search}%`
+      );
     }
 
     if (filters.fromDate) {
-      conditions.push('dh.NgayDat >= ?');
+      conditions.push("dh.NgayDat >= ?");
       params.push(filters.fromDate);
     }
     if (filters.toDate) {
-      conditions.push('dh.NgayDat <= ?');
+      conditions.push("dh.NgayDat <= ?");
       params.push(filters.toDate);
     }
 
     if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
+      query += " WHERE " + conditions.join(" AND ");
     }
 
     query += `
@@ -151,7 +157,7 @@ const DonHangAdmin = {
   },
 
   // Top sản phẩm bán chạy
-  getTopSellingProducts: async (limit = 10) => {
+  getTopSellingProducts: async (limit = 5) => {
     const [rows] = await db.query(
       `
       SELECT 
@@ -165,15 +171,15 @@ const DonHangAdmin = {
       JOIN BienThe bt ON dhct.MaBienThe = bt.MaBienThe
       JOIN SanPham sp ON bt.MaSP = sp.MaSP
       JOIN DonHang dh ON dhct.MaDonHang = dh.MaDonHang
-      WHERE dh.TinhTrangDonHang != 3
+      WHERE dh.TinhTrangDonHang = 2 
       GROUP BY bt.MaBienThe, bt.TenBienThe, bt.DuongDanAnhBienThe, sp.Ten
-      ORDER BY TongSoLuong DESC
+      ORDER BY TongSoLuong DESC, TongDoanhThu DESC
       LIMIT ?
       `,
       [limit]
     );
     return rows;
-  }
+  },
 };
 
 export default DonHangAdmin;
