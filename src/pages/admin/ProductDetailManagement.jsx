@@ -95,12 +95,24 @@ const ProductDetailManagement = () => {
                 vSpecsRes.data.map((s) => [s.MaThongSoBienTheMau, s])
               ).values()
             );
-            setVariantSpecs(unique);
+            // [UPDATE] Chỉ lấy các thuộc tính biến thể ĐANG HOẠT ĐỘNG (TinhTrang = 1)
+            // Để admin chỉ nhập giá trị cho những cái đang dùng
+            const activeVariantSpecs = unique.filter(
+              (item) => item.TinhTrangThongSoBienThe === 1
+            );
+            setVariantSpecs(activeVariantSpecs);
           }
 
           // 2. Thông số kỹ thuật (Màn hình, Pin...)
           const pSpecsRes = await thongSoMauAPI.getByCategory(prod.MaLoai);
-          if (pSpecsRes.success) setProductSpecs(pSpecsRes.data);
+          if (pSpecsRes.success) {
+            // [UPDATE] Chỉ lấy các thông số kỹ thuật ĐANG HOẠT ĐỘNG (TinhTrang = 1)
+            const activeProductSpecs = pSpecsRes.data.filter(
+              (item) => item.TinhTrangThongSoMau === 1
+            );
+
+            setProductSpecs(activeProductSpecs);
+          }
 
           // 3. Giá trị thông số đã điền
           const valsRes = await giaTriThongSoAPI.getByProduct(id);

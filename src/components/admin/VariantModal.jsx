@@ -1,7 +1,7 @@
 // src/components/admin/VariantModal.jsx
 
 import React, { useState, useEffect, useRef } from "react";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
 import {
   bienTheAdminAPI,
   giaTriBienTheAPI,
@@ -20,6 +20,11 @@ const VariantModal = ({
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
+  // State để lưu file ảnh tạm thời khi chưa bấm Lưu
+  const [selectedFile, setSelectedFile] = useState(null);
+  // [State để lưu URL preview ảnh (ảnh cũ hoặc ảnh mới chọn)
+  const [previewUrl, setPreviewUrl] = useState("");
+
   const [formData, setFormData] = useState({
     TenBienThe: "",
     SoLuongTonKho: 0,
@@ -32,6 +37,8 @@ const VariantModal = ({
 
   useEffect(() => {
     if (isOpen) {
+      // Reset file tạm mỗi khi mở modal
+      setSelectedFile(null);
       if (variant) {
         setFormData({
           TenBienThe: variant.TenBienThe,
@@ -42,6 +49,8 @@ const VariantModal = ({
           TinhTrangHoatDong: variant.TinhTrangHoatDong,
           attributes: {},
         });
+        //  Nếu có ảnh cũ thì set preview là ảnh cũ
+        setPreviewUrl(variant.DuongDanAnhBienThe || "");
         loadAttributes(variant.MaBienThe);
       } else {
         setFormData({
@@ -53,9 +62,20 @@ const VariantModal = ({
           TinhTrangHoatDong: 1,
           attributes: {},
         });
+        //  Reset preview
+        setPreviewUrl("");
       }
     }
   }, [isOpen, variant]);
+
+  // Clean up object URL khi unmount hoặc đổi file để tránh leak memory
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const loadAttributes = async (maBienThe) => {
     try {
@@ -99,30 +119,43 @@ const VariantModal = ({
     setFormData({ ...formData, [field]: val });
   };
 
-  const handleUploadImage = async (e) => {
+  // const handleUploadImage = async (e) => {
+  //   const file = e.target.files[0];
+  //   if (!file) return;
+
+  //   if (!variant) {
+  //     alert("Vui lòng LƯU biến thể trước khi upload ảnh!");
+  //     return;
+  //   }
+
+  //   try {
+  //     setUploading(true);
+  //     const res = await uploadAPI.uploadAnhBienThe(file, variant.MaBienThe);
+  //     if (res.success) {
+  //       alert("Upload ảnh thành công!");
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         DuongDanAnhBienThe: res.data.duongDanAnhBienThe,
+  //       }));
+  //     }
+  //   } catch (err) {
+  //     alert("Lỗi upload: " + err.message);
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
+
+  // [UPDATE] Hàm xử lý chọn ảnh (Không upload ngay, chỉ preview)
+  const handleSelectImage = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!variant) {
-      alert("Vui lòng LƯU biến thể trước khi upload ảnh!");
-      return;
-    }
+    // 1. Lưu file vào state để dành upload sau
+    setSelectedFile(file);
 
-    try {
-      setUploading(true);
-      const res = await uploadAPI.uploadAnhBienThe(file, variant.MaBienThe);
-      if (res.success) {
-        alert("Upload ảnh thành công!");
-        setFormData((prev) => ({
-          ...prev,
-          DuongDanAnhBienThe: res.data.duongDanAnhBienThe,
-        }));
-      }
-    } catch (err) {
-      alert("Lỗi upload: " + err.message);
-    } finally {
-      setUploading(false);
-    }
+    // 2. Tạo URL preview để hiển thị ngay lập tức
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
   };
 
   const handleSubmit = async (e) => {
@@ -177,6 +210,25 @@ const VariantModal = ({
       } else {
         const res = await bienTheAdminAPI.create(payload);
         variantId = res.data.maBienThe;
+      }
+
+      //  Xử lý Upload ảnh (Nếu có chọn file mới)
+      // Logic: Có ID rồi mới upload
+      if (selectedFile) {
+        try {
+          setUploading(true); // Hiển thị trạng thái đang upload (nếu cần UI)
+          await uploadAPI.uploadAnhBienThe(selectedFile, variantId);
+          // Không cần set lại formData vì modal sẽ đóng ngay sau đây
+        } catch (uploadErr) {
+          console.error("Lỗi upload ảnh:", uploadErr);
+          alert(
+            "Lưu thông tin thành công nhưng lỗi upload ảnh: " +
+              uploadErr.message
+          );
+          // Vẫn cho flow tiếp tục để đóng modal hoặc user có thể thử lại
+        } finally {
+          setUploading(false);
+        }
       }
 
       for (const [maThongSo, val] of Object.entries(formData.attributes)) {
@@ -302,9 +354,10 @@ const VariantModal = ({
                 Ảnh biến thể
               </label>
               <div className="flex items-center gap-4">
-                {formData.DuongDanAnhBienThe ? (
+                {/* Hiển thị Preview URL thay vì đường dẫn từ DB */}
+                {previewUrl ? (
                   <img
-                    src={formData.DuongDanAnhBienThe}
+                    src={previewUrl}
                     alt="Preview"
                     className="w-24 h-24 object-cover rounded-lg border border-gray-300 bg-white"
                   />
@@ -319,22 +372,19 @@ const VariantModal = ({
                     ref={fileInputRef}
                     type="file"
                     className="hidden"
-                    onChange={handleUploadImage}
+                    //  Gọi hàm handleSelectImage
+                    onChange={handleSelectImage}
                   />
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={!variant || uploading}
+                    disabled={uploading} // Vẫn disable nếu đang trong quá trình submit cuối cùng
                     className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
                   >
                     <Upload className="w-4 h-4" />
-                    {uploading ? "Đang upload..." : "Chọn ảnh"}
+                    {selectedFile ? "Đổi ảnh khác" : "Chọn ảnh"}
                   </button>
-                  {!variant && (
-                    <span className="text-xs text-amber-600 font-medium">
-                      Lưu biến thể trước khi upload ảnh
-                    </span>
-                  )}
+                  {/*  Xóa dòng cảnh báo "Lưu biến thể trước khi upload" vì giờ không cần nữa */}
                 </div>
               </div>
             </div>
@@ -424,6 +474,7 @@ const VariantModal = ({
             <button
               type="button"
               onClick={onClose}
+              disabled={loading}
               className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium"
             >
               Hủy
@@ -431,9 +482,17 @@ const VariantModal = ({
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium shadow-sm"
+              className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium shadow-sm"
             >
-              {loading ? "Đang lưu..." : variant ? "Cập nhật" : "Thêm mới"}
+              {/* Logic hiển thị Loading Spinner */}
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" /> {/* Icon xoay */}
+                  <span>Đang xử lý...</span>
+                </>
+              ) : (
+                <span>{variant ? "Cập nhật" : "Thêm mới"}</span>
+              )}
             </button>
           </div>
         </div>

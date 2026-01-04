@@ -23,7 +23,7 @@ router.post(
     try {
       const { maSP, thuTuHienThi = 0 } = req.body;
 
-      // ✅ Validate input
+      //  Validate input
       if (!maSP || !req.cloudinaryResult) {
         return res.status(400).json({
           success: false,
@@ -31,7 +31,7 @@ router.post(
         });
       }
 
-      // ✅ Kiểm tra sản phẩm có tồn tại
+      //  Kiểm tra sản phẩm có tồn tại
       const [productCheck] = await db.query(
         'SELECT MaSP FROM SanPham WHERE MaSP = ?',
         [maSP]
