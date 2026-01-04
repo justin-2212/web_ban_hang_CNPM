@@ -20,21 +20,19 @@ export default function Sidebar({ categories, selected, onSelect }) {
         <nav className="space-y-2">
           {categories.map((cat) => {
             const isActive = selected === cat.MaLoai;
-            const icon = categoryIcons[cat.TenLoai] || '📦';
 
             return (
               <button
                 key={cat.MaLoai}
                 onClick={() => onSelect(cat.MaLoai)}
-                className={`w-full text-left px-4 py-3 rounded-xl font-medium transition-all duration-200
-                  flex items-center gap-3
+                className={`w-full text-center px-4 py-3 rounded-xl font-medium transition-all duration-200
+                  flex items-center justify-center gap-3
                   ${isActive
                     ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
                     : 'text-gray-700 hover:bg-gray-100'
                   }
                 `}
               >
-                <span className="text-xl">{icon}</span>
                 <span>{cat.TenLoai}</span>
               </button>
             );

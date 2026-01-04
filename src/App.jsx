@@ -43,6 +43,7 @@ import AuthRedirect from "./components/AuthRedirect"; // Import chuyển hướn
 import AuthSync from "./components/AuthSync"; // Import đồng bộ auth
 import MainLayout from "./components/MainLayout";
 import AdminLayout from "./components/admin/AdminLayout";
+import ScrollToTop from "./components/ScrollToTop"; // Import scroll to top
 
 const App = () => {
   // Khởi tạo AOS khi app load
@@ -57,6 +58,8 @@ const App = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Tự động scroll lên đầu trang khi chuyển route */}
+      <ScrollToTop />
       {/* COMPONENT NÀY Ở ĐÂY ĐỂ NÓ CHẠY NGẦM */}
       <AuthSync />
       {/* Component này sẽ tự động check quyền và chuyển trang khi load web */}

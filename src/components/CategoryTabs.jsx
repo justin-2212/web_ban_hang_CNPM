@@ -18,7 +18,6 @@ export default function CategoryTabs({ categories, selected, onSelect }) {
     <div className="flex flex-wrap justify-center gap-3">
       {categories.map((cat) => {
         const isActive = selected === cat.MaLoai;
-        const icon = categoryIcons[cat.TenLoai] || '📦';
 
         return (
           <button
@@ -33,7 +32,6 @@ export default function CategoryTabs({ categories, selected, onSelect }) {
               }
             `}
           >
-            <span className="text-lg">{icon}</span>
             <span>{cat.TenLoai}</span>
           </button>
         );

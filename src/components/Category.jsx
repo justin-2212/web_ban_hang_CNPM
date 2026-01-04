@@ -80,11 +80,6 @@ const Category = () => {
                 <div className="bg-white rounded-2xl overflow-hidden shadow-md group-hover:shadow-2xl transition-all duration-300 border border-gray-100">
                   {/* Image Container */}
                   <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 p-6 relative overflow-hidden">
-                    {/* Background Icon */}
-                    <div className="absolute -bottom-4 -right-4 text-8xl opacity-5 group-hover:opacity-10 transition-opacity">
-                      {icon}
-                    </div>
-                    
                     {/* Product Image */}
                     <img
                       src={cat.HinhAnh || "/assets/placeholder.png"}
@@ -99,8 +94,7 @@ const Category = () => {
                   {/* Category Name */}
                   <div className="p-4 bg-white">
                     <div className="flex items-center justify-center gap-2">
-                      <span className="text-2xl">{icon}</span>
-                      <p className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      <p className="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
                         {cat.TenLoai}
                       </p>
                     </div>
