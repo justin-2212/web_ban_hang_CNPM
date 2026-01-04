@@ -176,10 +176,12 @@ export const donHangAPI = {
 
 // ============ CHECKOUT & THANH TOÁN ============
 export const checkoutAPI = {
-  checkout: ({ maTaiKhoan, phuongThucThanhToan }) =>
+  // ✅ Hỗ trợ thanh toán riêng từng sản phẩm được chọn
+  checkout: ({ maTaiKhoan, phuongThucThanhToan, cartItems }) =>
     apiClient.post("/checkout", {
       maTaiKhoan,
       phuongThucThanhToan, // "COD" | "ONLINE"
+      cartItems, // Danh sách sản phẩm được chọn để thanh toán
     }, {
       headers: getAuthHeaders(),
     }).then(res => res.data),

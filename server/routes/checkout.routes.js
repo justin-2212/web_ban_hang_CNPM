@@ -12,12 +12,13 @@ const router = express.Router();
 /**
  * POST /api/checkout
  * Tạo đơn hàng từ giỏ hàng được chọn
+ * ✅ Hỗ trợ thanh toán riêng từng sản phẩm
  */
 router.post("/", async (req, res, next) => {
   const connection = await db.getConnection();
 
   try {
-    const { maTaiKhoan, phuongThucThanhToan } = req.body;
+    const { maTaiKhoan, phuongThucThanhToan, cartItems } = req.body;
 
     if (!maTaiKhoan || !phuongThucThanhToan) {
       return res.status(400).json({
@@ -28,39 +29,69 @@ router.post("/", async (req, res, next) => {
 
     await connection.beginTransaction();
 
-    // Lấy giỏ hàng của user
-    const [cartItems] = await connection.query(
-      `
-      SELECT gct.MaBienThe, gct.SoLuong, bt.GiaTienBienThe
-      FROM GioHangChiTiet gct
-      JOIN BienThe bt ON gct.MaBienThe = bt.MaBienThe
-      WHERE gct.MaTaiKhoan = ?
-      `,
-      [maTaiKhoan]
-    );
+    // ✅ NEW: Nếu có cartItems từ client -> dùng đó, nếu không -> lấy toàn bộ giỏ hàng
+    let itemsToCheckout = [];
 
-    if (cartItems.length === 0) {
+    if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
+      // Lấy giá từ DB để đảm bảo an toàn (không tin client)
+      for (const item of cartItems) {
+        const [rows] = await connection.query(
+          `SELECT bt.GiaTienBienThe, bt.SoLuongTonKho
+           FROM BienThe bt
+           WHERE bt.MaBienThe = ?`,
+          [item.MaBienThe]
+        );
+        
+        if (rows.length === 0) {
+          await connection.rollback();
+          return res.status(400).json({
+            success: false,
+            message: `Không tìm thấy biến thể ${item.MaBienThe}`,
+          });
+        }
+        
+        itemsToCheckout.push({
+          MaBienThe: item.MaBienThe,
+          SoLuong: item.SoLuong,
+          GiaTienBienThe: parseFloat(rows[0].GiaTienBienThe),
+          SoLuongTonKho: rows[0].SoLuongTonKho,
+        });
+      }
+    } else {
+      // Fallback: Lấy toàn bộ giỏ hàng
+      const [allCartItems] = await connection.query(
+        `
+        SELECT gct.MaBienThe, gct.SoLuong, bt.GiaTienBienThe, bt.SoLuongTonKho
+        FROM GioHangChiTiet gct
+        JOIN BienThe bt ON gct.MaBienThe = bt.MaBienThe
+        WHERE gct.MaTaiKhoan = ?
+        `,
+        [maTaiKhoan]
+      );
+      itemsToCheckout = allCartItems;
+    }
+
+    if (itemsToCheckout.length === 0) {
       await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: "Giỏ hàng trống",
+        message: "Giỏ hàng trống hoặc không có sản phẩm được chọn",
       });
     }
 
     // ✅ 1. KIỂM TRA TỒN KHO TRƯỚC KHI TẠO ĐƠN HÀNG
-    for (const item of cartItems) {
-      const variant = await BienThe.getById(item.MaBienThe, connection);
-      if (!variant || item.SoLuong > variant.SoLuongTonKho) {
+    for (const item of itemsToCheckout) {
+      if (item.SoLuong > item.SoLuongTonKho) {
         await connection.rollback();
         return res.status(400).json({
           success: false,
-          message: `Sản phẩm ${item.MaBienThe} không đủ tồn kho`,
+          message: `Sản phẩm ${item.MaBienThe} không đủ tồn kho (còn ${item.SoLuongTonKho})`,
         });
       }
     }
 
     // Tính tổng tiền
-    const tongTien = cartItems.reduce(
+    const tongTien = itemsToCheckout.reduce(
       (sum, item) => sum + item.GiaTienBienThe * item.SoLuong,
       0
     );
@@ -76,7 +107,7 @@ router.post("/", async (req, res, next) => {
     );
 
     // Thêm chi tiết đơn hàng
-    for (const item of cartItems) {
+    for (const item of itemsToCheckout) {
       await DonHang.addOrderDetail(
         maDonHang,
         {
@@ -90,16 +121,19 @@ router.post("/", async (req, res, next) => {
 
     // ✅ 2. TRỪ TỒN KHO CHO COD (MOMO sẽ trừ kho sau khi callback thành công)
     if (phuongThucThanhToan === "COD") {
-      for (const item of cartItems) {
+      for (const item of itemsToCheckout) {
         await BienThe.decreaseStock(item.MaBienThe, item.SoLuong, connection);
       }
     }
 
-    // Xóa giỏ hàng
-    await connection.query(
-      "DELETE FROM GioHangChiTiet WHERE MaTaiKhoan = ?",
-      [maTaiKhoan]
-    );
+    // ✅ Chỉ xóa các sản phẩm đã thanh toán khỏi giỏ hàng (không xóa hết)
+    const maBienTheList = itemsToCheckout.map(item => item.MaBienThe);
+    if (maBienTheList.length > 0) {
+      await connection.query(
+        `DELETE FROM GioHangChiTiet WHERE MaTaiKhoan = ? AND MaBienThe IN (?)`,
+        [maTaiKhoan, maBienTheList]
+      );
+    }
 
     await connection.commit();
 

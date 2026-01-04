@@ -164,8 +164,11 @@ class ThanhToanController {
             await BienThe.decreaseStock(item.MaBienThe, item.SoLuongSanPham, conn);
           }
 
-          // 3.7. Xóa giỏ hàng
-          await GioHang.clearCart(maTaiKhoan, conn);
+          // 3.7. ✅ Chỉ xóa các sản phẩm đã thanh toán khỏi giỏ hàng (không xóa hết)
+          const maBienTheList = cartItems.map(item => item.maBienThe);
+          if (maBienTheList.length > 0) {
+            await GioHang.removeItems(maTaiKhoan, maBienTheList, conn);
+          }
 
           await conn.commit();
           console.log(`[MOMO CALLBACK]  Order #${maDonHang} created successfully`);
